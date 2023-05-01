@@ -1,0 +1,12 @@
+MuscleGroup: Chest
+Bench Press|Lie down on bench, grip the bar, lower to your chest, and press up.|Chest, Front Delts, Triceps|https://youtu.be/rT7DgCr-3pg|1.0
+Cable Chest Fly|Bring two cables together at chest height, squeeze your chest.|Chest|https://youtu.be/WEM9FCIPlxQ|0.75
+MuscleGroup: Back
+Barbell Row|While standing, hinge down and pull a barbell to your stomach.|Back, Biceps, Rear Delts|https://youtu.be/FWJR5Ve8bnQ|0.5
+Lat Pulldown|Pull the bar down to your chin while keeping your elbows tucked.|Back,Biceps|https://youtu.be/CAwf7n6Luuc|0.5
+MuscleGroup: Arms
+Bicep Curl|Keep your shoulders still and bring the weight up to around 40 degrees.|Biceps|https://youtu.be/ykJmrZ5v0Oo|0.1
+Cable Tricep Extension|Keep your shoulders still and extend your arm fullys from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3
+MuscleGroup: Legs
+Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Quads, Glutes, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0
+Leg Extension Machine|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75
