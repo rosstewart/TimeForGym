@@ -10,3 +10,5 @@ Cable Tricep Extension|Keep your shoulders still and extend your arm fullys from
 MuscleGroup: Legs
 Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Quads, Glutes, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0
 Leg Extension Machine|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75
+MuscleGroup: Abs
+Hanging Leg Raises|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2
