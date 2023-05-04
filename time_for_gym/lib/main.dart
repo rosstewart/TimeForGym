@@ -22,6 +22,7 @@ import 'package:time_for_gym/gym_crowd_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
+    name: 'TimeForGym',
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(MyApp());
