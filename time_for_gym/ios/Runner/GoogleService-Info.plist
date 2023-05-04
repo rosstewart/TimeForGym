@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>42338302290-bed0jvr2db7n94e9hl03qin1jg7gl6gj.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.42338302290-bed0jvr2db7n94e9hl03qin1jg7gl6gj</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCdkyKQ8GU_KthHYk_NZpQzDWbctVOCRm8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>42338302290</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.timeForGym</string>
+	<key>PROJECT_ID</key>
+	<string>timeforgym-65edb</string>
+	<key>STORAGE_BUCKET</key>
+	<string>timeforgym-65edb.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:42338302290:ios:9d0a3ee233e0d4701ae28b</string>
+</dict>
+</plist>

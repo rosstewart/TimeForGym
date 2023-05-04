@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "42338302290",
+    "project_id": "timeforgym-65edb",
+    "storage_bucket": "timeforgym-65edb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:42338302290:android:bea0579ed080edbc1ae28b",
+        "android_client_info": {
+          "package_name": "com.example.time_for_gym"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "42338302290-a93aqfn9cv1kuuv5m8kqkqnumgl1s4bf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8ynb6GJ97EUIASHs-bsoAceSSHXEEoeA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "42338302290-a93aqfn9cv1kuuv5m8kqkqnumgl1s4bf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
