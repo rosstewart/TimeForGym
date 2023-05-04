@@ -61,24 +61,23 @@ class MuscleGroupsPage extends StatelessWidget {
       color: theme.colorScheme.onBackground,
     );
 
-    return Column(
+    // return Scaffold(
+    //   appBar: AppBar(
+
+    //           actions: <Widget>[ Row(
+    //             mainAxisAlignment: MainAxisAlignment.end,
+    //             children: [
+    //               Back(appState: appState, index: 0),
+    //             ],
+    //           )],
+    //   ),
+    //   body:
+    // return ListView(
+    // shrinkWrap: true,
+    // children: [
+    return ListView(
       children: [
-        SizedBox(
-          height: 50,
-        ),
         Back(appState: appState, index: 0),
-        // Padding(
-        //   padding: const EdgeInsets.all(20),
-        //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-        //   child: Text(
-        //     "time for gym",
-        //     style: titleStyle,
-        //   ),
-        // ),
-        // SizedBox(
-        //   height: 150,
-        // ),
-        // Center(
         Column(
           children: [
             Padding(
@@ -86,16 +85,18 @@ class MuscleGroupsPage extends StatelessWidget {
               child: Text(
                 "Muscle Groups",
                 style: titleStyle,
+                textAlign: TextAlign.center,
               ),
             ),
             for (String muscleGroupName in muscleGroupMap.keys)
               MuscleGroupSelectorButton(muscleGroupName: muscleGroupName),
-            // BigButton(text: muscleGroupName, index: 0),
           ],
         ),
-        // ),
       ],
     );
+
+    // ],
+    // );
   }
 }
 

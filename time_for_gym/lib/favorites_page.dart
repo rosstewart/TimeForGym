@@ -17,11 +17,8 @@ class FavoritesPage extends StatelessWidget {
       color: theme.colorScheme.onBackground,
     );
 
-    return Column(
+    return ListView(
       children: [
-        SizedBox(
-          height: 50,
-        ),
         Back(appState: appState, index: 0),
 
         Column(
@@ -31,13 +28,24 @@ class FavoritesPage extends StatelessWidget {
               child: Text(
                 "Favorite Exercises",
                 style: titleStyle,
+                textAlign: TextAlign.center,
               ),
             ),
             SizedBox(
               height: 20,
             ),
             if (appState.favoriteExercises.isEmpty)
-              Text("You have no favorite exercises"),
+              Card(
+                color: theme.colorScheme.surface,
+                elevation: 10, // Shadow
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    "You have no favorite exercises",
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ),
+              ),
             for (Exercise exercise in appState.favoriteExercises)
               // ExerciseSelectorButton(exerciseName: exercise.name, fromFavorites: true,),
               FavoriteExerciseSelectorButton(exercise: exercise),

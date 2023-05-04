@@ -10,52 +10,68 @@ import 'package:time_for_gym/exercise.dart';
 const WAIT_MULTIPLIER_TO_MINUTES = 10;
 
 class IndividualExercisePage extends StatelessWidget {
-
-  
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
-
-
     int backIndex;
 
-    List<Exercise> exercises = appState.muscleGroups[appState.currentMuscleGroup]!;
-    Exercise exercise = Exercise(name: "", description: "", musclesWorked: "", videoLink: "", waitMultiplier: -1);
+    // List<Exercise> exercises = appState.muscleGroups[appState.currentMuscleGroup]!;
+    // Exercise exercise = Exercise(name: "", description: "", musclesWorked: "", videoLink: "", waitMultiplier: -1, mainMuscleGroup: "");
+    Exercise exercise = appState.currentExercise;
 
-    if (appState.fromFavorites){
+    if (appState.fromFavorites) {
       backIndex = 2;
       // exercises = appState.favoriteExercises;
-    } else{
+    } else {
       backIndex = 4;
     }
 
-    if (exercises == null) {
-      print("ERROR - List of exercises is null");
-      return Placeholder();
-    }
-    
-    try {
-        exercise =
-        exercises.firstWhere((e) => e.name == appState.currentExercise);
-    }
-    catch (exception){
-      // Have to find the exercise again
-      outerLoop: for (String muscleGroup in appState.muscleGroups.keys){
-        var exercisesByMuscleGroup = appState.muscleGroups[muscleGroup];
-        // print(muscleGroup);
-        if (exercisesByMuscleGroup == null){
-          print("ERROR - Muscle group is null");
-          return Placeholder();
-        }
-        for (Exercise e in exercisesByMuscleGroup){
-          if (e.name == appState.currentExercise){
-            exercise = e; // Found exercise
-            break outerLoop;
-          }
-        }
-      }
-    }
+    // Below - DEPRECATED: Search of exercises
+
+    // if (exercises == null) {
+    //   print("ERROR - List of exercises is null");
+    //   return Placeholder();
+    // }
+
+    // try {
+    //     exercise =
+    //     exercises.firstWhere((e) => e.name == appState.currentExercise.name);
+    // }
+    // catch (exception){
+    //   // Have to find the exercise again
+    //   String muscleGroup = appState.currentExercise.getMainMuscleGroup();
+    //   appState.currentMuscleGroup = muscleGroup;
+    //   var exercisesByMuscleGroup = appState.muscleGroups[muscleGroup];
+    //   if (exercisesByMuscleGroup == null){
+    //     print("ERROR - Muscle group is null");
+    //     return Placeholder();
+    //   }
+    //   for (Exercise e in exercisesByMuscleGroup){
+    //       if (e.name == appState.currentExercise.name){
+
+    //         exercise = e; // Found exercise
+    //       break;
+    //     }
+    //   }
+
+    // Below: Deprecated slower method for finding exercise
+
+    // outerLoop: for (String muscleGroup in appState.muscleGroups.keys){
+    //   var exercisesByMuscleGroup = appState.muscleGroups[muscleGroup];
+    //   // print(muscleGroup);
+    //   if (exercisesByMuscleGroup == null){
+    //     print("ERROR - Muscle group is null");
+    //     return Placeholder();
+    //   }
+    //   for (Exercise e in exercisesByMuscleGroup){
+    //     if (e.name == appState.currentExercise){
+    //       exercise = e; // Found exercise
+    //       break outerLoop;
+    //     }
+    //   }
+    // }
+    // }
 
     if (exercise.waitMultiplier == -1) {
       print("ERROR - Exercise is null");
@@ -74,16 +90,12 @@ class IndividualExercisePage extends StatelessWidget {
       icon = Icons.favorite_border;
     }
 
-    
-    if (appState.fromFavorites){
+    if (appState.fromFavorites) {
       backIndex = 2;
-    } 
+    }
 
-    return Column(
+    return ListView(
       children: [
-        SizedBox(
-          height: 50,
-        ),
         Back(appState: appState, index: backIndex),
 
         Column(
@@ -96,6 +108,7 @@ class IndividualExercisePage extends StatelessWidget {
               child: Text(
                 exercise.name,
                 style: titleStyle,
+                textAlign: TextAlign.center,
               ),
             ),
             SizedBox(
@@ -108,9 +121,11 @@ class IndividualExercisePage extends StatelessWidget {
                   ExerciseCard(
                     description: exercise.description,
                     musclesWorked: exercise.musclesWorked,
-                    expectedWaitTime:
-                        (WAIT_MULTIPLIER_TO_MINUTES * exercise.waitMultiplier)
-                            .toStringAsFixed(0), // Remove decimal place
+                    expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
+                            exercise.waitMultiplier *
+                            ((appState.gymCount as int).toDouble() /
+                                appState.maxCapacity.toDouble()))
+                        .toStringAsFixed(0), // Remove decimal place
                   ),
                   SizedBox(
                     height: 10,

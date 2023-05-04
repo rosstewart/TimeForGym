@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:time_for_gym/main.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // var appState = context.watch<MyAppState>(); // Listening to MyAppState
+    var appState = context.watch<MyAppState>(); // Listening to MyAppState
     // var pair = appState.current;
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onBackground,
+
     );
 
     // IconData icon;
@@ -30,11 +32,16 @@ class HomePage extends StatelessWidget {
           child: Text(
             "Time for Gym",
             style: titleStyle,
+            textAlign: TextAlign.center,
           ),
         ),
-        SizedBox(
-          height: 150,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(150, 20, 150, 70),
+          child: Image.asset('assets/images/um_logo.png'),
         ),
+        // SizedBox(
+        //   height: 150,
+        // ),
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -47,7 +54,16 @@ class HomePage extends StatelessWidget {
               SizedBox(
                 height: 15,
               ),
-              PageSelectorButton(text: "Gym Crowdedness", index: 3),
+              PageSelectorButton(text: "Gym Occupancy", index: 3),
+              SizedBox(height: 200,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.copyright_outlined),
+                  SizedBox(width: 10,),
+                  Text("Ross Stewart",style: TextStyle(color: theme.colorScheme.onBackground),)
+                ],
+              )
               // Row(
               //   mainAxisSize: MainAxisSize.min,
               //   children: [

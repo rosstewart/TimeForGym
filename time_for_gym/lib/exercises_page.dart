@@ -19,11 +19,8 @@ class ExercisesPage extends StatelessWidget {
       color: theme.colorScheme.onBackground,
     );
 
-    return Column(
+    return ListView(
       children: [
-        SizedBox(
-          height: 50,
-        ),
         Back(appState: appState, index: 1),
 
         Column(
@@ -41,7 +38,7 @@ class ExercisesPage extends StatelessWidget {
             ),
             if (exercises != null)
               for (Exercise exercise in exercises)
-                ExerciseSelectorButton(exerciseName: exercise.name),
+                ExerciseSelectorButton(exercise: exercise),
             // BigButton(text: muscleGroupName, index: 0),4
           ],
         ),

@@ -2,22 +2,32 @@ import 'dart:io';
 //import 'dart:js_util';
 import 'dart:ui';
 
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+// import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/favorites_page.dart';
 import 'package:time_for_gym/home_page.dart';
 import 'package:time_for_gym/muscle_groups_page.dart';
 import 'package:time_for_gym/exercises_page.dart';
 import 'package:time_for_gym/individual_exercise_page.dart';
+import 'package:time_for_gym/gym_crowd_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget with WidgetsBindingObserver {
   const MyApp({super.key});
 
   @override
@@ -28,7 +38,7 @@ class MyApp extends StatelessWidget {
         title: 'Time for Gym',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         ),
         home: MyHomePage(),
       ),
@@ -36,31 +46,133 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {
+class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
+  late SharedPreferences _prefs;
+  String _favoritesString = '';
+
   MyAppState() {
     initializeMuscleGroups();
+    initializeGymCount();
+    initPrefs(); // Initializes the user's old favorite exercises
+    // initializeOldFavorites();
+    // initializeFirebase(); // For storing user-reported occupancy data
   }
+
+  Future<void> initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _favoritesString = _prefs.getString('favorites') ?? '';
+    // initializeOldFavorites();
+    notifyListeners();
+  }
+
+  // String get favoritesString => _favoritesString;
+
+  // set favoritesString(String value) {
+  //   _favoritesString = value;
+  //   _prefs.setString('favorites', value);
+  //   notifyListeners();
+  // }
+
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.paused || state == AppLifecycleState.detached || state == AppLifecycleState.inactive) {
+  //     saveData();
+  //   }
+  // }
+
+  Future<void> saveData() async {
+    String favoriteExercisesAsString = "";
+    for (Exercise exercise in favoriteExercises) {
+      // name-muscleGroup,name-muscleGroup,etc.
+      favoriteExercisesAsString +=
+          "${exercise.toString()}-${exercise.mainMuscleGroup},";
+    }
+    if (favoriteExercisesAsString.isNotEmpty) {
+      // Remove last comma
+      favoriteExercisesAsString = favoriteExercisesAsString.substring(
+          0, favoriteExercisesAsString.length - 1);
+    }
+    _favoritesString = favoriteExercisesAsString;
+    await _prefs.setString('favorites', _favoritesString);
+  }
+
+  // bool _appResumed = false;
+
+  // bool get appResumed => _appResumed;
+
+  // void updateAppResumed(bool resumed) {
+  //   _appResumed = resumed;
+  //   notifyListeners();
+  // }
+
+  // void init() {
+  //   WidgetsBinding.instance.addObserver(this);
+  // }
+
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   super.dispose();
+  // }
+
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     updateAppResumed(true);
+  //   } else {
+  //     // App is paused, save favorite exercises data
+  //     String favoriteExercisesAsString = "";
+  //     for (Exercise exercise in favoriteExercises){
+  //       favoriteExercisesAsString += "${exercise.toString()}-${exercise.mainMuscleGroup},";
+  //     }
+  //     if (favoriteExercisesAsString.isNotEmpty){ // Remove last comma
+  //       favoriteExercisesAsString = favoriteExercisesAsString.substring(0,favoriteExercisesAsString.length-1);
+  //     }
+  //     storeString("favorites", favoriteExercisesAsString);
+  //     updateAppResumed(false);
+  //   }
+  // }
+
+// Store a favorite exercises upon app termination, in a string
+// void storeString(String key, String value) async {
+//   final prefs = await SharedPreferences.getInstance();
+//   prefs.setString(key, value);
+// }
+
+// // Retrieve stored favorite exercsies
+// Future<String?> getString(String key) async {
+//   final prefs = await SharedPreferences.getInstance();
+//   return prefs.getString(key);
+// }
 
   var favoriteExercises = <Exercise>[];
   var pageIndex = 0;
 
   var muscleGroups = <String, List<Exercise>>{}; // Map<String,Exercise>();
+  var gymCount = -1;
+  var maxCapacity = 200;
 
   var areMuscleGroupsInitialized = false;
+  var isGymCountInitialized = false;
 
-  var currentMuscleGroup; // String
-  var currentExercise;
+  var currentMuscleGroup = ""; // String
+  var currentExercise = Exercise();
 
-  var fromFavorites;
+  var fromFavorites = false;
+
+  final databaseRef = FirebaseDatabase.instance.ref();
+
+  var hasSubmittedData = false;
 
   void initializeMuscleGroups() async {
     if (areMuscleGroupsInitialized) {
       // Stop from initializing multiple times
       return;
     }
-    const filePath = '/Users/rossaroni/FlutterProjects/time_for_gym/ExerciseData.txt';
-    muscleGroups = await readLinesFromFile(filePath);
-
+    // const filePath = '/Users/rossaroni/FlutterProjects/time_for_gym/ExerciseData.txt';
+    String url =
+        'https://raw.githubusercontent.com/rosstewart/TimeForGym/main/time_for_gym/ExerciseData.txt';
+    muscleGroups = await readLinesFromFile(url);
 
     // var exercises = <Exercise>[];
     // var exercises2 = <Exercise>[];
@@ -79,53 +191,172 @@ class MyAppState extends ChangeNotifier {
     // muscleGroups.putIfAbsent("Back", () => exercises2);
 
     areMuscleGroupsInitialized = true;
+
+    // Wait until map is initialized before extracting previous favorite exercises
+    initializeOldFavorites();
   }
 
+  Future<Map<String, List<Exercise>>> readLinesFromFile(String url) async {
+    // final file = File(filePath);
+    // final lines = await file.readAsLines();
 
-  Future<Map<String, List<Exercise>>> readLinesFromFile(String filePath) async {
+    http.Response response = await http.get(Uri.parse(url));
+    String fileContents = response.body;
+    // print(fileContents);
+    List<String> lines = fileContents.split("\n");
 
-  final file = File(filePath);
-  final lines = await file.readAsLines();
-  Map<String, List<Exercise>> newMap = <String, List<Exercise>>{};
-  List<String> attributes;
-  List<Exercise> exercises = <Exercise>[];
-  Exercise exercise;
-  
-  String muscleGroup = "";
-  bool start = true;
+    Map<String, List<Exercise>> newMap = <String, List<Exercise>>{};
+    List<String> attributes;
+    List<Exercise> exercises = <Exercise>[];
+    Exercise exercise;
 
-  for (final line in lines) {
-    if (line.startsWith('MuscleGroup: ')) {
-      if (!start){
-        // print(muscleGroup);
-        // print(exercises);
-        newMap.putIfAbsent(muscleGroup, () => exercises);
-        // print(newMap);
-        exercises = <Exercise>[]; // Allocate memory for new list of exercises
-        // print(newMap);
-      } else{
-        start = false;
+    String muscleGroup = "";
+    bool start = true;
+
+    for (final line in lines) {
+      if (line.isEmpty) {
+        // EOF
+        // print("exit");
+        break;
       }
-      muscleGroup = line.substring('MuscleGroup: '.length); // Save muscle group
+      if (line.startsWith('MuscleGroup: ')) {
+        if (!start) {
+          exercises.sort(); // Sort alphabetically
+          newMap.putIfAbsent(muscleGroup, () => exercises);
+          // print(newMap);
+          exercises = <Exercise>[]; // Allocate memory for new list of exercises
+          // print(newMap);
+        } else {
+          start = false;
+        }
+        muscleGroup =
+            line.substring('MuscleGroup: '.length); // Save muscle group
+      } else {
+        attributes = line.split("|");
 
-    } else {
-      attributes = line.split("|"); 
-      exercise = Exercise(name: attributes[0], description: attributes[1], musclesWorked: attributes[2], videoLink: attributes[3], waitMultiplier: double.parse(attributes[4]));
-      // print("else: $exercise");
-      exercises.add(exercise);
-      // print("else: $exercises");
+        // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
+        exercise = Exercise(
+            name: attributes[0],
+            description: attributes[1],
+            musclesWorked: attributes[2],
+            videoLink: attributes[3],
+            waitMultiplier: double.parse(attributes[4]),
+            mainMuscleGroup: muscleGroup);
+
+        // // If exercise already in favorites, no need to allocate memory for a new exercise
+        // if (favoriteExercises.contains(exercise)){
+        //   print("Adding previous favorite exercise to map");
+        //   exercises.add(favoriteExercises.firstWhere((e) => e.name == exercise.name));
+        // } else {
+        exercises.add(exercise);
+        // }
+      }
+    }
+
+    // print(muscleGroup);
+    // print(exercises);
+
+    newMap.putIfAbsent(muscleGroup, () => exercises);
+
+    print("Muscle group map: $newMap");
+
+    return newMap;
+  }
+
+  void initializeGymCount() async {
+    if (isGymCountInitialized) {
+      // Stop from initializing multiple times
+      return;
+    }
+    gymCount = await getLiveCount();
+    print("Initialized gym count: $gymCount");
+    isGymCountInitialized = true;
+  }
+
+  Future<int> getLiveCount() async {
+    String url = 'https://wellness.miami.edu/facilityoccupancy/';
+
+    http.Response response = await http.get(Uri.parse(url));
+    String fileContents = response.body;
+    // print(fileContents);
+    List<String> lines = fileContents.split("\n");
+
+    String htmlCount =
+        "                            <p class=\"occupancy-count\"><strong>";
+    int liveCountIndex = htmlCount.length;
+    int liveCountLength = 3;
+    int liveCount;
+
+    for (final line in lines) {
+      if (line.startsWith(htmlCount)) {
+        String liveCountString =
+            line.substring(liveCountIndex, liveCountIndex + liveCountLength);
+        if (liveCountString.endsWith('<')) {
+          // 2 digit
+          liveCountString = liveCountString.substring(0, 2);
+        } else if (liveCountString.endsWith('/')) {
+          // 1 digit
+          liveCountString = liveCountString.substring(0, 1);
+        } // Otherwise, 3 digit
+        liveCount = int.parse(liveCountString);
+        return liveCount;
+      }
+    }
+
+    return -1;
+  }
+
+  void initializeOldFavorites() {
+    if (_favoritesString.isEmpty) {
+      print("No favorite exercises");
+      return;
+    }
+
+    List<String> favoriteStrings = _favoritesString.split(",");
+
+    for (String favoriteString in favoriteStrings) {
+      // For each exercise
+      List<String> nameAndMuscleGroup =
+          favoriteString.split("-"); // Split up name and muscle group
+      String name = nameAndMuscleGroup[0];
+      String muscleGroupOfExercise = nameAndMuscleGroup[1];
+
+      // print(muscleGroupOfExercise);
+      if (muscleGroups[muscleGroupOfExercise] == null) {
+        print("Error - muscleGroups is null");
+        return;
+      }
+
+      int index =
+          binarySearchExerciseList(muscleGroups[muscleGroupOfExercise]!, name);
+      if (index < 0) {
+        print("ERROR - previous favorite exercise not found");
+      } else {
+        print(
+            "Favorite exercise <${muscleGroups[muscleGroupOfExercise]![index].toString()}> found at muscle group <$muscleGroupOfExercise>, index $index");
+        favoriteExercises.add(muscleGroups[muscleGroupOfExercise]![index]);
+      }
+
+      // for (Exercise exercise in muscleGroups[muscleGroupOfExercise]!) {
+      //   if  // Binary search?
+      // }
     }
   }
 
-  // print(muscleGroup);
-  // print(exercises);
+  // Future<void> initializeFirebase() async {
+  //   await Firebase.initializeApp(
+  //     options: DefaultFirebaseOptions.currentPlatform,
+  //   );
+  // }
 
-  newMap.putIfAbsent(muscleGroup, () => exercises);
-
-  print(newMap);
-
-  return newMap;
-
+  // Listen for user input and write data to the database
+  void submitOccupancyDataToFirebase(int currentOccupancy) {
+    String timestamp = DateTime.now().toString();
+    OccupancyData data = OccupancyData(currentOccupancy, timestamp);
+    databaseRef.child('occupancyData').push().set(data.toJson());
+    hasSubmittedData = true;
+    notifyListeners();
+    print("Submitted $currentOccupancy to firebase database");
   }
 
   void changePage(int index) {
@@ -140,20 +371,20 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changePageToExercise(String exerciseName) {
+  void changePageToExercise(Exercise exercise) {
     // Exercise page from muscleGroup
     pageIndex = 5;
     // currentMuscleGroup should match the correct muscleGroup for the exercise
     // Need a different approach for viewing exercises from favorites because of back button
-    currentExercise = exerciseName;
+    currentExercise = exercise;
     notifyListeners();
   }
 
-  void changePageToFavoriteExercise(Exercise exercise){
-        pageIndex = 5;
-        currentExercise = exercise.name;
-        fromFavorites = true;
-        notifyListeners();
+  void changePageToFavoriteExercise(Exercise exercise) {
+    pageIndex = 5;
+    currentExercise = exercise;
+    fromFavorites = true;
+    notifyListeners();
   }
 
   void toggleFavorite(Exercise exercise) {
@@ -162,6 +393,15 @@ class MyAppState extends ChangeNotifier {
     } else {
       favoriteExercises.add(exercise);
     }
+    favoriteExercises.sort(); // Sort favorite exercises alphabetically
+
+    /* In case there are deprecated exercises in favoriteExercises:
+    favoriteExercises.clear();
+    print(favoriteExercises);
+    */
+
+    saveData(); // Save favorite exercises so they can be accessed after the app terminates
+
     notifyListeners();
   }
 }
@@ -187,13 +427,16 @@ class _MyHomePageState extends State<MyHomePage> {
         page = FavoritesPage(); // Favorites page
         break;
       case 3:
-        page = Placeholder(); // Gym crowd page
+        page = GymCrowdPage(); // Gym crowd page
         break;
       case 4:
         page = ExercisesPage();
         break;
       case 5:
         page = IndividualExercisePage(); // Exercise page
+        break;
+      case 6:
+        page = Placeholder();
         break;
       default:
         throw UnimplementedError('no widget for ${appState.pageIndex}');
@@ -371,11 +614,11 @@ class MuscleGroupSelectorButton extends StatelessWidget {
 class ExerciseSelectorButton extends StatelessWidget {
   const ExerciseSelectorButton({
     super.key,
-    required this.exerciseName,
+    required this.exercise,
     // required this.index,
   });
 
-  final String exerciseName;
+  final Exercise exercise;
   // final int index;
 
   @override
@@ -387,7 +630,7 @@ class ExerciseSelectorButton extends StatelessWidget {
     );
 
     void togglePressed() {
-      appState.changePageToExercise(exerciseName);
+      appState.changePageToExercise(exercise);
     }
 
     return Padding(
@@ -404,7 +647,7 @@ class ExerciseSelectorButton extends StatelessWidget {
           // child: Text("${wordPair.first} ${wordPair.second}", style: style),
           child: Center(
             child: Text(
-              exerciseName,
+              exercise.name,
               style: style,
               textAlign: TextAlign.center,
             ),
@@ -461,148 +704,6 @@ class FavoriteExerciseSelectorButton extends StatelessWidget {
     );
   }
 }
-
-
-
-// class GeneratorPage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     var appState = context.watch<MyAppState>();
-//     var pair = appState.current;
-
-//     IconData icon;
-//     if (appState.favorites.contains(pair)) {
-//       icon = Icons.favorite;
-//     } else {
-//       icon = Icons.favorite_border;
-//     }
-
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           BigCard(wordPair: pair),
-//           SizedBox(height: 10),
-//           Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               ElevatedButton.icon(
-//                 onPressed: () {
-//                   appState.toggleFavorite();
-//                 },
-//                 icon: Icon(icon),
-//                 label: Text('Like'),
-//               ),
-//               SizedBox(width: 10),
-//               ElevatedButton(
-//                 onPressed: () {
-//                   appState.getNext();
-//                 },
-//                 child: Text('Next'),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// class FavoritesPage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     var appState = context.watch<MyAppState>();
-//     var favorites = appState.favorites;
-
-//     return Center(
-//       child: Padding(
-//         padding: const EdgeInsets.all(20.0),
-//         child: ListView(
-//           children: [
-//             if (favorites.isEmpty) Text("You have no favorites"),
-//             if (favorites.length == 1)
-//               Text("You have ${favorites.length} favorite"),
-//             if (favorites.length > 1)
-//               Text("You have ${favorites.length} favorites"),
-//             SizedBox(
-//               height: 20,
-//             ),
-//             for (WordPair wordPair in favorites)
-//               FavoriteLine(wordPair: wordPair),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// class FavoriteLine extends StatelessWidget {
-//   const FavoriteLine({
-//     super.key,
-//     required this.wordPair,
-//   });
-
-//   final WordPair wordPair;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Row(
-//       children: [
-//         SizedBox(height: 25),
-//         FavoriteIconButton(wordPair: wordPair),
-//         SizedBox(width: 10),
-//         Text(wordPair.toString()),
-//       ],
-//     );
-//   }
-// }
-
-// class FavoriteIconButton extends StatefulWidget {
-//   const FavoriteIconButton({
-//     super.key,
-//     required this.wordPair,
-//   });
-
-//   final WordPair wordPair;
-
-//   @override
-//   _FavoriteIconButtonState createState() =>
-//       _FavoriteIconButtonState(wordPair: wordPair);
-// }
-
-// class _FavoriteIconButtonState extends State<FavoriteIconButton> {
-//   bool _isPressed = true;
-
-//   _FavoriteIconButtonState({
-//     required this.wordPair,
-//   });
-
-//   final WordPair wordPair;
-
-//   void _togglePressed() {
-//     var appState = Provider.of<MyAppState>(context, listen: false);
-//     setState(() {
-//       _isPressed = !_isPressed;
-//     });
-//     if (_isPressed) {
-//       // If got changed to be a favorite
-//       appState.favorites.add(wordPair);
-//     } else {
-//       // If got changed to not a favorite
-//       appState.favorites.remove(wordPair);
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     var appState = context.watch<MyAppState>();
-
-//     return IconButton(
-//       icon: _isPressed ? Icon(Icons.favorite) : Icon(Icons.favorite_border),
-//       onPressed: _togglePressed,
-//     );
-//   }
-// }
 
 class ExerciseCard extends StatelessWidget {
   const ExerciseCard(
@@ -694,4 +795,219 @@ class ExerciseCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// class CapacityChart extends StatelessWidget {
+//   final int capacity;
+//   final int maxCapacity;
+
+//   CapacityChart({required this.capacity, required this.maxCapacity});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     double percentage = capacity / maxCapacity;
+
+//     return LinearProgressIndicator(
+//       value: percentage,
+//       backgroundColor: Colors.grey[300],
+//       valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+//     );
+//   }
+// }
+
+class CustomCircularProgressIndicator extends StatelessWidget {
+  final double strokeWidth;
+  final double percentCapacity;
+
+  CustomCircularProgressIndicator(
+      {this.strokeWidth = 10.0, this.percentCapacity = 0.0});
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: 60.0,
+      height: 60.0,
+      child: CircularProgressIndicator(
+        strokeWidth: strokeWidth,
+        value: percentCapacity,
+        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+        backgroundColor: theme.colorScheme.onPrimary,
+      ),
+    );
+  }
+}
+
+class GymCrowdCard extends StatelessWidget {
+  const GymCrowdCard({
+    super.key,
+    required this.chart,
+  });
+
+  final CustomCircularProgressIndicator chart;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final headingStyle = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.secondary,
+      fontWeight: FontWeight.bold,
+    );
+    final textStyle = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.secondary,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: Card(
+        color: theme.colorScheme.surface,
+        elevation: 10, // Shadow
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            // mainAxisAlignment: MainAxisAlignment.spaceEvenly
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Max Capacity:  ',
+                      style: headingStyle,
+                    ),
+                    TextSpan(
+                      text: appState.maxCapacity.toString(),
+                      style: textStyle,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              chart,
+              SizedBox(
+                height: 10,
+              ),
+              Text("${(chart.percentCapacity * 100).toInt()} %"),
+              SizedBox(
+                height: 30,
+              ),
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'Current capacity:  ',
+                      style: headingStyle,
+                    ),
+                    TextSpan(
+                      text: appState.gymCount.toString(),
+                      style: textStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// class OccupancyFormCard extends StatelessWidget {
+//   const OccupancyFormCard(
+//       {super.key,
+//       });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     var appState = context.watch<MyAppState>();
+//     final theme = Theme.of(context);
+//     final headingStyle = theme.textTheme.titleLarge!.copyWith(
+//       color: theme.colorScheme.secondary,
+//       fontWeight: FontWeight.bold,
+//     );
+//     final textStyle = theme.textTheme.titleLarge!.copyWith(
+//       color: theme.colorScheme.secondary,
+//     );
+
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+//       child: Card(
+//         color: theme.colorScheme.surface,
+//         elevation: 10, // Shadow
+//         child: Padding(
+//           padding: const EdgeInsets.all(20),
+//           child: Column(
+//             // mainAxisAlignment: MainAxisAlignment.spaceEvenly
+//             crossAxisAlignment: CrossAxisAlignment.center,
+//             children: [
+//               RichText(
+//                 text: TextSpan(
+//                   style: TextStyle(),
+//                   children: <TextSpan>[
+//                     TextSpan(
+//                       text: 'Max Capacity:  ',
+//                       style: headingStyle,
+//                     ),
+//                     TextSpan(
+//                       text: appState.maxCapacity.toString(),
+//                       style: textStyle,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               SizedBox(
+//                 height: 30,
+//               ),
+//               chart,
+//               SizedBox(height: 10,),
+//               Text("${(chart.percentCapacity * 100).toInt()} %"),
+//               SizedBox(
+//                 height: 30,
+//               ),
+//               RichText(
+//                 text: TextSpan(
+//                   style: TextStyle(),
+//                   children: <TextSpan>[
+//                     TextSpan(
+//                       text: 'Current capacity:  ',
+//                       style: headingStyle,
+//                     ),
+//                     TextSpan(
+//                       text: appState.gymCount.toString(),
+//                       style: textStyle,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+int binarySearchExerciseList(List<Exercise> array, String targetName) {
+  int min = 0;
+  int max = array.length - 1;
+
+  while (min <= max) {
+    int mid = ((max - min) / 2).floor() + min;
+    if (array[mid].name.compareTo(targetName) == 0) {
+      return mid;
+    } else if (array[mid].name.compareTo(targetName) < 0) {
+      min = mid + 1;
+    } else {
+      max = mid - 1;
+    }
+  }
+
+  return -1;
 }
