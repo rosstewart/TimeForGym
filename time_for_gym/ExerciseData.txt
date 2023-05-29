@@ -9,11 +9,11 @@ Bicep Curl|Keep your shoulders still and bring the weight up to around 40 degree
 MuscleGroup: Triceps
 Cable Tricep Extension|Keep your shoulders still and extend your arm fullys from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3
 MuscleGroup: Front Delts
-Dumbbell Shoulder Press|description|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|7.5
+Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75
 MuscleGroup: Side Delts
-Dumbbell Lateral Raise|description|Side delts|https://youtu.be/3VcKaXpzqRo|0.2
+Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until your head, 30° in front of you.|Side delts|https://youtu.be/3VcKaXpzqRo|0.2
 MuscleGroup: Rear Delts
-Machine Rear Delt Fly|description|Rear delts|https://youtu.be/6yMdhi2DVao|0.6
+Machine Rear Delt Fly|Bring your arms back to your side while keeping them striaght.|Rear delts|https://youtu.be/6yMdhi2DVao|0.6
 MuscleGroup: Quads
 Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Quads, Glutes, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0
 Leg Extension Machine|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75
