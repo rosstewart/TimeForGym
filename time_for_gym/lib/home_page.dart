@@ -55,7 +55,11 @@ class HomePage extends StatelessWidget {
                 height: 15,
               ),
               PageSelectorButton(text: "Gym Occupancy", index: 3),
-              SizedBox(height: 200,),
+              SizedBox(
+                height: 15,
+              ),
+              PageSelectorButton(text: "Custom Workout Split", index: 6),
+              SizedBox(height: 100,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

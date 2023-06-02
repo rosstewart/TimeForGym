@@ -57,7 +57,7 @@ class MuscleGroupsPage extends StatelessWidget {
     // }
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displayMedium!.copyWith(
+    final titleStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 

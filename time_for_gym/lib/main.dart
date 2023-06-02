@@ -1,6 +1,7 @@
 import 'dart:io';
 //import 'dart:js_util';
 import 'dart:ui';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 // import 'package:flutter/rendering.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -18,6 +20,8 @@ import 'package:time_for_gym/muscle_groups_page.dart';
 import 'package:time_for_gym/exercises_page.dart';
 import 'package:time_for_gym/individual_exercise_page.dart';
 import 'package:time_for_gym/gym_crowd_page.dart';
+import 'package:time_for_gym/split_page.dart';
+import 'package:time_for_gym/split.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +54,8 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   late SharedPreferences _prefs;
   String _favoritesString = '';
+  String _currentSplitString = '';
+  String _splitDayExerciseIndicesString = '';
 
   MyAppState() {
     initializeMuscleGroups();
@@ -62,6 +68,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     _favoritesString = _prefs.getString('favorites') ?? '';
+    // _currentSplitString = _prefs.getString('currentSplit') ?? '';
+    _splitDayExerciseIndicesString =
+        _prefs.getString('splitDayExerciseIndices') ?? '';
     // initializeOldFavorites();
     notifyListeners();
   }
@@ -95,6 +104,17 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     }
     _favoritesString = favoriteExercisesAsString;
     await _prefs.setString('favorites', _favoritesString);
+  }
+
+  // Future<void> saveSplitData() async {
+  //   print(currentSplit.toMuscleGroupString());
+  //   await _prefs.setString('currentSplit', currentSplit.toMuscleGroupString());
+  // }
+
+  Future<void> saveSplitDayExerciseIndicesData() async {
+    print(splitDayExerciseIndices.toString());
+    await _prefs.setString(
+        'splitDayExerciseIndices', splitDayExerciseIndices.toString());
   }
 
   // bool _appResumed = false;
@@ -160,10 +180,30 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var currentExercise = Exercise();
 
   var fromFavorites = false;
+  var fromSplitDayPage = false;
 
   final databaseRef = FirebaseDatabase.instance.ref();
 
   var hasSubmittedData = false;
+
+  var currentSplit;
+  var makeNewSplit = true;
+
+  var currentDayIndex;
+
+  List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
+
+  void setSplit(Split split) {
+    currentSplit = split;
+    makeNewSplit = false;
+    notifyListeners();
+  }
+
+  // Split is still saved in currentSplit, but user can now make a new split
+  void setMakeNewSplit(bool regenerate) {
+    makeNewSplit = regenerate;
+    notifyListeners();
+  }
 
   void initializeMuscleGroups() async {
     if (areMuscleGroupsInitialized) {
@@ -193,8 +233,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     areMuscleGroupsInitialized = true;
 
-    // Wait until map is initialized before extracting previous favorite exercises
+    // Wait until map is initialized before extracting previous favorite exercises & split data
     initializeOldFavorites();
+    retrieveSplitFromSharedPreferences();
+    initializeSplitDataAndExerciseIndices();
   }
 
   Future<Map<String, List<Exercise>>> readLinesFromFile(String url) async {
@@ -344,6 +386,100 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  void initializeSplitDataAndExerciseIndices() {
+    // splitDayExerciseIndices = [[],[],[],[],[],[],[]];
+    // _splitDayExerciseIndicesString = "";
+    // return;
+  if (_splitDayExerciseIndicesString.isEmpty) {
+    print("No split exercise index data saved");
+    return;
+  }
+
+  // // Remove the enclosing square brackets
+  // String cleanedInput = _splitDayExerciseIndicesString.substring(
+  //     1, _splitDayExerciseIndicesString.length - 1);
+
+  // // Split the string into individual row strings
+  // List<String> rowStrings = cleanedInput.split(']');
+
+  // // Parse each row string into a List<int>
+  // splitDayExerciseIndices = rowStrings.map((rowString) {
+  //   if (rowString.isEmpty || rowString == ']') {
+  //     return <int>[];
+  //   }
+
+  //   // Remove trailing ']'
+  //   rowString = rowString.substring(0, rowString.length - 1);
+
+  //   // Split the row string into individual elements
+  //   List<String> elementStrings = rowString.split(',');
+
+  //   // Parse each element string into an int
+  //   List<int> row = elementStrings
+  //       .map((elementString) => int.parse(elementString.trim()))
+  //       .toList();
+
+  //   return row;
+  // }).toList();
+
+
+    String splitDayExerciseIndicesStringTemp = _splitDayExerciseIndicesString.substring(2); // remove first two square brackets
+    List<String> rows = splitDayExerciseIndicesStringTemp.split("[");
+    List<List<int>> indices = [];
+    for (String s in rows){
+      s = s.trim().substring(0,s.trim().length - 2); // remove "]," or "]]"
+      if (s.isEmpty){
+        indices.add(<int>[]);
+        continue;
+      }
+      List<String> sToList = s.split(",");
+      List<int> intToList = []; 
+      for (String s2 in sToList){
+        s2 = s2.trim();
+        intToList.add(int.parse(s2));
+      }
+      indices.add(intToList); // Add each day
+    }
+    splitDayExerciseIndices = indices;
+
+    print("initialized indices: $splitDayExerciseIndices");
+
+    
+
+    // _currentSplitString = _currentSplitString.substring(2); // remove first two square brackets
+    // List<String> muscleGroupsPerDay = _currentSplitString.split("[");
+    // List<List<String>> muscleGroupsforAllDays = [];
+    // for (String s in muscleGroupsPerDay){
+    //   s = s.substring(0,s.length - 2); // remove "]," or "]]"
+    //   List<String> sToList = s.split(",");
+    //   for (String s2 in sToList){
+    //     s2 = s2.trim();
+    //   }
+    //   muscleGroupsforAllDays.add(sToList); // Add each day
+    // }
+  }
+
+  // Storing the Split object in SharedPreferences
+  void storeSplitInSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String splitJson = json.encode(currentSplit.toJson());
+    await prefs.setString('split', splitJson);
+  }
+
+// Retrieving the Split object from SharedPreferences
+  void retrieveSplitFromSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? splitJson = prefs.getString('split');
+    if (splitJson != null) {
+      Map<String, dynamic> splitMap = json.decode(splitJson);
+      currentSplit = Split.fromJson(splitMap);
+      makeNewSplit = false;
+      print("initialized split: $currentSplit");
+    } else {
+      print("No split saved");
+    }
+  }
+
   // Future<void> initializeFirebase() async {
   //   await Firebase.initializeApp(
   //     options: DefaultFirebaseOptions.currentPlatform,
@@ -389,11 +525,38 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void toggleFavorite(Exercise exercise) {
-    if (favoriteExercises.contains(exercise)) {
-      favoriteExercises.remove(exercise);
-    } else {
+    // if (favoriteExercises.contains(exercise)) {
+    //   favoriteExercises.remove(exercise);
+    // } else {
+    //   bool foundFavorite = false;
+    //   Exercise? exerciseToBeRemoved;
+    //   for (Exercise favoriteExercise in favoriteExercises) {
+    //     if (exercise.compareTo(favoriteExercise) == 0) {
+    //       // If duplicate exercise is already in favorites
+    //       exerciseToBeRemoved = favoriteExercise;
+    //       foundFavorite = true;
+    //       break;
+    //     }
+    //   }
+    //   if (!foundFavorite) {
+    //     favoriteExercises.add(exercise);
+    //   } else{
+    //     favoriteExercises.remove(exerciseToBeRemoved);
+    //   }
+    // }
+    bool foundFavorite = false;
+    for (Exercise favoriteExercise in favoriteExercises) {
+      if (exercise.compareTo(favoriteExercise) == 0) {
+        // If duplicate exercise is already in favorites
+        favoriteExercises.remove(favoriteExercise);
+        foundFavorite = true;
+        break;
+      }
+    }
+    if (!foundFavorite) {
       favoriteExercises.add(exercise);
     }
+
     favoriteExercises.sort(); // Sort favorite exercises alphabetically
 
     /* In case there are deprecated exercises in favoriteExercises:
@@ -419,6 +582,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (appState.pageIndex) {
       case 0:
+        appState.fromSplitDayPage = false;
         page = HomePage();
         break;
       case 1:
@@ -437,7 +601,12 @@ class _MyHomePageState extends State<MyHomePage> {
         page = IndividualExercisePage(); // Exercise page
         break;
       case 6:
-        page = Placeholder();
+        page = SplitPage();
+        break;
+      case 7:
+        appState.fromSplitDayPage = true;
+        appState.fromFavorites = false;
+        page = SplitDayPage(appState.currentDayIndex);
         break;
       default:
         throw UnimplementedError('no widget for ${appState.pageIndex}');
@@ -562,6 +731,19 @@ class Back extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class BackFromSplitPage extends Back {
+  BackFromSplitPage({required super.appState, required super.index});
+
+  @override
+  void togglePressed() {
+    if (appState.currentSplit != null && appState.makeNewSplit) {
+      // On the regenerate split page
+      appState.makeNewSplit = false;
+    }
+    appState.changePage(index);
   }
 }
 

@@ -15,7 +15,7 @@ class ExercisesPage extends StatelessWidget {
     var exercises = appState.muscleGroups[appState.currentMuscleGroup];
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displayMedium!.copyWith(
+    final titleStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 

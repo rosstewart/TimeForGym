@@ -79,19 +79,47 @@ class IndividualExercisePage extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displayMedium!.copyWith(
+    final titleStyle = theme.textTheme.displaySmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
-    IconData icon;
-    if (appState.favoriteExercises.contains(exercise)) {
-      icon = Icons.favorite;
-    } else {
+    // IconData icon
+    // if (appState.favoriteExercises.contains(exercise)) {
+    //   icon = Icons.favorite;
+    // } else {
+    //   bool foundFavorite = false;
+    //   for (Exercise favoriteExercise in appState.favoriteExercises) {
+    //     if (exercise.compareTo(favoriteExercise) == 0) {
+    //       // If duplicate exercise is already in favorites
+    //       foundFavorite = true;
+    //       break;
+    //     }
+    //   }
+    //   if (!foundFavorite) {
+    //     icon = Icons.favorite_border;
+    //   } else{
+    //     icon = Icons.favorite;
+    //   }
+    // }
+    IconData icon = Icons.abc;
+    bool foundFavorite = false;
+    for (Exercise favoriteExercise in appState.favoriteExercises) {
+      if (exercise.compareTo(favoriteExercise) == 0) {
+        // If duplicate exercise is already in favorites
+        icon = Icons.favorite;
+        foundFavorite = true;
+        break;
+      }
+    }
+    if (!foundFavorite){
       icon = Icons.favorite_border;
     }
 
     if (appState.fromFavorites) {
       backIndex = 2;
+    }
+    else if (appState.fromSplitDayPage){
+      backIndex = 7;
     }
 
     return ListView(
