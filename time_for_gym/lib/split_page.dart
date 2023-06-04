@@ -5,6 +5,9 @@ import 'dart:io';
 
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/split.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
+// import 'package:flutter_multiselect/flutter_multiselect.dart';
+
 // import 'package:time_for_gym/exercise.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
 
@@ -12,8 +15,6 @@ class SplitPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
-
-    // var exercises = appState.muscleGroups[appState.currentMuscleGroup];
 
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.displaySmall!.copyWith(
@@ -23,39 +24,30 @@ class SplitPage extends StatelessWidget {
     return ListView(
       children: [
         BackFromSplitPage(appState: appState, index: 0),
-
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                "Custom Workout Split",
-                textAlign: TextAlign.center,
-                style: titleStyle,
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-              child: Card(
-                color: theme.colorScheme.surface,
-                elevation: 10, // Shadow
-                child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        if (appState.makeNewSplit == true)
-                          GymGoalAndDayOfWeekSelector(),
-                        if (appState.makeNewSplit == false) SplitCard(),
-                      ],
-                    )),
-              ),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            "Custom Workout Split",
+            textAlign: TextAlign.center,
+            style: titleStyle,
+          ),
         ),
-        // ),
+        SizedBox(
+          height: 20,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Card(
+            color: theme.colorScheme.surface,
+            elevation: 10,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: appState.makeNewSplit
+                  ? GymGoalAndDayOfWeekSelector()
+                  : SplitCard(),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -69,7 +61,7 @@ class GymGoalAndDayOfWeekSelector extends StatefulWidget {
 
 class _GymGoalAndDayOfWeekSelectorState
     extends State<GymGoalAndDayOfWeekSelector> {
-  String? selectedGymGoalOption;
+  String? selectedGymGoalOption = "Build Muscle";
 
   List<String> gymGoalOptions = [
     'Build Muscle',
@@ -89,6 +81,8 @@ class _GymGoalAndDayOfWeekSelectorState
     'Sunday'
   ];
 
+  List<String> selectedMuscleGroups = [];
+
   void submitSplitOnPressed(var appState) {
     // Since selectedDayOfWeekOptions is unsorted:
     String trainingDaysInput = "";
@@ -102,8 +96,8 @@ class _GymGoalAndDayOfWeekSelectorState
     // Set at 60 training minutes per session temporarily
     // No focused muscle groups temporarily
     if (selectedGymGoalOption != null) {
-      appState
-          .setSplit(Split(selectedGymGoalOption!, trainingDaysInput, 60, []));
+      appState.setSplit(Split(
+          selectedGymGoalOption!, trainingDaysInput, 60, selectedMuscleGroups));
     }
 
     for (int i = 0; i < appState.currentSplit.trainingDays.length; i++) {
@@ -121,7 +115,8 @@ class _GymGoalAndDayOfWeekSelectorState
         for (int j = 0;
             j < appState.currentSplit.trainingDays[i].muscleGroups.length;
             j++) {
-          if (j >= appState.splitDayExerciseIndices[i].length){ // New split day goes over more muscle groups than previous split day
+          if (j >= appState.splitDayExerciseIndices[i].length) {
+            // New split day goes over more muscle groups than previous split day
             appState.splitDayExerciseIndices[i].add(0);
           }
           appState.splitDayExerciseIndices[i][j] =
@@ -142,12 +137,16 @@ class _GymGoalAndDayOfWeekSelectorState
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
-    final theme = Theme.of(context);
+    List<String> muscleGroupOptions = appState.muscleGroups.keys.toList();
+
+    final theme = Theme.of(context); //.copyWith(
+    //   dialogBackgroundColor: Colors.black,
+    // );
     final headingStyle = theme.textTheme.titleLarge!.copyWith(
       color: theme.colorScheme.secondary,
       fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.titleLarge!.copyWith(
+    final textStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.secondary,
     );
 
@@ -177,19 +176,61 @@ class _GymGoalAndDayOfWeekSelectorState
           style: headingStyle,
         ),
         SizedBox(height: 20),
-        Column(
-          children: gymGoalOptions.map((gymGoalOption) {
-            return RadioListTile<String>(
-              title: Text(gymGoalOption),
-              value: gymGoalOption,
-              groupValue: selectedGymGoalOption,
-              onChanged: (value) {
-                setState(() {
-                  selectedGymGoalOption = value;
-                });
-              },
-            );
-          }).toList(),
+        // Column(
+        //   children: gymGoalOptions.map((gymGoalOption) {
+        //     return RadioListTile<String>(
+        //       title: Text(gymGoalOption),
+        //       value: gymGoalOption,
+        //       groupValue: selectedGymGoalOption,
+        //       onChanged: (value) {
+        //         setState(() {
+        //           selectedGymGoalOption = value;
+        //         });
+        //       },
+        //     );
+        //   }).toList(),
+        // ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 2,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: DropdownButton<String>(
+            value: selectedGymGoalOption,
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedGymGoalOption = newValue;
+              });
+            },
+            style: TextStyle(
+              color: Colors.black,
+            ),
+            underline: SizedBox(), // Remove default underline
+            items: [
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text('Select gym goal:'),
+              ),
+              ...gymGoalOptions.map((gymGoalOption) {
+                return DropdownMenuItem<String>(
+                  value: gymGoalOption,
+                  child: Text(
+                    gymGoalOption,
+                    style: textStyle,
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
         ),
         SizedBox(
           height: 30,
@@ -199,28 +240,101 @@ class _GymGoalAndDayOfWeekSelectorState
           style: headingStyle,
         ),
         SizedBox(height: 20),
-        Column(
-          children: dayOfWeekOptions.map((dayOfWeekOption) {
-            return CheckboxListTile(
-              title: Text(
-                dayOfWeekOption,
-                style: textStyle,
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 2,
+                offset: Offset(0, 2),
               ),
-              value: selectedDayOfWeekOptions.contains(dayOfWeekOption),
-              onChanged: (value) {
-                setState(() {
-                  if (value!) {
-                    selectedDayOfWeekOptions.add(dayOfWeekOption);
-                  } else {
-                    selectedDayOfWeekOptions.remove(dayOfWeekOption);
-                  }
-                });
-              },
-            );
-          }).toList(),
+            ],
+          ),
+          child: Column(
+            children: dayOfWeekOptions.map((dayOfWeekOption) {
+              return CheckboxListTile(
+                title: Text(
+                  dayOfWeekOption,
+                  style: textStyle,
+                ),
+                value: selectedDayOfWeekOptions.contains(dayOfWeekOption),
+                onChanged: (value) {
+                  setState(() {
+                    if (value!) {
+                      selectedDayOfWeekOptions.add(dayOfWeekOption);
+                    } else {
+                      selectedDayOfWeekOptions.remove(dayOfWeekOption);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(
+          height: 30,
+        ),
+        Text(
+          "Select Muscle Groups to Focus:",
+          style: headingStyle,
+          textAlign: TextAlign.center,
         ),
         SizedBox(
           height: 20,
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 2,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          // child: Theme(
+          //   data: Theme.of(context).copyWith(
+          //     dialogBackgroundColor: Colors.white,
+          //   ),
+          child: MultiSelectDialogField<String>(
+            buttonText: Text("Select none for a balanced split"),
+            items: muscleGroupOptions
+                .map((muscleGroupOption) => MultiSelectItem<String>(
+                      muscleGroupOption,
+                      muscleGroupOption,
+                    ))
+                .toList(),
+            title: Text("Muscle Groups"), //, style: theme.textTheme.bodyLarge),
+            initialValue: selectedMuscleGroups,
+            // backgroundColor: Colors.white,
+            // barrierColor: Colors.orange[50],
+            barrierColor: Color.fromRGBO(255, 243, 230, 0.8),
+            searchable: true,
+            // searchHint: "Search",
+            onConfirm: (List<String> results) {
+              setState(() {
+                selectedMuscleGroups = results;
+              });
+            },
+            chipDisplay: MultiSelectChipDisplay<String>(
+              onTap: (value) {
+                setState(() {
+                  selectedMuscleGroups.remove(value);
+                });
+              },
+            ),
+          ),
+        ), //),
+        SizedBox(
+          height: 30,
         ),
         ElevatedButton(
             onPressed: () {
@@ -268,14 +382,35 @@ class SplitCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             ElevatedButton.icon(
-                onPressed: () {
-                  regenerateSplit(appState);
-                },
-                icon: Icon(Icons.autorenew),
-                label: Text("Make a New Split"))
+              icon: Icon(Icons.keyboard_arrow_up),
+              onPressed: () {
+                appState.shiftSplit(-1);
+              },
+              label: Text("Shift Up"),
+            ),
+            Spacer(),
+            ElevatedButton.icon(
+              onPressed: () {
+                regenerateSplit(appState);
+              },
+              icon: Icon(Icons.autorenew),
+              label: Text("Make a New Split"),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.keyboard_arrow_down),
+                  onPressed: () {
+                    appState.shiftSplit(1);
+                  },
+                  label: Text("Shift Down"),
+                ),
           ],
         ),
         SizedBox(
@@ -291,23 +426,26 @@ class SplitCard extends StatelessWidget {
                 onPressed: () {
                   viewDayOfWeek(appState, i);
                 },
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${daysOfWeek[i]}:  ',
-                        style: headingStyle,
-                        textAlign: TextAlign.left,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${daysOfWeek[i]}:',
+                          style: headingStyle,
+                          textAlign: TextAlign.left,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        appState.currentSplit.trainingDays[i].toString(),
-                        style: textStyle,
-                        textAlign: TextAlign.right,
+                      Expanded(
+                        child: Text(
+                          appState.currentSplit.trainingDays[i].toString(),
+                          style: textStyle,
+                          textAlign: TextAlign.right,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

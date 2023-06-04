@@ -190,6 +190,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var makeNewSplit = true;
 
   var currentDayIndex;
+  bool splitDayEditMode = false;
+  var editModeTempSplit;
+  var editModeTempExerciseIndices;
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
 
@@ -202,6 +205,79 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // Split is still saved in currentSplit, but user can now make a new split
   void setMakeNewSplit(bool regenerate) {
     makeNewSplit = regenerate;
+    notifyListeners();
+  }
+
+  void shiftSplit(int numDays) {
+    currentSplit.shift(numDays);
+    shiftExerciseIndices(numDays);
+
+    print("shifted split: $currentSplit");
+    print("shifted exercise indices: $splitDayExerciseIndices");
+    notifyListeners();
+
+    storeSplitInSharedPreferences();
+    saveSplitDayExerciseIndicesData();
+  }
+
+  void shiftExerciseIndices(int numDays) {
+    int n = splitDayExerciseIndices.length;
+    int k;
+
+    if (numDays >= 0) {
+      k = numDays % n;
+    } else {
+      k = (n - (-numDays % n)) % n;
+    }
+
+    reverseExerciseIndices(0, n - 1);
+    reverseExerciseIndices(0, k - 1);
+    reverseExerciseIndices(k, n - 1);
+  }
+
+  void reverseExerciseIndices(int start, int end) {
+    while (start < end) {
+      List<int> temp = splitDayExerciseIndices[start];
+      splitDayExerciseIndices[start] = splitDayExerciseIndices[end];
+      splitDayExerciseIndices[end] = temp;
+      start++;
+      end--;
+    }
+  }
+
+  void toSplitDayEditMode(bool edit) {
+    // print("current split $splitDayExerciseIndices");
+    // print("temp split $editModeTempExerciseIndices");
+    splitDayEditMode = edit;
+    if (edit) {
+      editModeTempSplit = Split.deepCopy(currentSplit);
+      editModeTempExerciseIndices = splitDayExerciseIndices.map((innerList) => [...innerList]).toList();;
+    }
+    notifyListeners();
+  }
+
+  void saveEditChanges() {
+    // Variables now point to the new objects
+    currentSplit = editModeTempSplit;
+    splitDayExerciseIndices = editModeTempExerciseIndices;
+
+    storeSplitInSharedPreferences();
+    saveSplitDayExerciseIndicesData();
+    toSplitDayEditMode(false);
+  }
+
+  void addTempMuscleGroupToSplit(
+      int dayIndex, int cardIndex, String muscleGroup, int muscleGroupExerciseIndex) {
+    editModeTempSplit.trainingDays[dayIndex]
+        .insertMuscleGroup(cardIndex, muscleGroup);
+    editModeTempExerciseIndices[dayIndex].insert(cardIndex, muscleGroupExerciseIndex);
+    notifyListeners();
+  }
+
+  void removeTempMuscleGroupFromSplit(
+      int dayIndex, int cardIndex) {
+    editModeTempSplit.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
+    editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     notifyListeners();
   }
 
@@ -390,51 +466,51 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // splitDayExerciseIndices = [[],[],[],[],[],[],[]];
     // _splitDayExerciseIndicesString = "";
     // return;
-  if (_splitDayExerciseIndicesString.isEmpty) {
-    print("No split exercise index data saved");
-    return;
-  }
+    if (_splitDayExerciseIndicesString.isEmpty) {
+      print("No split exercise index data saved");
+      return;
+    }
 
-  // // Remove the enclosing square brackets
-  // String cleanedInput = _splitDayExerciseIndicesString.substring(
-  //     1, _splitDayExerciseIndicesString.length - 1);
+    // // Remove the enclosing square brackets
+    // String cleanedInput = _splitDayExerciseIndicesString.substring(
+    //     1, _splitDayExerciseIndicesString.length - 1);
 
-  // // Split the string into individual row strings
-  // List<String> rowStrings = cleanedInput.split(']');
+    // // Split the string into individual row strings
+    // List<String> rowStrings = cleanedInput.split(']');
 
-  // // Parse each row string into a List<int>
-  // splitDayExerciseIndices = rowStrings.map((rowString) {
-  //   if (rowString.isEmpty || rowString == ']') {
-  //     return <int>[];
-  //   }
+    // // Parse each row string into a List<int>
+    // splitDayExerciseIndices = rowStrings.map((rowString) {
+    //   if (rowString.isEmpty || rowString == ']') {
+    //     return <int>[];
+    //   }
 
-  //   // Remove trailing ']'
-  //   rowString = rowString.substring(0, rowString.length - 1);
+    //   // Remove trailing ']'
+    //   rowString = rowString.substring(0, rowString.length - 1);
 
-  //   // Split the row string into individual elements
-  //   List<String> elementStrings = rowString.split(',');
+    //   // Split the row string into individual elements
+    //   List<String> elementStrings = rowString.split(',');
 
-  //   // Parse each element string into an int
-  //   List<int> row = elementStrings
-  //       .map((elementString) => int.parse(elementString.trim()))
-  //       .toList();
+    //   // Parse each element string into an int
+    //   List<int> row = elementStrings
+    //       .map((elementString) => int.parse(elementString.trim()))
+    //       .toList();
 
-  //   return row;
-  // }).toList();
+    //   return row;
+    // }).toList();
 
-
-    String splitDayExerciseIndicesStringTemp = _splitDayExerciseIndicesString.substring(2); // remove first two square brackets
+    String splitDayExerciseIndicesStringTemp = _splitDayExerciseIndicesString
+        .substring(2); // remove first two square brackets
     List<String> rows = splitDayExerciseIndicesStringTemp.split("[");
     List<List<int>> indices = [];
-    for (String s in rows){
-      s = s.trim().substring(0,s.trim().length - 2); // remove "]," or "]]"
-      if (s.isEmpty){
+    for (String s in rows) {
+      s = s.trim().substring(0, s.trim().length - 2); // remove "]," or "]]"
+      if (s.isEmpty) {
         indices.add(<int>[]);
         continue;
       }
       List<String> sToList = s.split(",");
-      List<int> intToList = []; 
-      for (String s2 in sToList){
+      List<int> intToList = [];
+      for (String s2 in sToList) {
         s2 = s2.trim();
         intToList.add(int.parse(s2));
       }
@@ -443,8 +519,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     splitDayExerciseIndices = indices;
 
     print("initialized indices: $splitDayExerciseIndices");
-
-    
 
     // _currentSplitString = _currentSplitString.substring(2); // remove first two square brackets
     // List<String> muscleGroupsPerDay = _currentSplitString.split("[");
@@ -598,9 +672,12 @@ class _MyHomePageState extends State<MyHomePage> {
         page = ExercisesPage();
         break;
       case 5:
+        // appState.splitDayEditMode = false;
         page = IndividualExercisePage(); // Exercise page
         break;
       case 6:
+        // Reversion changes are already stored in currentSplit
+        appState.splitDayEditMode = false;
         page = SplitPage();
         break;
       case 7:

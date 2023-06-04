@@ -8,7 +8,7 @@ class TrainingDay {
   List<String> muscleGroups = [];
   bool isNotRestDay = false;
   int dayOfWeek = -1;
-  String splitDay = "none";
+  String splitDay = "Rest Day";
 
   TrainingDay(this.isNotRestDay, this.dayOfWeek);
 
@@ -165,6 +165,29 @@ class TrainingDay {
     dayOfWeek = json['dayOfWeek'] ?? 0;
     splitDay = json['splitDay'] ?? "none";
   }
+
+  void insertMuscleGroup(int index, String muscleGroup) {
+    muscleGroups.insert(index, muscleGroup);
+  }
+
+  void removeMuscleGroup(int index) {
+    muscleGroups.removeAt(index);
+  }
+
+
+  TrainingDay._internal(
+    this.muscleGroups,
+    this.isNotRestDay,
+    this.dayOfWeek,
+    this.splitDay,
+  );
+
+  TrainingDay.deepCopy(TrainingDay original) : this._internal(
+    List<String>.from(original.muscleGroups),
+    original.isNotRestDay,
+    original.dayOfWeek,
+    original.splitDay,
+  );
 }
 
 class Split {
@@ -175,7 +198,12 @@ class Split {
   List<String> focusedMuscleGroups = [];
   List<TrainingDay> trainingDays = [];
 
-  List<String> pushMuscleGroups = ["Chest", "Triceps", "Front Delts", "Side Delts"];
+  List<String> pushMuscleGroups = [
+    "Chest",
+    "Triceps",
+    "Front Delts",
+    "Side Delts"
+  ];
   List<String> pullMuscleGroups = ["Back", "Biceps", "Rear Delts", "Abs"];
   List<String> legsMuscleGroups = ["Quads", "Glutes", "Hamstrings", "Calves"];
 
@@ -220,7 +248,7 @@ class Split {
     for (int i = 0; i < trainingDaysInput.length; i++) {
       if (trainingDaysInput.substring(i, i + 1) == 'r') {
         // Rest day
-        trainingDays.add(TrainingDay(false,i));
+        trainingDays.add(TrainingDay(false, i));
 
         rCount++;
 
@@ -230,9 +258,9 @@ class Split {
           splitStartDay = (i + 1) % trainingDaysInput.length;
         }
       } else {
-        trainingDays.add(TrainingDay(true,i));
+        trainingDays.add(TrainingDay(true, i));
         trainingDaysPerWeek++;
-        
+
         rCount = 0;
       }
     }
@@ -509,12 +537,12 @@ class Split {
     return trainingDays.toString();
   }
 
-  String toMuscleGroupString(){
+  String toMuscleGroupString() {
     String s = "[";
-    for (TrainingDay trainingDay in trainingDays){
+    for (TrainingDay trainingDay in trainingDays) {
       s += "${trainingDay.muscleGroups},";
     }
-    s = s.substring(0,s.length - 1); // remove last comma
+    s = s.substring(0, s.length - 1); // remove last comma
     s += "]";
 
     return s;
@@ -539,16 +567,65 @@ class Split {
     trainingDaysPerWeek = json['trainingDaysPerWeek'] ?? 0;
     trainingDaysInput = json['trainingDaysInput'] ?? "";
     trainingMinutesPerSession = json['trainingMinutesPerSession'] ?? -1;
-    focusedMuscleGroups =
-        List<String>.from(json['focusedMuscleGroups'] ?? []);
+    focusedMuscleGroups = List<String>.from(json['focusedMuscleGroups'] ?? []);
     trainingDays = (json['trainingDays'] as List<dynamic>?)
-        ?.map((day) => TrainingDay.fromJson(day))
-        .toList() ?? [];
+            ?.map((day) => TrainingDay.fromJson(day))
+            .toList() ??
+        [];
   }
+
+  // void shift(int numDays){
+  //   List<TrainingDay> temp = List<TrainingDay>.filled(7, TrainingDay(false, -1));
+  //   for (int i = 0; i < trainingDays.length; i++){
+  //     temp[(i + numDays) % trainingDays.length] = trainingDays[i];
+  //     trainingDays[(i + numDays) % trainingDays.length] = trainingDays[i];
+  //     temp = trainingDays[(i + 1 + numDays) % trainingDays.length];
+  //   }
+  // }
+
+  void shift(int numDays) {
+    int n = trainingDays.length;
+    int k;
+
+    if (numDays >= 0) {
+      k = numDays % n;
+    } else {
+      k = (n - (-numDays % n)) % n;
+    }
+
+    reverse(0, n - 1);
+    reverse(0, k - 1);
+    reverse(k, n - 1);
+  }
+
+  void reverse(int start, int end) {
+    while (start < end) {
+      TrainingDay temp = trainingDays[start];
+      trainingDays[start] = trainingDays[end];
+      trainingDays[end] = temp;
+      start++;
+      end--;
+    }
+  }
+
+  Split.deepCopy(Split other) {
+    gymGoal = other.gymGoal;
+    trainingDaysPerWeek = other.trainingDaysPerWeek;
+    trainingDaysInput = other.trainingDaysInput;
+    trainingMinutesPerSession = other.trainingMinutesPerSession;
+    focusedMuscleGroups = List.from(other.focusedMuscleGroups);
+    trainingDays = other.trainingDays.map((day) => TrainingDay.deepCopy(day)).toList();
+  }
+
 }
 
+
 // void main() {
-//   Split split = Split("build muscle", "trtrrrt", 120, ["Side Delts", "Front Delts"]);
+//   Split split =
+//       Split("Build Muscle", "trtrrrt", 120, ["Side Delts", "Front Delts"]);
 
 //   print(split);
+//   split.shift(-2);
+//   print(split);
+  
 // }
