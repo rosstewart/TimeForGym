@@ -12,6 +12,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/favorites_page.dart';
@@ -251,7 +254,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     splitDayEditMode = edit;
     if (edit) {
       editModeTempSplit = Split.deepCopy(currentSplit);
-      editModeTempExerciseIndices = splitDayExerciseIndices.map((innerList) => [...innerList]).toList();;
+      editModeTempExerciseIndices =
+          splitDayExerciseIndices.map((innerList) => [...innerList]).toList();
+      ;
     }
     notifyListeners();
   }
@@ -266,16 +271,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     toSplitDayEditMode(false);
   }
 
-  void addTempMuscleGroupToSplit(
-      int dayIndex, int cardIndex, String muscleGroup, int muscleGroupExerciseIndex) {
+  void addTempMuscleGroupToSplit(int dayIndex, int cardIndex,
+      String muscleGroup, int muscleGroupExerciseIndex) {
     editModeTempSplit.trainingDays[dayIndex]
         .insertMuscleGroup(cardIndex, muscleGroup);
-    editModeTempExerciseIndices[dayIndex].insert(cardIndex, muscleGroupExerciseIndex);
+    editModeTempExerciseIndices[dayIndex]
+        .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
   }
 
-  void removeTempMuscleGroupFromSplit(
-      int dayIndex, int cardIndex) {
+  void removeTempMuscleGroupFromSplit(int dayIndex, int cardIndex) {
     editModeTempSplit.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
     editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     notifyListeners();
@@ -360,7 +365,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             musclesWorked: attributes[2],
             videoLink: attributes[3],
             waitMultiplier: double.parse(attributes[4]),
-            mainMuscleGroup: muscleGroup);
+            mainMuscleGroup: muscleGroup,
+            // Temporarily all image must be gifs and images have same name as exercise name
+            imageUrl: "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif");
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -380,6 +387,34 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     print("Muscle group map: $newMap");
 
     return newMap;
+  }
+
+// Function to download and create a container with the image from a URL
+  Future<Uint8List> downloadImageFromUrl(String imageUrl) async {
+    http.Response response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      // Uint8List imageBytes = response.bodyBytes;
+      // ImageProvider imageProvider = MemoryImage(imageBytes);
+
+      return response.bodyBytes;
+
+
+      // print("worked $imageUrl");
+
+      // return Container(
+      //   decoration: BoxDecoration(
+      //     image: DecorationImage(
+      //       image: imageProvider,
+      //       fit: BoxFit.cover,
+      //     ),
+      //   ),
+      // );
+    } else {
+      print(imageUrl);
+      // print('Failed to load image. Status code: ${response.statusCode}');
+      throw Exception('Failed to load image. Status code: ${response.statusCode}');
+      // return Container(); // Return an empty container if image loading fails
+    }
   }
 
   void initializeGymCount() async {
@@ -968,17 +1003,26 @@ class FavoriteExerciseSelectorButton extends StatelessWidget {
 class ExerciseCard extends StatelessWidget {
   const ExerciseCard(
       {super.key,
+      required this.name,
       required this.description,
       required this.musclesWorked,
-      required this.expectedWaitTime});
+      required this.expectedWaitTime,
+      required this.imageUrl});
 
+  final String name;
   final String description;
   final String musclesWorked;
   final String expectedWaitTime;
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
     final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.displaySmall!.copyWith(
+      color: theme.colorScheme.secondary,
+    );
     final headingStyle = theme.textTheme.titleLarge!.copyWith(
       color: theme.colorScheme.secondary,
       fontWeight: FontWeight.bold,
@@ -998,6 +1042,8 @@ class ExerciseCard extends StatelessWidget {
             // mainAxisAlignment: MainAxisAlignment.spaceEvenly
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Text(name,style: titleStyle),
+              // Image.asset('assets/images/Barbell Bench Press.gif'),
               RichText(
                 text: TextSpan(
                   style: TextStyle(),
@@ -1270,4 +1316,54 @@ int binarySearchExerciseList(List<Exercise> array, String targetName) {
   }
 
   return -1;
+}
+
+
+class ImageContainer extends StatelessWidget {
+  const ImageContainer({
+    super.key,
+    required this.exercise,
+  });
+
+  final Exercise exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
+        child: FutureBuilder<ImageProvider<Object>>(
+          future: _loadImage(exercise.imageUrl),
+          builder: (BuildContext context,
+              AsyncSnapshot<ImageProvider<Object>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                print('Error loading image: ${snapshot.error}');
+                return Text('Failed to load image');
+              }
+              return Image(image: snapshot.data!);
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
+        ),
+      );
+    } catch (e) {
+      print('Failed to load image: $e');
+      return Text('Failed to load image');
+    }
+  }
+
+  Future<ImageProvider<Object>> _loadImage(String imageUrl) async {
+    final completer = Completer<ImageProvider<Object>>();
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode == 200) {
+      final imageProvider = MemoryImage(response.bodyBytes);
+      completer.complete(imageProvider);
+    } else {
+      completer.completeError(
+          'Failed to load image. Status code: ${response.statusCode}');
+    }
+    return completer.future;
+  }
 }

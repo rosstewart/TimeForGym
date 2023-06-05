@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:typed_data';
+
 
 import 'dart:io';
 
@@ -12,7 +14,7 @@ const WAIT_MULTIPLIER_TO_MINUTES = 10;
 class IndividualExercisePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>(); // Listening to MyAppState
+    var appState = Provider.of<MyAppState>(context); // Listening to MyAppState
 
     int backIndex;
 
@@ -111,14 +113,13 @@ class IndividualExercisePage extends StatelessWidget {
         break;
       }
     }
-    if (!foundFavorite){
+    if (!foundFavorite) {
       icon = Icons.favorite_border;
     }
 
     if (appState.fromFavorites) {
       backIndex = 2;
-    }
-    else if (appState.fromSplitDayPage){
+    } else if (appState.fromSplitDayPage) {
       backIndex = 7;
     }
 
@@ -139,14 +140,13 @@ class IndividualExercisePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(
-              height: 50,
-            ),
+            ImageContainer(exercise: exercise),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ExerciseCard(
+                    name: exercise.name,
                     description: exercise.description,
                     musclesWorked: exercise.musclesWorked,
                     expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
@@ -154,6 +154,7 @@ class IndividualExercisePage extends StatelessWidget {
                             ((appState.gymCount as int).toDouble() /
                                 appState.maxCapacity.toDouble()))
                         .toStringAsFixed(0), // Remove decimal place
+                    imageUrl: exercise.imageUrl,
                   ),
                   SizedBox(
                     height: 10,
@@ -200,3 +201,5 @@ class IndividualExercisePage extends StatelessWidget {
     );
   }
 }
+
+

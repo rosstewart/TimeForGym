@@ -153,14 +153,16 @@ class _AddButtonState extends State<AddButton> {
   List<String> muscleGroups = [];
   List<String> exerciseNames = [];
 
-  void findMuscleGroupOrExercise(MyAppState appState, String name, List<Exercise> allExercises) {
+  void findMuscleGroupOrExercise(
+      MyAppState appState, String name, List<Exercise> allExercises) {
     if (muscleGroups.contains(name)) {
       // Muscle Group - Add first exercise in muscle group
-      appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex, name, 0);
+      appState.addTempMuscleGroupToSplit(
+          widget.dayIndex, widget.cardIndex, name, 0);
     } else {
       // Exercise - Find exercise index of the main muscle group
       int index = exerciseNames.indexOf(name);
-      if (index == -1){
+      if (index == -1) {
         // Invalid search query
         print("Invalid search query");
         return;
@@ -168,11 +170,15 @@ class _AddButtonState extends State<AddButton> {
 
       String mainMuscleGroupName = allExercises[index].mainMuscleGroup;
       List<Exercise>? exercises = appState.muscleGroups[mainMuscleGroupName];
-      if (exercises == null){
+      if (exercises == null) {
         print("ERROR - null search");
         return;
-      } else{
-        appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex, mainMuscleGroupName, exercises.indexWhere((element) => element.name == name));
+      } else {
+        appState.addTempMuscleGroupToSplit(
+            widget.dayIndex,
+            widget.cardIndex,
+            mainMuscleGroupName,
+            exercises.indexWhere((element) => element.name == name));
       }
     }
   }
@@ -278,7 +284,8 @@ class _AddButtonState extends State<AddButton> {
               ElevatedButton(
                 onPressed: () {
                   setState(() {
-                    findMuscleGroupOrExercise(widget.appState, searchQuery, allExercises);
+                    findMuscleGroupOrExercise(
+                        widget.appState, searchQuery, allExercises);
                     // _selectedItem = searchQuery;
                   });
                   Navigator.of(context).pop();
@@ -465,6 +472,11 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                         SizedBox(
                           height: 20,
                         ),
+                        ImageContainer(exercise: appState
+                                .muscleGroups[widget.muscleGroup]![
+                                    widget.exerciseIndices[
+                                            appState.currentDayIndex]
+                                        [widget.splitDayCardIndex]]),
                         Text(
                             // exercise index
                             appState

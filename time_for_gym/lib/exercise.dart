@@ -8,6 +8,7 @@ class Exercise implements Comparable<Exercise> {
     this.videoLink = "",
     this.waitMultiplier = -1,
     this.mainMuscleGroup = "",
+    this.imageUrl = "",
   });
 
   @override
@@ -23,7 +24,7 @@ class Exercise implements Comparable<Exercise> {
     return "$name|$description|$musclesWorked|$videoLink|$mainMuscleGroup";
   }
 
-  final String name, description, musclesWorked, videoLink, mainMuscleGroup;
+  final String name, description, musclesWorked, videoLink, mainMuscleGroup, imageUrl;
   final double waitMultiplier;
 
   @override
