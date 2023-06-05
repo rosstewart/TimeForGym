@@ -6,9 +6,9 @@ MuscleGroup: Back
 Barbell Row|While standing, hinge down and pull a barbell to your stomach.|Back, Biceps, Rear Delts|https://youtu.be/FWJR5Ve8bnQ|0.5
 Lat Pulldown|Pull the bar down to your chin while keeping your elbows tucked.|Back, Biceps|https://youtu.be/CAwf7n6Luuc|0.5
 MuscleGroup: Biceps
-Bicep Curl|Keep your shoulders still and bring the weight up to around 40 degrees.|Biceps|https://youtu.be/ykJmrZ5v0Oo|0.1
+Dumbbell Curl|Keep your shoulders still and bring the weight up to around 40 degrees.|Biceps|https://youtu.be/ykJmrZ5v0Oo|0.1
 MuscleGroup: Triceps
-Cable Tricep Extension|Keep your shoulders still and extend your arm fullys from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3
+Cable Tricep Pushdown|Keep your shoulders still and extend your arm fullys from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3
 Skull Crushers|On a bench, lower the weight behind your head by moving your elbows|Triceps|https://youtu.be/d_KZxkY_0cM|0.5
 MuscleGroup: Front Delts
 Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75
@@ -20,11 +20,11 @@ MuscleGroup: Glutes
 Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes, Quads, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0
 Dumbbell RDL|Keeping bent legs, hinge back while keeping the dumbbells close and squeezing the glutes on the way up.|Glutes, Hamstrings|https://youtu.be/6_F82F5thmE|0.4
 MuscleGroup: Quads
-Leg Extension Machine|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75
+Leg Extension|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75
 Quad-Focused Hack Squat|Take your feet as low as possible with your feet flat and squat through the entire range of motion|Quads, Glutes|https://youtu.be/yptPTetoxik|0.7
 MuscleGroup: Hamstrings
-Seated Leg Curl Machine|Push into the seat, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/ELOCsoDSmrg|0.7
-Lying Leg Curl Machine|Lay down, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/1Tq3QdYUuHs|0.7
+Seated Leg Curl|Push into the seat, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/ELOCsoDSmrg|0.7
+Lying Leg Curl|Lay down, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/1Tq3QdYUuHs|0.7
 Stiff Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the dumbbells close. You should feel a stretch in the hamstrings.|Hamstrings, Glutes|https://youtu.be/R6KXyhU4nTY|0.4
 MuscleGroup: Calves
 Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves|https://youtu.be/GAQ-oohMhog|0.3
