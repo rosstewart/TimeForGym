@@ -73,6 +73,11 @@ class _SearchPageState extends State<SearchPage> {
         exercisesByMuscleGroup.expand((innerList) => innerList).toList();
     exerciseNames = allExercises.map((exercise) => exercise.name).toList();
 
+    List<String> upperBodyMuscleGroups = [...muscleGroups];
+    upperBodyMuscleGroups.removeRange(7, 11);
+    List<String> lowerBodyMuscleGroups = muscleGroups.getRange(7,11).toList();
+    
+
     // IconData icon;
     // if (appState.favorites.contains(pair)) {
     //   icon = Icons.favorite;
@@ -187,23 +192,36 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
         // title: Text("Browse exercises", style: titleStyle,),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        body: ListView(
+          // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 30,
+              height: 20,
             ),
             Padding(
-              padding: const EdgeInsets.all(15),
-              child: Text("View Muscle Groups", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+              padding: const EdgeInsets.fromLTRB(15,25,15,15),
+              child: Text("Upper Body Muscle Groups", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
             ),
             ScrollableButtonRow(
-              names: appState.muscleGroups.keys.toList(),
+              names: upperBodyMuscleGroups,
+              isExercise: false,
             ),
-            PageSelectorButton(text: "Exercise Library", index: 8),
-            PageSelectorButton(text: "Exercises by Muscle Group", index: 1),
-            PageSelectorButton(text: "Favorite Exercises", index: 2),
-            PageSelectorButton(text: "Gym Occupancy", index: 3),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15,25,15,15),
+              child: Text("Lower Body Muscle Groups", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+            ),
+            ScrollableButtonRow(
+              names: lowerBodyMuscleGroups,
+              isExercise: false,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15,25,15,15),
+              child: Text("Favorite Exercises", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+            ),
+            ScrollableButtonRow(
+              names: appState.favoriteExercises.map((exercise) => exercise.name).toList(),
+              isExercise: true,
+            ),
           ],
         ),
       ),
@@ -213,12 +231,21 @@ class _SearchPageState extends State<SearchPage> {
 
 class SquareButton extends StatelessWidget {
   final String name;
+  final bool isExercise;
   final VoidCallback onPressed;
+  Widget image = Placeholder();
 
-  SquareButton({required this.name, required this.onPressed});
+  SquareButton({required this.name, required this.isExercise, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>(); // Listening to MyAppState
+
+    if (!isExercise) {
+      image = MuscleGroupImageContainer(muscleGroup: name);
+    } else {
+      image = ImageContainer(exercise: appState.favoriteExercises.firstWhere((exercise) => exercise.name == name));
+    }
     return GestureDetector(
       onTap: onPressed,
       child: Column(
@@ -231,13 +258,17 @@ class SquareButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-            child: MuscleGroupImageContainer(muscleGroup: name),
+            child: image,
             // child: ,
           ),
           SizedBox(height: 8),
-          Text(
-            name,
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).colorScheme.onBackground),
+          SizedBox(
+            width: 120,
+            child: Text(
+              name,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).colorScheme.onBackground),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -247,8 +278,9 @@ class SquareButton extends StatelessWidget {
 
 class ScrollableButtonRow extends StatelessWidget {
   final List<String> names;
+  final bool isExercise;
 
-  ScrollableButtonRow({required this.names});
+  ScrollableButtonRow({required this.names, required this.isExercise});
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +288,7 @@ class ScrollableButtonRow extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(width: 10), // Buffer space before the first button
           ...List.generate(
@@ -264,9 +297,14 @@ class ScrollableButtonRow extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: SquareButton(
                 name: names[index],
+                isExercise: isExercise,
                 onPressed: () {
                   // Handle button press
+                  if (!isExercise) { // Muscle group
                   appState.changePageToMuscleGroup(names[index]);
+                  } else { // Favorite Exercise
+                  appState.changePageToExercise(appState.favoriteExercises[index]);
+                  }
                 },
               ),
             ),

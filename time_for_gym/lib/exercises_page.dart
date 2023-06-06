@@ -31,21 +31,7 @@ class ExercisesPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          // Back(appState: appState, index: 1),
-
-          Column(
-            children: [
-              // Padding(
-              //   padding: const EdgeInsets.all(20),
-              //   child: Text(
-              //     "${appState.currentMuscleGroup} Exercises",
-              //     textAlign: TextAlign.center,
-              //     style: titleStyle,
-              //   ),
-              // ),
-              // SizedBox(
-              //   height: 20,
-              // ),
+              SizedBox(height: 20),
               if (exercises != null)
                 for (Exercise exercise in exercises)
                   ExerciseSelectorButton(exercise: exercise),
@@ -53,8 +39,6 @@ class ExercisesPage extends StatelessWidget {
             ],
           ),
           // ),
-        ],
-      ),
     );
   }
 }

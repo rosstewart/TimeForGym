@@ -9,6 +9,7 @@ class Exercise implements Comparable<Exercise> {
     this.waitMultiplier = -1,
     this.mainMuscleGroup = "",
     this.imageUrl = "",
+    this.starRating = 0
   });
 
   @override
@@ -26,9 +27,36 @@ class Exercise implements Comparable<Exercise> {
 
   final String name, description, musclesWorked, videoLink, mainMuscleGroup, imageUrl;
   final double waitMultiplier;
+  final double starRating;
 
   @override
   int compareTo(Exercise other) {
-    return name.compareTo(other.name); // Sort alphabetically
+    return other.starRating.compareTo(starRating); // Sort from highest to lowest rating
+  }
+
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    return Exercise(
+      name: json['name'] ?? "",
+      description: json['description'] ?? "",
+      musclesWorked: json['musclesWorked'] ?? "",
+      videoLink: json['videoLink'] ?? "",
+      waitMultiplier: json['waitMultiplier'] ?? -1,
+      mainMuscleGroup: json['mainMuscleGroup'] ?? "",
+      imageUrl: json['imageUrl'] ?? "",
+      starRating: json['rating0to10'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'description': description,
+      'musclesWorked': musclesWorked,
+      'videoLink': videoLink,
+      'waitMultiplier': waitMultiplier,
+      'mainMuscleGroup': mainMuscleGroup,
+      'imageUrl': imageUrl,
+      'rating0to10': starRating,
+    };
   }
 }

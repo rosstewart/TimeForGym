@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,31 +18,29 @@ class SplitPage extends StatelessWidget {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displaySmall!.copyWith(
+    final titleStyle = theme.textTheme.headlineSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
-    return ListView(
-      children: [
-        // BackFromSplitPage(appState: appState, index: 0),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            "Custom Workout Split",
-            textAlign: TextAlign.center,
-            style: titleStyle,
+    return Scaffold(
+      appBar: AppBar(
+        leadingWidth: 70,
+        title: Text(
+          "Custom Workout Split",
+          style: titleStyle,
+        ),
+        backgroundColor: theme.scaffoldBackgroundColor,
+      ),
+      body: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: appState.makeNewSplit
+                ? GymGoalAndDayOfWeekSelector()
+                : SplitCard(),
           ),
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(40),
-          child: appState.makeNewSplit
-                  ? GymGoalAndDayOfWeekSelector()
-                  : SplitCard(),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -136,11 +135,14 @@ class _GymGoalAndDayOfWeekSelectorState
     //   dialogBackgroundColor: Colors.black,
     // );
     final headingStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+      color: theme.colorScheme.onBackground,
       fontWeight: FontWeight.bold,
     );
     final textStyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+      color: theme.colorScheme.primary,
+    );
+    final whiteTextStyle = theme.textTheme.bodyLarge!.copyWith(
+      color: theme.colorScheme.onBackground,
     );
 
     return Column(
@@ -152,11 +154,19 @@ class _GymGoalAndDayOfWeekSelectorState
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
                       onPressed: () {
                         restorePreviousSplit(appState);
                       },
-                      icon: Icon(Icons.restore),
-                      label: Text("Restore Previous Split"))
+                      icon: Icon(
+                        Icons.restore,
+                        color: appState.onBackground,
+                      ),
+                      label: Text("Restore Previous Split", style: textStyle))
                 ],
               ),
               SizedBox(
@@ -186,16 +196,8 @@ class _GymGoalAndDayOfWeekSelectorState
         Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 2,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           child: DropdownButton<String>(
             value: selectedGymGoalOption,
@@ -204,21 +206,16 @@ class _GymGoalAndDayOfWeekSelectorState
                 selectedGymGoalOption = newValue;
               });
             },
-            style: TextStyle(
-              color: Colors.black,
-            ),
+            style: whiteTextStyle,
             underline: SizedBox(), // Remove default underline
+            dropdownColor: theme.colorScheme.primaryContainer,
             items: [
-              DropdownMenuItem<String>(
-                value: null,
-                child: Text('Select gym goal:'),
-              ),
               ...gymGoalOptions.map((gymGoalOption) {
                 return DropdownMenuItem<String>(
                   value: gymGoalOption,
                   child: Text(
                     gymGoalOption,
-                    style: textStyle,
+                    style: whiteTextStyle,
                   ),
                 );
               }).toList(),
@@ -229,30 +226,31 @@ class _GymGoalAndDayOfWeekSelectorState
           height: 30,
         ),
         Text(
-          "Select training days:",
+          "Select Days to Train:",
           style: headingStyle,
         ),
         SizedBox(height: 20),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 2,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           child: Column(
             children: dayOfWeekOptions.map((dayOfWeekOption) {
               return CheckboxListTile(
                 title: Text(
                   dayOfWeekOption,
-                  style: textStyle,
+                  style: whiteTextStyle,
+                ),
+                checkColor: theme.colorScheme.onBackground,
+                activeColor: theme.colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  side: BorderSide(
+                    color: theme.colorScheme
+                        .onBackground, // Set the desired border color
+                  ),
                 ),
                 value: selectedDayOfWeekOptions.contains(dayOfWeekOption),
                 onChanged: (value) {
@@ -282,35 +280,52 @@ class _GymGoalAndDayOfWeekSelectorState
         Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 2,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           // child: Theme(
           //   data: Theme.of(context).copyWith(
           //     dialogBackgroundColor: Colors.white,
           //   ),
           child: MultiSelectDialogField<String>(
-            buttonText: Text("Select none for a balanced split"),
+            buttonText: Text(
+              "Select none for a balanced split",
+              style: whiteTextStyle,
+            ),
+            buttonIcon: Icon(
+              Icons.keyboard_arrow_down,
+              color: Color.fromRGBO(80, 80, 80, 1),
+            ),
             items: muscleGroupOptions
                 .map((muscleGroupOption) => MultiSelectItem<String>(
                       muscleGroupOption,
                       muscleGroupOption,
                     ))
                 .toList(),
-            title: Text("Muscle Groups"), //, style: theme.textTheme.bodyLarge),
+            title: Text(
+              "Muscle Groups",
+              style: TextStyle(color: theme.colorScheme.onBackground),
+            ), //, style: theme.textTheme.bodyLarge),
             initialValue: selectedMuscleGroups,
-            // backgroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.background,
             // barrierColor: Colors.orange[50],
-            barrierColor: Color.fromRGBO(255, 243, 230, 0.8),
+            barrierColor: Color.fromRGBO(10, 10, 10, 0.8),
             searchable: true,
+            itemsTextStyle: whiteTextStyle,
+            searchTextStyle: whiteTextStyle,
+            searchHintStyle: whiteTextStyle,
+            selectedItemsTextStyle: whiteTextStyle,
+            selectedColor: theme.colorScheme.primary,
+            unselectedColor: theme.colorScheme.onBackground,
+            checkColor: theme.colorScheme.onBackground,
+            searchIcon: Icon(
+              Icons.search,
+              color: theme.colorScheme.primary,
+            ),
+            closeSearchIcon: Icon(
+              Icons.clear,
+              color: theme.colorScheme.primary,
+            ),
             // searchHint: "Search",
             onConfirm: (List<String> results) {
               setState(() {
@@ -330,10 +345,18 @@ class _GymGoalAndDayOfWeekSelectorState
           height: 30,
         ),
         ElevatedButton(
+            style: ButtonStyle(
+                backgroundColor:
+                    resolveColor(theme.colorScheme.primaryContainer),
+                surfaceTintColor:
+                    resolveColor(theme.colorScheme.primaryContainer)),
             onPressed: () {
               submitSplitOnPressed(appState);
             },
-            child: Text("Generate Split"))
+            child: Text(
+              "Generate Split",
+              style: textStyle,
+            ))
       ],
     );
   }
@@ -364,11 +387,11 @@ class SplitCard extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headingStyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.secondary,
-      fontWeight: FontWeight.bold,
+      color: theme.colorScheme.onBackground,
+      // fontWeight: FontWeight.bold,
     );
     final textStyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+      color: theme.colorScheme.primary,
     );
 
     return Column(
@@ -378,19 +401,41 @@ class SplitCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             ElevatedButton.icon(
-              icon: Icon(Icons.keyboard_arrow_up),
+              style: ButtonStyle(
+                  backgroundColor:
+                      resolveColor(theme.colorScheme.primaryContainer),
+                  surfaceTintColor:
+                      resolveColor(theme.colorScheme.primaryContainer)),
+              icon: Icon(
+                Icons.keyboard_arrow_up,
+                color: theme.colorScheme.primary,
+              ),
               onPressed: () {
                 appState.shiftSplit(-1);
               },
-              label: Text("Shift Up"),
+              label: Text(
+                "Shift Up",
+                style: headingStyle,
+              ),
             ),
             Spacer(),
             ElevatedButton.icon(
+              style: ButtonStyle(
+                  backgroundColor:
+                      resolveColor(theme.colorScheme.primaryContainer),
+                  surfaceTintColor:
+                      resolveColor(theme.colorScheme.primaryContainer)),
               onPressed: () {
                 regenerateSplit(appState);
               },
-              icon: Icon(Icons.autorenew),
-              label: Text("Make a New Split"),
+              icon: Icon(
+                Icons.autorenew,
+                color: theme.colorScheme.primary,
+              ),
+              label: Text(
+                "Make a New Split",
+                style: headingStyle,
+              ),
             ),
           ],
         ),
@@ -398,12 +443,23 @@ class SplitCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             ElevatedButton.icon(
-              icon: Icon(Icons.keyboard_arrow_down),
-                  onPressed: () {
-                    appState.shiftSplit(1);
-                  },
-                  label: Text("Shift Down"),
-                ),
+              style: ButtonStyle(
+                  backgroundColor:
+                      resolveColor(theme.colorScheme.primaryContainer),
+                  surfaceTintColor:
+                      resolveColor(theme.colorScheme.primaryContainer)),
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: () {
+                appState.shiftSplit(1);
+              },
+              label: Text(
+                "Shift Down",
+                style: headingStyle,
+              ),
+            ),
           ],
         ),
         SizedBox(
@@ -413,9 +469,13 @@ class SplitCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(
-              width: 400,
               height: 70,
               child: ElevatedButton(
+                style: ButtonStyle(
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
                 onPressed: () {
                   viewDayOfWeek(appState, i);
                 },
@@ -426,7 +486,9 @@ class SplitCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           '${daysOfWeek[i]}:',
-                          style: headingStyle,
+                          style: headingStyle.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.left,
                         ),
                       ),

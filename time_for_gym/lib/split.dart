@@ -25,7 +25,7 @@ class TrainingDay {
   }
 
   void addLegs() {
-    muscleGroups.addAll(["Quads", "Glutes", "Hamstrings", "Calves"]);
+    muscleGroups.addAll(["Glutes", "Quads", "Hamstrings", "Calves"]);
     splitDay = "Legs";
   }
 

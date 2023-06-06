@@ -15,7 +15,7 @@ class GymCrowdPage extends StatelessWidget {
 
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.headlineSmall!.copyWith(
-      color: appState.onBackground,
+      color: theme.colorScheme.onBackground,
     );
 
     return Scaffold(
@@ -100,110 +100,99 @@ class _OccupancyFormState extends State<OccupancyForm> {
 
     if (!appState.hasSubmittedData) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-        child: Card(
-          color: theme.colorScheme.surface,
-          elevation: 10, // Shadow
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "At the gym? Help us collect data:",
-                    style: headingStyle,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: TextFormField(
-                      style: TextStyle(color: theme.colorScheme.onPrimary),
-                      textAlign: TextAlign.center,
-                      
-                      decoration: InputDecoration(
-                        errorStyle: TextStyle(color: theme.colorScheme.onPrimary),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                              color: theme.colorScheme.onPrimary), // Color when focused
-                        ),
-                        errorBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                              color: theme.colorScheme.secondary), // Color when there's an error
-                        ),
-                        labelText: 'Perceived percent occupancy (e.g: 50%)',
-                        labelStyle: theme.textTheme.bodyMedium!
-                            .copyWith(color: theme.colorScheme.onPrimary),
-                        // floatingLabelAlignment: FloatingLabelAlignment.center,
-                      ),
-                      validator: (value) {
-                        if (value!.contains('%')) {
-                          value = value.replaceAll('%', '');
-                        }
-                        if (value.isEmpty) {
-                          return 'Please enter the current occupancy';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a number';
-                        }
-                        if (double.parse(value) < 1 ||
-                            double.parse(value) > 100) {
-                          // Greater than 200% occupancy
-                          return 'Please enter a number between 1 and 100';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        if (value!.contains('%')) {
-                          value = value.replaceAll('%', '');
-                        }
-                        _occupancy = value;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 10.0),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                        backgroundColor:
-                            resolveColor(theme.colorScheme.onPrimary)),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-
-                        // Save the occupancy data to the database
-                        if (_occupancy.contains('%')) {
-                          // Is a percent
-                          _occupancy.replaceAll('%', '');
-                          appState.submitOccupancyDataToFirebase(
-                              ((double.parse(_occupancy) / 100) * 200).toInt());
-                        } else {
-                          // Is an occupancy number
-                          appState.submitOccupancyDataToFirebase(
-                              double.parse(_occupancy).toInt());
-                        }
-                      }
-                    },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: theme.colorScheme.secondary),
-                    ),
-                  ),
-                ],
+        padding: const EdgeInsets.fromLTRB(40, 20, 40, 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "At the gym? Help us collect data:",
+                style: headingStyle,
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: TextFormField(
+                  style: TextStyle(color: theme.colorScheme.onPrimary),
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    errorStyle: TextStyle(color: theme.colorScheme.onPrimary),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                          color: theme
+                              .colorScheme.onPrimary), // Color when focused
+                    ),
+                    errorBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                          color: theme.colorScheme
+                              .secondary), // Color when there's an error
+                    ),
+                    labelText: 'Perceived percent occupancy (e.g: 50%)',
+                    labelStyle: theme.textTheme.bodyMedium!
+                        .copyWith(color: theme.colorScheme.onBackground),
+                    // floatingLabelAlignment: FloatingLabelAlignment.center,
+                  ),
+                  validator: (value) {
+                    if (value!.contains('%')) {
+                      value = value.replaceAll('%', '');
+                    }
+                    if (value.isEmpty) {
+                      return 'Please enter the current occupancy';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Please enter a number';
+                    }
+                    if (double.parse(value) < 1 || double.parse(value) > 100) {
+                      // Greater than 200% occupancy
+                      return 'Please enter a number between 1 and 100';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    if (value!.contains('%')) {
+                      value = value.replaceAll('%', '');
+                    }
+                    _occupancy = value;
+                  },
+                ),
+              ),
+              SizedBox(height: 10.0),
+              ElevatedButton(
+                style: ButtonStyle(
+                    backgroundColor: resolveColor(theme.colorScheme.primaryContainer), surfaceTintColor: resolveColor(theme.colorScheme.primaryContainer)),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+
+                    // Save the occupancy data to the database
+                    if (_occupancy.contains('%')) {
+                      // Is a percent
+                      _occupancy.replaceAll('%', '');
+                      appState.submitOccupancyDataToFirebase(
+                          ((double.parse(_occupancy) / 100) * 200).toInt());
+                    } else {
+                      // Is an occupancy number
+                      appState.submitOccupancyDataToFirebase(
+                          double.parse(_occupancy).toInt());
+                    }
+                  }
+                },
+                child: Text(
+                  'Submit',
+                  style: TextStyle(color: theme.colorScheme.primary),
+                ),
+              ),
+            ],
           ),
         ),
       );
     } else {
-      return Card(
-        color: theme.colorScheme.surface,
-        elevation: 10, // Shadow
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            "Thanks for submitting!",
-            style: headingStyle,
-          ),
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          "Thanks for submitting!",
+          textAlign: TextAlign.center,
+          style: headingStyle,
         ),
       );
     }

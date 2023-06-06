@@ -68,23 +68,52 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
       },
     );
 
+    ThemeData theme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSwatch(
+        primarySwatch: primarySwatch,
+        primaryColorDark: onBackground,
+        accentColor: secondaryColor,
+        // cardColor: Color.fromRGBO(20, 20, 20, 1),
+        backgroundColor: Color.fromRGBO(20, 20, 20, 1),
+      ),
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
+      dialogBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
+      dialogTheme: DialogTheme(
+          surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
+          backgroundColor: Color.fromRGBO(20, 20, 20, 1)),
+    );
+
+    // Create a new theme based on the original theme with the updated onBackground color
+    theme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onBackground:
+            Color.fromRGBO(235, 235, 235, 1), // Replace with your desired color
+        onPrimary: Color.fromRGBO(235, 235, 235, 1),
+        tertiary: Color.fromRGBO(17, 75, 95, 1),
+        primaryContainer: Color.fromRGBO(30, 30, 30, 1),
+      ),
+    );
+
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Time for Gym',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSwatch(
-            primarySwatch: primarySwatch,
-            primaryColorDark: onBackground,
-            accentColor: secondaryColor,
-            // cardColor: Color.fromRGBO(69, 105, 144, 1),
-            // cardColor: Color.fromRGBO(20, 20, 20, 1),
-            backgroundColor: Color.fromRGBO(20, 20, 20, 1),
-          ),
-          brightness: Brightness.light,
-          scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
-        ),
+        // theme: ThemeData(
+        //   useMaterial3: true,
+        //   colorScheme: ColorScheme.fromSwatch(
+        //     primarySwatch: primarySwatch,
+        //     primaryColorDark: onBackground,
+        //     accentColor: secondaryColor,
+        //     // cardColor: Color.fromRGBO(69, 105, 144, 1),
+        //     // cardColor: Color.fromRGBO(20, 20, 20, 1),
+        //     backgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        //   ),
+        //   brightness: Brightness.light,
+        //   scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        // ),
+        theme: theme,
         home: MyHomePage(),
       ),
     );
@@ -236,7 +265,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool splitDayEditMode = false;
   var editModeTempSplit;
   var editModeTempExerciseIndices;
-
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
 
@@ -407,6 +435,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             videoLink: attributes[3],
             waitMultiplier: double.parse(attributes[4]),
             mainMuscleGroup: muscleGroup,
+            starRating: double.parse(attributes[5]),
             // Temporarily all image must be gifs and images have same name as exercise name
             imageUrl:
                 "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif");
@@ -427,6 +456,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     newMap.putIfAbsent(muscleGroup, () => exercises);
 
     print("Muscle group map: $newMap");
+
+    // print(jsonEncode(newMap));
+    // File file = File("/Users/rossaroni/Desktop/MuscleGroupMap.json");
+    // file.writeAsStringSync(jsonEncode(newMap));
+    // print('JSON data written to file: MuscleGroupMap.json');
 
     return newMap;
   }
@@ -652,10 +686,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  // Depr
   void changePageToMuscleGroup(String muscleGroupName) {
     pageIndex = 4;
     currentMuscleGroup = muscleGroupName;
     fromFavorites = false;
+    fromSplitDayPage = false;
     notifyListeners();
   }
 
@@ -746,10 +782,10 @@ class _MyHomePageState extends State<MyHomePage> {
         _bottomNavigationIndex = 0; // Update navigation bar
         page = HomePage();
         break;
-      case 1:
+      case 1: // Deprecated
         page = MuscleGroupsPage();
         break;
-      case 2:
+      case 2: // Deprecated
         appState.fromFavorites = true;
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = false;
@@ -759,6 +795,9 @@ class _MyHomePageState extends State<MyHomePage> {
         page = GymCrowdPage(); // Gym crowd page
         break;
       case 4:
+        appState.fromFavorites = false;
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
         page = ExercisesPage();
         break;
       case 5:
@@ -871,17 +910,19 @@ class PageSelectorButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.index,
+    required this.icon,
   });
 
   final String text;
   final int index;
+  final Icon icon;
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.onPrimary,
+    final style = theme.textTheme.bodyLarge!.copyWith(
+      color: theme.colorScheme.onBackground,
     );
 
     void togglePressed() {
@@ -890,23 +931,20 @@ class PageSelectorButton extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
-      child: ElevatedButton(
+      child: ElevatedButton.icon(
         style: ButtonStyle(
-          backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
+          backgroundColor: MaterialStateProperty.all<Color>(
+              theme.colorScheme.primaryContainer),
+          surfaceTintColor: MaterialStateProperty.all<Color>(
+              theme.colorScheme.primaryContainer),
           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
         onPressed: togglePressed,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-          child: Center(
-            child: Text(
-              text,
-              style: style,
-              textAlign: TextAlign.center,
-            ),
-          ),
+        icon: icon,
+        label: Text(
+          text,
+          style: style,
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -1029,35 +1067,59 @@ class ExerciseSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.titleLarge!.copyWith(
+    final style = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
     void togglePressed() {
+      // Coming from individual muscle group page
+      appState.fromSearchPage = false;
+      appState.fromFavorites = false;
+      appState.fromSplitDayPage = false;
       appState.changePageToExercise(exercise);
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
-      child: ElevatedButton(
-        style: ButtonStyle(
-          backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
-          // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-        ),
+      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+      child: TextButton(
         onPressed: togglePressed,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-          child: Center(
-            child: Text(
-              exercise.name,
-              style: style,
-              textAlign: TextAlign.center,
+        child: Row(children: [
+          Container(
+            height: 80,
+            width: 80,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: theme.colorScheme.onBackground),
+            child: Padding(
+              padding: const EdgeInsets.all(1.0),
+              child: ImageContainer(exercise: exercise),
             ),
           ),
-        ),
+          SizedBox(width: 25),
+          Text(
+            exercise.name,
+            style: style,
+          ),
+        ]),
       ),
+      //  ElevatedButton(
+      //   style: ButtonStyle(
+      //     backgroundColor:
+      //         MaterialStateProperty.all<Color>(theme.colorScheme.primary),
+      //     // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+      //   ),
+      //   onPressed: togglePressed,
+      //   child: Padding(
+      //     padding: const EdgeInsets.all(20),
+      //     child: Center(
+      //       child: Text(
+      //         exercise.name,
+      //         style: style,
+      //         textAlign: TextAlign.center,
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
   }
 }
@@ -1116,13 +1178,15 @@ class ExerciseCard extends StatelessWidget {
       required this.description,
       required this.musclesWorked,
       required this.expectedWaitTime,
-      required this.imageUrl});
+      required this.imageUrl,
+      required this.averageRating});
 
   final String name;
   final String description;
   final String musclesWorked;
   final String expectedWaitTime;
   final String imageUrl;
+  final double averageRating;
 
   @override
   Widget build(BuildContext context) {
@@ -1132,9 +1196,9 @@ class ExerciseCard extends StatelessWidget {
     // final titleStyle = theme.textTheme.displaySmall!.copyWith(
     //   color: theme.colorScheme.secondary,
     // );
-    final headingStyle = theme.textTheme.titleMedium!.copyWith(
+    final headingStyle = theme.textTheme.titleLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
-      fontWeight: FontWeight.bold,
+      // fontWeight: FontWeight.bold,
     );
     final textStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -1142,72 +1206,81 @@ class ExerciseCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-      child: Card(
-        color: theme.colorScheme.surface,
-        elevation: 10, // Shadow
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            // mainAxisAlignment: MainAxisAlignment.spaceEvenly
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Text(name,style: titleStyle),
-              // Image.asset('assets/images/Barbell Bench Press.gif'),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Instructions:  ',
-                      style: headingStyle,
-                    ),
-                    TextSpan(
-                      text: description,
-                      style: textStyle,
-                    ),
-                  ],
+      // child: Card(
+      //   color: theme.colorScheme.surface,
+      //   elevation: 10, // Shadow
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          // mainAxisAlignment: MainAxisAlignment.spaceEvenly
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Instructions',
+              style: headingStyle,
+            ),
+            SizedBox(height: 5),
+            Text(
+              description,
+              style: textStyle,
+            ),
+            // Text(name,style: titleStyle),
+            // Image.asset('assets/images/Barbell Bench Press.gif'),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              'Muscles Worked',
+              style: headingStyle,
+            ),
+            SizedBox(height: 5),
+            Text(
+              musclesWorked,
+              style: textStyle,
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              'Expected Wait Time',
+              style: headingStyle,
+            ),
+            SizedBox(height: 5),
+            Text(
+              '$expectedWaitTime Minutes',
+              style: textStyle,
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              'Average Star Rating',
+              style: headingStyle,
+            ),
+            SizedBox(height: 5),
+            Row(
+              children: [
+                Text(
+                  '$averageRating',
+                  style: textStyle,
                 ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Muscles worked:  ',
-                      style: headingStyle,
-                    ),
-                    TextSpan(
-                      text: musclesWorked,
-                      style: textStyle,
-                    ),
-                  ],
+                SizedBox(
+                  width: 10,
                 ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Expected wait time:  ',
-                      style: headingStyle,
-                    ),
-                    TextSpan(
-                      text: '$expectedWaitTime minutes',
-                      style: textStyle,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+                for (int i = 0; i < 5; i++)
+                  if (i + 1 <= averageRating)
+                    Icon(Icons.star, color: theme.colorScheme.onBackground)
+                  else if (i + 0.5 <= averageRating)
+                    Icon(Icons.star_half, color: theme.colorScheme.onBackground)
+                  else
+                    Icon(Icons.star_border,
+                        color: theme.colorScheme.onBackground)
+              ],
+            ),
+          ],
         ),
       ),
+      // ),
     );
   }
 }
@@ -1239,7 +1312,6 @@ class CustomCircularProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     return SizedBox(
       width: 60.0,
@@ -1247,7 +1319,7 @@ class CustomCircularProgressIndicator extends StatelessWidget {
       child: CircularProgressIndicator(
         strokeWidth: strokeWidth,
         value: percentCapacity,
-        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.secondary),
+        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
         backgroundColor: theme.colorScheme.onPrimary,
       ),
     );
@@ -1266,71 +1338,62 @@ class GymCrowdCard extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headingStyle = theme.textTheme.titleLarge!.copyWith(
+    final headingStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
       fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.titleLarge!.copyWith(
+    final textStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-      child: Card(
-        color: theme.colorScheme.surface,
-        elevation: 10, // Shadow
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            // mainAxisAlignment: MainAxisAlignment.spaceEvenly
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Max Capacity:  ',
-                      style: headingStyle,
-                    ),
-                    TextSpan(
-                      text: appState.maxCapacity.toString(),
-                      style: textStyle,
-                    ),
-                  ],
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(crossAxisAlignment: 
+              CrossAxisAlignment.start ,children: [
+              Text(
+                'Max Capacity',
+                style: headingStyle,
+              ),
+              SizedBox(height: 5),
+              Text(
+                appState.maxCapacity.toString(),
+                style: textStyle,
               ),
               SizedBox(
                 height: 30,
-              ),
-              chart,
-              SizedBox(
-                height: 10,
               ),
               Text(
-                "${(chart.percentCapacity * 100).toInt()} %",
-                style: TextStyle(color: theme.colorScheme.onPrimary),
+                'Current Capacity',
+                style: headingStyle,
               ),
-              SizedBox(
-                height: 30,
+              SizedBox(height: 5),
+              Text(
+                appState.gymCount.toString(),
+                style: textStyle,
               ),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Current capacity:  ',
-                      style: headingStyle,
-                    ),
-                    TextSpan(
-                      text: appState.gymCount.toString(),
-                      style: textStyle,
-                    ),
-                  ],
+            ]),
+            Spacer(),
+            Column(
+              children: [
+                chart,
+                SizedBox(
+                  height: 15,
                 ),
-              ),
-            ],
-          ),
+                Text(
+                  "${(chart.percentCapacity * 100).toInt()} %",
+                  style: TextStyle(color: theme.colorScheme.onPrimary),
+                ),
+              ],
+            ),
+            SizedBox(
+              width: 40,
+            ),
+          ],
         ),
       ),
     );
@@ -1442,24 +1505,21 @@ class ImageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
-
-        child: FutureBuilder(
-          future: checkAssetExists("exercise_pictures/${exercise.name}.gif"),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData && snapshot.data == true) {
-                return Image.asset('exercise_pictures/${exercise.name}.gif');
-              } else {
-                return Container();
-                // return Text('Failed to load image');
-              }
+      return FutureBuilder(
+        future: checkAssetExists("exercise_pictures/${exercise.name}.gif"),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData && snapshot.data == true) {
+              return Image.asset('exercise_pictures/${exercise.name}.gif');
             } else {
-              return CircularProgressIndicator();
+              print(('Failed to load $exercise image'));
+              return Container();
+              // return Text('Failed to load image');
             }
-          },
-        ),
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
 
         // child: FutureBuilder<void>(
         //   future: loadImageAsset(context),
@@ -1555,27 +1615,29 @@ class MuscleGroupImageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     try {
-        return FutureBuilder(
-          future: checkAssetExists("muscle_group_pictures/$muscleGroup.jpeg"),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData && snapshot.data == true) {
-                return Image.asset('muscle_group_pictures/$muscleGroup.jpeg', fit: BoxFit.cover,);
-              } else {
-                print('Failed to load image $muscleGroup');
-                return Container();
-              }
+      return FutureBuilder(
+        future: checkAssetExists("muscle_group_pictures/$muscleGroup.jpeg"),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData && snapshot.data == true) {
+              return Image.asset(
+                'muscle_group_pictures/$muscleGroup.jpeg',
+                fit: BoxFit.cover,
+              );
             } else {
-              return CircularProgressIndicator();
+              print('Failed to load image $muscleGroup');
+              return Container();
             }
-          },
-        );
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
+      );
     } catch (e) {
       print('Failed to load image: $e');
       return Text('Failed to load image');
     }
   }
-
 }
 
 Future<bool> checkAssetExists(String assetPath) async {

@@ -22,12 +22,6 @@ class IndividualExercisePage extends StatelessWidget {
     // Exercise exercise = Exercise(name: "", description: "", musclesWorked: "", videoLink: "", waitMultiplier: -1, mainMuscleGroup: "");
     Exercise exercise = appState.currentExercise;
 
-    if (appState.fromFavorites) {
-      backIndex = 2;
-      // exercises = appState.favoriteExercises;
-    } else {
-      backIndex = 4;
-    }
 
     // Below - DEPRECATED: Search of exercises
 
@@ -117,6 +111,8 @@ class IndividualExercisePage extends StatelessWidget {
       icon = Icons.favorite_border;
     }
 
+    backIndex = 4;
+
     if (appState.fromFavorites) {
       backIndex = 2;
     } else if (appState.fromSplitDayPage) {
@@ -152,7 +148,10 @@ class IndividualExercisePage extends StatelessWidget {
             //     textAlign: TextAlign.center,
             //   ),
             // ),
-            ImageContainer(exercise: exercise),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(50, 10, 50, 20),
+              child: ImageContainer(exercise: exercise),
+            ),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -167,6 +166,7 @@ class IndividualExercisePage extends StatelessWidget {
                                 appState.maxCapacity.toDouble()))
                         .toStringAsFixed(0), // Remove decimal place
                     imageUrl: exercise.imageUrl,
+                    averageRating: exercise.starRating,
                   ),
                   SizedBox(
                     height: 10,

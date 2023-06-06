@@ -28,20 +28,27 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: RichText(
-          text: TextSpan(
-            style: TextStyle(),
-            children: <TextSpan>[
-              TextSpan(
-                text: 'Gym',
-                style: titleStyle1,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: TextStyle(),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'Gym',
+                    style: titleStyle1,
+                  ),
+                  TextSpan(
+                    text: 'Brain',
+                    style: titleStyle2,
+                  ),
+                ],
               ),
-              TextSpan(
-                text: 'Brain',
-                style: titleStyle2,
-              ),
-            ],
-          ),
+            ),
+            SizedBox(width: 10),
+            Icon(Icons.self_improvement_sharp, color: theme.colorScheme.secondary,)
+          ],
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
@@ -84,10 +91,8 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                PageSelectorButton(text: "Exercise Library", index: 8),
-                PageSelectorButton(text: "Exercises by Muscle Group", index: 1),
-                PageSelectorButton(text: "Favorite Exercises", index: 2),
-                PageSelectorButton(text: "Gym Occupancy", index: 3),
+                PageSelectorButton(text: "Exercise Library", index: 8, icon: Icon(Icons.library_books),),
+                PageSelectorButton(text: "Gym Occupancy", index: 3, icon: Icon(Icons.people),),
               ],
             ),
           ),
