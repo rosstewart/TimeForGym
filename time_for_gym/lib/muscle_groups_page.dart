@@ -57,7 +57,7 @@ class MuscleGroupsPage extends StatelessWidget {
     // }
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displaySmall!.copyWith(
+    final titleStyle = theme.textTheme.headlineSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -75,24 +75,35 @@ class MuscleGroupsPage extends StatelessWidget {
     // return ListView(
     // shrinkWrap: true,
     // children: [
-    return ListView(
-      children: [
-        Back(appState: appState, index: 0),
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                "Muscle Groups",
-                style: titleStyle,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            for (String muscleGroupName in muscleGroupMap.keys)
-              MuscleGroupSelectorButton(muscleGroupName: muscleGroupName),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        leading: Back(appState: appState, index: 0),
+        leadingWidth: 70,
+        title: Text(
+          "Muscle Groups",
+          style: titleStyle,
         ),
-      ],
+        backgroundColor: theme.scaffoldBackgroundColor,
+      ),
+      body: ListView(
+        children: [
+          // Back(appState: appState, index: 0),
+          Column(
+            children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(20),
+              //   child: Text(
+              //     "Muscle Groups",
+              //     style: titleStyle,
+              //     textAlign: TextAlign.center,
+              //   ),
+              // ),
+              for (String muscleGroupName in muscleGroupMap.keys)
+                MuscleGroupSelectorButton(muscleGroupName: muscleGroupName),
+            ],
+          ),
+        ],
+      ),
     );
 
     // ],

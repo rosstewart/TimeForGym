@@ -23,7 +23,7 @@ class SplitPage extends StatelessWidget {
 
     return ListView(
       children: [
-        BackFromSplitPage(appState: appState, index: 0),
+        // BackFromSplitPage(appState: appState, index: 0),
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
@@ -36,17 +36,10 @@ class SplitPage extends StatelessWidget {
           height: 20,
         ),
         Padding(
-          padding: const EdgeInsets.all(20),
-          child: Card(
-            color: theme.colorScheme.surface,
-            elevation: 10,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: appState.makeNewSplit
+          padding: const EdgeInsets.all(40),
+          child: appState.makeNewSplit
                   ? GymGoalAndDayOfWeekSelector()
                   : SplitCard(),
-            ),
-          ),
         ),
       ],
     );

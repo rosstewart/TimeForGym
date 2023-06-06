@@ -81,7 +81,7 @@ class IndividualExercisePage extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displaySmall!.copyWith(
+    final titleStyle = theme.textTheme.titleLarge!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -121,25 +121,37 @@ class IndividualExercisePage extends StatelessWidget {
       backIndex = 2;
     } else if (appState.fromSplitDayPage) {
       backIndex = 7;
+    } else if (appState.fromSearchPage) {
+      backIndex = 8;
     }
 
-    return ListView(
+    return Scaffold(
+      appBar: AppBar(
+        leading: Back(appState: appState, index: backIndex),
+        leadingWidth: 70,
+        title: Text(
+          exercise.name,
+          style: titleStyle,
+        ),
+        backgroundColor: theme.scaffoldBackgroundColor,
+      ),
+      body:  ListView(
       children: [
-        Back(appState: appState, index: backIndex),
+        // Back(appState: appState, index: backIndex),
 
-        Column(
-          children: [
+        // Column(
+        //   children: [
             //
 
-            Padding(
-              padding: const EdgeInsets.all(20),
-              // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-              child: Text(
-                exercise.name,
-                style: titleStyle,
-                textAlign: TextAlign.center,
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(20),
+            //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
+            //   child: Text(
+            //     exercise.name,
+            //     style: titleStyle,
+            //     textAlign: TextAlign.center,
+            //   ),
+            // ),
             ImageContainer(exercise: exercise),
             Center(
               child: Column(
@@ -166,8 +178,9 @@ class IndividualExercisePage extends StatelessWidget {
                         onPressed: () {
                           appState.toggleFavorite(exercise);
                         },
-                        icon: Icon(icon),
-                        label: Text('Favorite exercise'),
+                        style: ButtonStyle(backgroundColor: resolveColor(theme.colorScheme.onPrimary)),
+                        icon: Icon(icon, color: appState.onBackground),
+                        label: Text('Favorite exercise', style: TextStyle(color: appState.onBackground)),
                       ),
                       SizedBox(
                         width: 15,
@@ -176,7 +189,8 @@ class IndividualExercisePage extends StatelessWidget {
                         onPressed: () {
                           launchUrl(Uri.parse(exercise.videoLink));
                         },
-                        child: Text('Tutorial video'),
+                        style: ButtonStyle(backgroundColor: resolveColor(theme.colorScheme.onPrimary)),
+                        child: Text('Tutorial video', style: TextStyle(color: appState.onBackground)),
                       ),
                     ],
                   )
@@ -194,12 +208,14 @@ class IndividualExercisePage extends StatelessWidget {
             // if (exercise != null)
             // ExerciseSelectorButton(exerciseName: exercise.name),
             // BigButton(text: muscleGroupName, index: 0),4
-          ],
-        ),
+        //   ],
+        // ),
         // ),
       ],
-    );
+    ),);
   }
+
+  
 }
 
 

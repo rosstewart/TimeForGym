@@ -15,6 +15,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/favorites_page.dart';
@@ -25,6 +26,7 @@ import 'package:time_for_gym/individual_exercise_page.dart';
 import 'package:time_for_gym/gym_crowd_page.dart';
 import 'package:time_for_gym/split_page.dart';
 import 'package:time_for_gym/split.dart';
+import 'package:time_for_gym/search_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,17 +38,52 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget with WidgetsBindingObserver {
-  const MyApp({super.key});
+  // const?
+  MyApp({super.key});
+
+  // final Color primaryColor = Color.fromRGBO(0, 159, 153, 1);
+
+  final int red = 0;
+  final int green = 159;
+  final int blue = 153;
+
+  final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
+  final Color secondaryColor = Color.fromRGBO(244, 91, 105, 1);
 
   @override
   Widget build(BuildContext context) {
+    final MaterialColor primarySwatch = MaterialColor(
+      Color.fromRGBO(2, 128, 144, 1).value,
+      <int, Color>{
+        50: Color.fromRGBO(red, green, blue, 0.1),
+        100: Color.fromRGBO(red, green, blue, 0.2),
+        200: Color.fromRGBO(red, green, blue, 0.3),
+        300: Color.fromRGBO(red, green, blue, 0.4),
+        400: Color.fromRGBO(red, green, blue, 0.5),
+        500: Color.fromRGBO(red, green, blue, 0.6),
+        600: Color.fromRGBO(red, green, blue, 0.7),
+        700: Color.fromRGBO(red, green, blue, 0.8),
+        800: Color.fromRGBO(red, green, blue, 0.9),
+        900: Color.fromRGBO(red, green, blue, 1.0),
+      },
+    );
+
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Time for Gym',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: primarySwatch,
+            primaryColorDark: onBackground,
+            accentColor: secondaryColor,
+            // cardColor: Color.fromRGBO(69, 105, 144, 1),
+            // cardColor: Color.fromRGBO(20, 20, 20, 1),
+            backgroundColor: Color.fromRGBO(20, 20, 20, 1),
+          ),
+          brightness: Brightness.light,
+          scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
         ),
         home: MyHomePage(),
       ),
@@ -59,6 +96,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   String _favoritesString = '';
   String _currentSplitString = '';
   String _splitDayExerciseIndicesString = '';
+
+  final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
   MyAppState() {
     initializeMuscleGroups();
@@ -184,6 +223,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   var fromFavorites = false;
   var fromSplitDayPage = false;
+  var fromSearchPage = false;
 
   final databaseRef = FirebaseDatabase.instance.ref();
 
@@ -196,6 +236,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool splitDayEditMode = false;
   var editModeTempSplit;
   var editModeTempExerciseIndices;
+
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
 
@@ -367,7 +408,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             waitMultiplier: double.parse(attributes[4]),
             mainMuscleGroup: muscleGroup,
             // Temporarily all image must be gifs and images have same name as exercise name
-            imageUrl: "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif");
+            imageUrl:
+                "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif");
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -398,7 +440,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
       return response.bodyBytes;
 
-
       // print("worked $imageUrl");
 
       // return Container(
@@ -412,7 +453,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     } else {
       print(imageUrl);
       // print('Failed to load image. Status code: ${response.statusCode}');
-      throw Exception('Failed to load image. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to load image. Status code: ${response.statusCode}');
       // return Container(); // Return an empty container if image loading fails
     }
   }
@@ -685,19 +727,32 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int _bottomNavigationIndex = 0;
+
+  final List<Widget> _bottomScreens = [
+    HomePage(),
+    MuscleGroupsPage(),
+    SplitPage(),
+  ];
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+
     Widget page;
     switch (appState.pageIndex) {
       case 0:
         appState.fromSplitDayPage = false;
+        _bottomNavigationIndex = 0; // Update navigation bar
         page = HomePage();
         break;
       case 1:
         page = MuscleGroupsPage();
         break;
       case 2:
+        appState.fromFavorites = true;
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
         page = FavoritesPage(); // Favorites page
         break;
       case 3:
@@ -713,12 +768,22 @@ class _MyHomePageState extends State<MyHomePage> {
       case 6:
         // Reversion changes are already stored in currentSplit
         appState.splitDayEditMode = false;
+        _bottomNavigationIndex = 2; // Update navigation bar
         page = SplitPage();
         break;
       case 7:
-        appState.fromSplitDayPage = true;
         appState.fromFavorites = false;
+        appState.fromSplitDayPage = true;
+        appState.fromSearchPage = false;
         page = SplitDayPage(appState.currentDayIndex);
+        break;
+      case 8:
+        // Search screen
+        appState.fromFavorites = false;
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = true;
+        _bottomNavigationIndex = 1; // Update navigation bar
+        page = SearchPage();
         break;
       default:
         throw UnimplementedError('no widget for ${appState.pageIndex}');
@@ -726,6 +791,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
+        // body: _bottomScreens[_currentIndex],
         body: Row(
           children: [
             // SafeArea(
@@ -751,9 +817,47 @@ class _MyHomePageState extends State<MyHomePage> {
             // ),
             Expanded(
               child: Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                // color: Theme.of(context).colorScheme.primaryContainer,
                 child: page,
               ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          unselectedItemColor: theme.colorScheme.onBackground,
+          selectedItemColor: theme.colorScheme.primary,
+          currentIndex: _bottomNavigationIndex,
+          onTap: (int index) {
+            setState(() {
+              if (appState.currentSplit != null && appState.makeNewSplit) {
+                // On the regenerate split page, if they already have a split put them back to view split option
+                appState.makeNewSplit = false;
+              }
+              if (index == 0) {
+                // Home
+                appState.changePage(0);
+              } else if (index == 1) {
+                // Search Page
+                appState.changePage(8);
+              } else if (index == 2) {
+                // Split Page
+                appState.changePage(6);
+              }
+              _bottomNavigationIndex = index;
+            });
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt),
+              label: 'Your Split',
             ),
           ],
         ),
@@ -776,8 +880,8 @@ class PageSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.headlineSmall!.copyWith(
-      color: theme.colorScheme.onSecondary,
+    final style = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
     );
 
     void togglePressed() {
@@ -789,7 +893,7 @@ class PageSelectorButton extends StatelessWidget {
       child: ElevatedButton(
         style: ButtonStyle(
           backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.secondary),
+              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
         onPressed: togglePressed,
@@ -828,19 +932,24 @@ class Back extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(width: 20),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: Color.fromRGBO(200, 200, 200, 1),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-            child: BackButton(
-              onPressed: togglePressed,
-            ),
-          ),
-        ),
+        SizedBox(width: 15),
+        IconButton(
+          color: Theme.of(context).colorScheme.onPrimary,
+          onPressed: togglePressed,
+          icon: Icon(Icons.arrow_back_ios_new),
+        )
+        // Container(
+        //   decoration: BoxDecoration(
+        //     borderRadius: BorderRadius.circular(20),
+        //     color: Color.fromRGBO(200, 200, 200, 1),
+        //   ),
+        //   child: Padding(
+        //     padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+        //     child: BackButton(
+        //       onPressed: togglePressed,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -873,8 +982,8 @@ class MuscleGroupSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.headlineSmall!.copyWith(
-      color: theme.colorScheme.onSecondary,
+    final style = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
     );
 
     void togglePressed() {
@@ -886,7 +995,7 @@ class MuscleGroupSelectorButton extends StatelessWidget {
       child: ElevatedButton(
         style: ButtonStyle(
           backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.secondary),
+              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
         onPressed: togglePressed,
@@ -920,8 +1029,8 @@ class ExerciseSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.headlineSmall!.copyWith(
-      color: theme.colorScheme.onSecondary,
+    final style = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
     );
 
     void togglePressed() {
@@ -933,7 +1042,7 @@ class ExerciseSelectorButton extends StatelessWidget {
       child: ElevatedButton(
         style: ButtonStyle(
           backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.secondary),
+              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
         onPressed: togglePressed,
@@ -967,8 +1076,8 @@ class FavoriteExerciseSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.headlineSmall!.copyWith(
-      color: theme.colorScheme.onSecondary,
+    final style = theme.textTheme.titleLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
     );
 
     void togglePressed() {
@@ -980,7 +1089,7 @@ class FavoriteExerciseSelectorButton extends StatelessWidget {
       child: ElevatedButton(
         style: ButtonStyle(
           backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.secondary),
+              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
         onPressed: togglePressed,
@@ -1020,15 +1129,15 @@ class ExerciseCard extends StatelessWidget {
     var appState = context.watch<MyAppState>();
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displaySmall!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
-    final headingStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+    // final titleStyle = theme.textTheme.displaySmall!.copyWith(
+    //   color: theme.colorScheme.secondary,
+    // );
+    final headingStyle = theme.textTheme.titleMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
       fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+    final textStyle = theme.textTheme.bodyLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
     );
 
     return Padding(
@@ -1138,7 +1247,7 @@ class CustomCircularProgressIndicator extends StatelessWidget {
       child: CircularProgressIndicator(
         strokeWidth: strokeWidth,
         value: percentCapacity,
-        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.secondary),
         backgroundColor: theme.colorScheme.onPrimary,
       ),
     );
@@ -1158,11 +1267,11 @@ class GymCrowdCard extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headingStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+      color: theme.colorScheme.onPrimary,
       fontWeight: FontWeight.bold,
     );
     final textStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.secondary,
+      color: theme.colorScheme.onPrimary,
     );
 
     return Padding(
@@ -1198,7 +1307,10 @@ class GymCrowdCard extends StatelessWidget {
               SizedBox(
                 height: 10,
               ),
-              Text("${(chart.percentCapacity * 100).toInt()} %"),
+              Text(
+                "${(chart.percentCapacity * 100).toInt()} %",
+                style: TextStyle(color: theme.colorScheme.onPrimary),
+              ),
               SizedBox(
                 height: 30,
               ),
@@ -1318,52 +1430,208 @@ int binarySearchExerciseList(List<Exercise> array, String targetName) {
   return -1;
 }
 
-
 class ImageContainer extends StatelessWidget {
-  const ImageContainer({
+  ImageContainer({
     super.key,
     required this.exercise,
   });
 
   final Exercise exercise;
+  // bool isImageInitialized = false;
 
   @override
   Widget build(BuildContext context) {
     try {
       return Padding(
         padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
-        child: FutureBuilder<ImageProvider<Object>>(
-          future: _loadImage(exercise.imageUrl),
-          builder: (BuildContext context,
-              AsyncSnapshot<ImageProvider<Object>> snapshot) {
+
+        child: FutureBuilder(
+          future: checkAssetExists("exercise_pictures/${exercise.name}.gif"),
+          builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                print('Error loading image: ${snapshot.error}');
-                return Text('Failed to load image');
+              if (snapshot.hasData && snapshot.data == true) {
+                return Image.asset('exercise_pictures/${exercise.name}.gif');
+              } else {
+                return Container();
+                // return Text('Failed to load image');
               }
-              return Image(image: snapshot.data!);
             } else {
               return CircularProgressIndicator();
             }
           },
         ),
+
+        // child: FutureBuilder<void>(
+        //   future: loadImageAsset(context),
+        //   builder: (context, snapshot) {
+        //     if (snapshot.connectionState == ConnectionState.done) {
+        //       if (snapshot.hasData == false) {
+        //         return Text('Failed to load image');
+        //       } else {
+        //         return Image.asset('exercise_pictures/${exercise.name}.gif');
+        //       }
+        //     } else {
+        //       return CircularProgressIndicator();
+        //     }
+        //   },
+        // ),
+
+        // child: FutureBuilder(
+        //   future: _loadImage("assets/images/${exercise.name}.gif"),
+        //   builder: (BuildContext context,
+        //       AsyncSnapshot<ImageProvider<Object>> snapshot) {
+        //     if (snapshot.connectionState == ConnectionState.done) {
+        //       if (snapshot.hasError) {
+        //         print('Error loading image: ${snapshot.error}');
+        //         return Text('Failed to load image');
+        //       }
+        //       return Image(image: snapshot.data!);
+        //     } else {
+        //       return CircularProgressIndicator();
+        //     }
+        //   },),
+
+        // child: Image.asset("exercise_pictures/${exercise.name}.gif"),
       );
+      // return Padding(
+      //   padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
+      //   child: FutureBuilder<ImageProvider<Object>>(
+      //     future: _loadImage(exercise.imageUrl),
+      //     builder: (BuildContext context,
+      //         AsyncSnapshot<ImageProvider<Object>> snapshot) {
+      //       if (snapshot.connectionState == ConnectionState.done) {
+      //         if (snapshot.hasError) {
+      //           print('Error loading image: ${snapshot.error}');
+      //           return Text('Failed to load image');
+      //         }
+      //         image = Image(image: snapshot.data!);
+      //         isImageInitialized = true;
+      //         return image;
+      //       } else {
+      //         return CircularProgressIndicator();
+      //       }
+      //     },
+      //   ),
+      // );
     } catch (e) {
       print('Failed to load image: $e');
       return Text('Failed to load image');
     }
   }
 
-  Future<ImageProvider<Object>> _loadImage(String imageUrl) async {
-    final completer = Completer<ImageProvider<Object>>();
-    final response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode == 200) {
-      final imageProvider = MemoryImage(response.bodyBytes);
-      completer.complete(imageProvider);
-    } else {
-      completer.completeError(
-          'Failed to load image. Status code: ${response.statusCode}');
+  // Future<bool> loadImageAsset(BuildContext context) async {
+  //   try {
+  //     await precacheImage(
+  //         AssetImage('exercise_pictures/${exercise.name}.gif'), context);
+  //     return true; // Image loaded successfully
+  //   } catch (error) {
+  //     return false; // Asset not found or error occurred
+  //   }
+  // }
+
+  // Future<ImageProvider<Object>> _loadImage(String imageUrl) async {
+  //   final completer = Completer<ImageProvider<Object>>();
+  //   final response = await http.get(Uri.parse(imageUrl));
+  //   if (response.statusCode == 200) {
+  //     final imageProvider = MemoryImage(response.bodyBytes);
+  //     completer.complete(imageProvider);
+  //   } else {
+  //     completer.completeError(
+  //         'Failed to load image. Status code: ${response.statusCode}');
+  //   }
+  //   return completer.future;
+  // }
+}
+
+class MuscleGroupImageContainer extends StatelessWidget {
+  MuscleGroupImageContainer({
+    super.key,
+    required this.muscleGroup,
+  });
+
+  final String muscleGroup;
+  // bool isImageInitialized = false;
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+        return FutureBuilder(
+          future: checkAssetExists("muscle_group_pictures/$muscleGroup.jpeg"),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData && snapshot.data == true) {
+                return Image.asset('muscle_group_pictures/$muscleGroup.jpeg', fit: BoxFit.cover,);
+              } else {
+                print('Failed to load image $muscleGroup');
+                return Container();
+              }
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
+        );
+    } catch (e) {
+      print('Failed to load image: $e');
+      return Text('Failed to load image');
     }
-    return completer.future;
+  }
+
+}
+
+Future<bool> checkAssetExists(String assetPath) async {
+  try {
+    await rootBundle.load(assetPath);
+    return true; // Asset file exists
+  } catch (error) {
+    return false; // Asset file not found or error occurred
+  }
+}
+
+MaterialStateColor resolveColor(Color color) {
+  return MaterialStateColor.resolveWith((Set<MaterialState> states) {
+    if (states.contains(MaterialState.pressed)) {
+      // Color when the button is pressed
+      return color.withOpacity(0.8);
+    } else if (states.contains(MaterialState.hovered)) {
+      // Color when the button is hovered
+      return color.withOpacity(0.6);
+    } else {
+      // Default color
+      return color;
+    }
+  });
+}
+
+class BottomNavigation extends StatefulWidget {
+  @override
+  _BottomNavigationState createState() => _BottomNavigationState();
+}
+
+class _BottomNavigationState extends State<BottomNavigation> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bottom Navigation'),
+      ),
+    );
+  }
+}
+
+class SearchScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text('Search Screen'),
+    );
+  }
+}
+
+class YourSplitScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text('Your Split Screen'),
+    );
   }
 }

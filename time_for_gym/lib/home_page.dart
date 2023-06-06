@@ -9,9 +9,14 @@ class HomePage extends StatelessWidget {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
     // var pair = appState.current;
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onBackground,
-
+    final titleStyle1 = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.primary,
+      fontFamily: 'Courier',
+    );
+    final titleStyle2 = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.secondary,
+      fontWeight: FontWeight.bold,
+      fontFamily: 'Courier',
     );
 
     // IconData icon;
@@ -21,76 +26,73 @@ class HomePage extends StatelessWidget {
     //   icon = Icons.favorite_border;
     // }
 
-    return Column(
-      children: [
-        SizedBox(
-          height: 50,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-          child: Text(
-            "Time for Gym",
-            style: titleStyle,
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(150, 20, 150, 70),
-          child: Image.asset('assets/images/um_logo.png'),
-        ),
-        // SizedBox(
-        //   height: 150,
-        // ),
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              PageSelectorButton(text: "Exercises by Muscle Group", index: 1),
-              SizedBox(
-                height: 15,
+    return Scaffold(
+      appBar: AppBar(
+        title: RichText(
+          text: TextSpan(
+            style: TextStyle(),
+            children: <TextSpan>[
+              TextSpan(
+                text: 'Gym',
+                style: titleStyle1,
               ),
-              PageSelectorButton(text: "Favorite Exercises", index: 2),
-              SizedBox(
-                height: 15,
+              TextSpan(
+                text: 'Brain',
+                style: titleStyle2,
               ),
-              PageSelectorButton(text: "Gym Occupancy", index: 3),
-              SizedBox(
-                height: 15,
-              ),
-              PageSelectorButton(text: "Custom Workout Split", index: 6),
-              SizedBox(height: 100,),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.copyright_outlined),
-                  SizedBox(width: 10,),
-                  Text("Ross Stewart",style: TextStyle(color: theme.colorScheme.onBackground),)
-                ],
-              )
-              // Row(
-              //   mainAxisSize: MainAxisSize.min,
-              //   children: [
-              //     ElevatedButton.icon(
-              //       onPressed: () {
-              //         appState.toggleFavorite();
-              //       },
-              //       icon: Icon(icon),
-              //       label: Text('Like'),
-              //     ),
-              //     SizedBox(width: 10),
-              //     ElevatedButton(
-              //       onPressed: () {
-              //         appState.getNext();
-              //       },
-              //       child: Text('Next'),
-              //     ),
-              //   ],
-              // ),
             ],
           ),
         ),
-      ],
+        backgroundColor: theme.scaffoldBackgroundColor,
+      ),
+      body: Column(
+        children: [
+          SizedBox(height: 10,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.copyright_outlined, color: theme.colorScheme.primary,),
+              SizedBox(
+                width: 10,
+              ),
+              Text(
+                "Ross Stewart",
+                style: TextStyle(color: theme.colorScheme.primary),
+              )
+            ],
+          ),
+          // SizedBox(
+          //   height: 50,
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.all(20),
+          //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
+          //   child: Text(
+          //     "Time for Gym",
+          //     style: titleStyle,
+          //     textAlign: TextAlign.center,
+          //   ),
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(150, 20, 150, 70),
+          //   child: Image.asset('assets/images/um_logo.png'),
+          // ),
+          SizedBox(
+            height: 100,
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                PageSelectorButton(text: "Exercise Library", index: 8),
+                PageSelectorButton(text: "Exercises by Muscle Group", index: 1),
+                PageSelectorButton(text: "Favorite Exercises", index: 2),
+                PageSelectorButton(text: "Gym Occupancy", index: 3),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
