@@ -557,8 +557,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
 
-      int index =
-          binarySearchExerciseList(muscleGroups[muscleGroupOfExercise]!, name);
+      // No binary search as exercises aren't sorted by name anymore
+      int index = muscleGroups[muscleGroupOfExercise]!.indexWhere((exercise) => exercise.name == name);
+          // binarySearchExerciseList(muscleGroups[muscleGroupOfExercise]!, name);
       if (index < 0) {
         print("ERROR - previous favorite exercise not found");
       } else {
