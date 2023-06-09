@@ -16,7 +16,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import 'package:time_for_gym/exercise.dart';
@@ -763,7 +763,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
-      deviceId = androidInfo.androidId;
+      deviceId = androidInfo.id;
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfoPlugin.iosInfo;
       deviceId = iosInfo.identifierForVendor;
