@@ -31,7 +31,8 @@ class SplitPage extends StatelessWidget {
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
-      body: ListView(
+      body: OuterScroll(
+        scrollMode: appState.splitWeekEditMode,
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
@@ -164,9 +165,11 @@ class _GymGoalAndDayOfWeekSelectorState
                       },
                       icon: Icon(
                         Icons.restore,
-                        color: appState.onBackground,
+                        color: theme.colorScheme.primary,
                       ),
-                      label: Text("Restore Previous Split", style: textStyle))
+                      label: Text("Restore Previous Split",
+                          style: textStyle.copyWith(
+                              color: theme.colorScheme.onBackground)))
                 ],
               ),
               SizedBox(
@@ -362,7 +365,12 @@ class _GymGoalAndDayOfWeekSelectorState
   }
 }
 
-class SplitCard extends StatelessWidget {
+class SplitCard extends StatefulWidget {
+  @override
+  State<SplitCard> createState() => _SplitCardState();
+}
+
+class _SplitCardState extends State<SplitCard> {
   final List<String> daysOfWeek = [
     "Monday",
     "Tuesday",
@@ -373,13 +381,16 @@ class SplitCard extends StatelessWidget {
     "Sunday"
   ];
 
-  void viewDayOfWeek(var appState, int dayIndex) {
-    appState.currentDayIndex = dayIndex;
-    appState.changePage(7);
-  }
-
   void regenerateSplit(var appState) {
     appState.setMakeNewSplit(true);
+  }
+
+  void cancelEditChanges(var appState) {
+    appState.toSplitWeekEditMode(false);
+  }
+
+  void saveEditChanges(var appState) {
+    appState.saveWeekEditChanges();
   }
 
   @override
@@ -394,118 +405,290 @@ class SplitCard extends StatelessWidget {
       color: theme.colorScheme.primary,
     );
 
+    Split split;
+    List<List<int>> exerciseIndices;
+    if (appState.splitWeekEditMode) {
+      split = appState.editModeTempSplit;
+      exerciseIndices = appState.editModeTempExerciseIndices;
+    } else {
+      split = appState.currentSplit;
+      exerciseIndices = appState.splitDayExerciseIndices;
+    }
+
+    List<Widget> dayOfWeekButtons = List.generate(
+      split.trainingDays.length,
+      (i) => DayOfWeekButton(
+          key: ValueKey(i), // Assign a unique key to each SplitMuscleGroupCard
+          theme: theme,
+          daysOfWeek: daysOfWeek,
+          i: i,
+          headingStyle: headingStyle,
+          split: split,
+          textStyle: textStyle,
+          appState: appState),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton.icon(
-              style: ButtonStyle(
-                  backgroundColor:
-                      resolveColor(theme.colorScheme.primaryContainer),
-                  surfaceTintColor:
-                      resolveColor(theme.colorScheme.primaryContainer)),
-              icon: Icon(
-                Icons.keyboard_arrow_up,
-                color: theme.colorScheme.primary,
+        if (appState.splitWeekEditMode)
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
+                      onPressed: () {
+                        cancelEditChanges(appState);
+                      },
+                      icon: Icon(
+                        Icons.cancel,
+                        color: theme.colorScheme.primary,
+                      ),
+                      label: Text("Cancel", style: headingStyle)),
+                  Spacer(),
+                  ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
+                      onPressed: () {
+                        saveEditChanges(appState);
+                      },
+                      icon: Icon(
+                        Icons.save_alt,
+                        color: theme.colorScheme.primary,
+                      ),
+                      label: Text("Save", style: headingStyle))
+                ],
               ),
-              onPressed: () {
-                appState.shiftSplit(-1);
-              },
-              label: Text(
-                "Shift Up",
-                style: headingStyle,
+              ElevatedButton.icon(
+                style: ButtonStyle(
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
+                icon: Icon(
+                  Icons.keyboard_arrow_up,
+                  color: theme.colorScheme.primary,
+                ),
+                onPressed: () {
+                  appState.shiftSplit(split, exerciseIndices, -1);
+                },
+                label: Text(
+                  "Shift Up",
+                  style: headingStyle,
+                ),
               ),
-            ),
-            Spacer(),
-            ElevatedButton.icon(
-              style: ButtonStyle(
-                  backgroundColor:
-                      resolveColor(theme.colorScheme.primaryContainer),
-                  surfaceTintColor:
-                      resolveColor(theme.colorScheme.primaryContainer)),
-              onPressed: () {
-                regenerateSplit(appState);
-              },
-              icon: Icon(
-                Icons.autorenew,
-                color: theme.colorScheme.primary,
+              ElevatedButton.icon(
+                style: ButtonStyle(
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: theme.colorScheme.primary,
+                ),
+                onPressed: () {
+                  appState.shiftSplit(split, exerciseIndices, 1);
+                },
+                label: Text(
+                  "Shift Down",
+                  style: headingStyle,
+                ),
               ),
-              label: Text(
-                "Make a New Split",
-                style: headingStyle,
+            ],
+          ),
+        if (!appState.splitWeekEditMode)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
+                style: ButtonStyle(
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
+                icon: Icon(
+                  Icons.edit,
+                  color: theme.colorScheme.primary,
+                ),
+                onPressed: () {
+                  appState.toSplitWeekEditMode(true);
+                },
+                label: Text(
+                  "Edit Split",
+                  style: headingStyle,
+                ),
               ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            ElevatedButton.icon(
-              style: ButtonStyle(
-                  backgroundColor:
-                      resolveColor(theme.colorScheme.primaryContainer),
-                  surfaceTintColor:
-                      resolveColor(theme.colorScheme.primaryContainer)),
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                color: theme.colorScheme.primary,
-              ),
-              onPressed: () {
-                appState.shiftSplit(1);
-              },
-              label: Text(
-                "Shift Down",
-                style: headingStyle,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        for (int i = 0; i < 7; i++)
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              height: 70,
-              child: ElevatedButton(
+              Spacer(),
+              ElevatedButton.icon(
                 style: ButtonStyle(
                     backgroundColor:
                         resolveColor(theme.colorScheme.primaryContainer),
                     surfaceTintColor:
                         resolveColor(theme.colorScheme.primaryContainer)),
                 onPressed: () {
-                  viewDayOfWeek(appState, i);
+                  regenerateSplit(appState);
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${daysOfWeek[i]}:',
-                          style: headingStyle.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.left,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          appState.currentSplit.trainingDays[i].toString(),
-                          style: textStyle,
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ],
-                  ),
+                icon: Icon(
+                  Icons.autorenew,
+                  color: theme.colorScheme.primary,
+                ),
+                label: Text(
+                  "Make a New Split",
+                  style: headingStyle,
                 ),
               ),
-            ),
+            ],
           ),
+        SizedBox(
+          height: 20,
+        ),
+
+        if (!appState.splitWeekEditMode)
+        for (Widget dayOfWeekButton in dayOfWeekButtons)
+          dayOfWeekButton,
+
+        if (appState.splitWeekEditMode)
+        SizedBox(
+          height: 521,
+          child: ReorderableListView(
+            children: dayOfWeekButtons,
+            onReorder: (oldIndex, newIndex) {
+              print(
+                  "Training days before reorder: ${split.trainingDays}");
+              print(
+                  "Exercise indices before reorder: $exerciseIndices");
+              try {
+                setState(() {
+                  // if (newIndex >= dayOfWeekButtons.length || newIndex < 0) {
+                  //   // Avoid out of bounds error
+                  //   return;
+                  // }
+                  if (newIndex > oldIndex) {
+                    newIndex -= 1; // Adjust the index when moving an item down
+                  }
+                  final card = dayOfWeekButtons.removeAt(oldIndex);
+                  final TrainingDay trainingDay = split.trainingDays.removeAt(oldIndex);
+                  final List<int> exerciseIndicesForTheDay = exerciseIndices.removeAt(oldIndex);
+                  dayOfWeekButtons.insert(newIndex, card);
+                  split.trainingDays.insert(newIndex, trainingDay);
+                  exerciseIndices.insert(newIndex,exerciseIndicesForTheDay);
+
+                  print(
+                      "Trainings days after reorder: ${split.trainingDays}");
+                  print(
+                      "Exercise indices after reorder: $exerciseIndices");
+                });
+              } catch (e) {
+                print("Drag and drop error - $e");
+              }
+            },
+          ),
+        ),
       ],
     );
+  }
+}
+
+class DayOfWeekButton extends StatelessWidget {
+  const DayOfWeekButton({
+    super.key,
+    required this.theme,
+    required this.daysOfWeek,
+    required this.i,
+    required this.headingStyle,
+    required this.split,
+    required this.textStyle,
+    required this.appState,
+  });
+
+  final ThemeData theme;
+  final List<String> daysOfWeek;
+  final int i;
+  final TextStyle headingStyle;
+  final Split split;
+  final TextStyle textStyle;
+  final MyAppState appState;
+
+  void viewDayOfWeek(MyAppState appState, int dayIndex) {
+    appState.currentDayIndex = dayIndex;
+    appState.changePage(7);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        height: 70,
+        child: ElevatedButton(
+          style: ButtonStyle(
+              backgroundColor: resolveColor(theme.colorScheme.primaryContainer),
+              surfaceTintColor:
+                  resolveColor(theme.colorScheme.primaryContainer)),
+          onPressed: () {
+            viewDayOfWeek(appState, i);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${daysOfWeek[i]}:',
+                  style: headingStyle.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                Spacer(),
+                Expanded(
+                  child: Text(
+                    split.trainingDays[i].toString(),
+                    style: textStyle,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                if (appState.splitWeekEditMode)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(30, 0, 0, 0),
+                    child: Icon(
+                      Icons.reorder,
+                      color: theme.colorScheme.onBackground,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class OuterScroll extends StatelessWidget {
+  final bool scrollMode;
+  final List<Widget> children;
+
+  const OuterScroll(
+      {super.key, required this.scrollMode, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    if (scrollMode) {
+      return Column(children: children);
+    } else {
+      return ListView(children: children);
+    }
   }
 }

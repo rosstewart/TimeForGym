@@ -10,6 +10,8 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  // bool isFocused = false;
+
   late TextEditingController searchController;
   late FocusNode focusNode;
   bool isSuggestionsOpen = false;
@@ -30,6 +32,11 @@ class _SearchPageState extends State<SearchPage> {
         });
       }
     });
+    //   widget.focusNode.addListener(() {
+    // setState(() {
+    //   isFocused = widget.focusNode.hasFocus;
+    // });
+// });
   }
 
   @override
@@ -75,8 +82,7 @@ class _SearchPageState extends State<SearchPage> {
 
     List<String> upperBodyMuscleGroups = [...muscleGroups];
     upperBodyMuscleGroups.removeRange(7, 11);
-    List<String> lowerBodyMuscleGroups = muscleGroups.getRange(7,11).toList();
-    
+    List<String> lowerBodyMuscleGroups = muscleGroups.getRange(7, 11).toList();
 
     // IconData icon;
     // if (appState.favorites.contains(pair)) {
@@ -103,11 +109,12 @@ class _SearchPageState extends State<SearchPage> {
                   // width: 300,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(40),
-                      color: theme.colorScheme.onBackground),
+                      color: theme.colorScheme.primaryContainer),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
                     child: TypeAheadField<String>(
                       textFieldConfiguration: TextFieldConfiguration(
+                        style: TextStyle(color: theme.colorScheme.onBackground),
                         controller: searchController,
                         focusNode: focusNode,
                         onChanged: (value) {
@@ -116,18 +123,27 @@ class _SearchPageState extends State<SearchPage> {
                           }
                         },
                         decoration: InputDecoration(
-                          icon: Icon(Icons.search),
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.clear),
-                            onPressed: () {
-                              searchController.clear(); // Clear the text field
-                              searchQuery =
-                                  ''; // Clear user input if they click search right away
-                            },
-                          ),
-                          labelText: 'Search for an Exercise',
-                          labelStyle: TextStyle(color: appState.onBackground),
-                        ),
+                            icon: Icon(
+                              Icons.search,
+                              color: theme.colorScheme.primary,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: theme.colorScheme.onBackground,
+                              ),
+                              onPressed: () {
+                                searchController
+                                    .clear(); // Clear the text field
+                                searchQuery =
+                                    ''; // Clear user input if they click search right away
+                              },
+                            ),
+                            labelText: 'Search for an Exercise',
+                            labelStyle: TextStyle(
+                                color: theme.colorScheme.onBackground),
+                            floatingLabelStyle:
+                                TextStyle(color: theme.colorScheme.primary)),
                       ),
                       suggestionsCallback: (pattern) {
                         // setState(() {
@@ -143,6 +159,7 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       itemBuilder: (context, suggestion) {
                         return ListTile(
+                          tileColor: theme.colorScheme.primaryContainer,
                           title: Row(
                             children: [
                               Expanded(
@@ -186,6 +203,7 @@ class _SearchPageState extends State<SearchPage> {
                     onPressed: () {
                       closeSuggestions();
                       FocusScope.of(context).requestFocus(FocusNode());
+                      // widget.focusNode.unfocus();
                     },
                     child: Text("Cancel", style: suggestionStyle)),
             ],
@@ -199,27 +217,44 @@ class _SearchPageState extends State<SearchPage> {
               height: 20,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(15,25,15,15),
-              child: Text("Upper Body Muscle Groups", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+              padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+              child: Text(
+                "Upper Body Muscle Groups",
+                style: theme.textTheme.titleLarge!
+                    .copyWith(color: theme.colorScheme.onBackground),
+                textAlign: TextAlign.left,
+              ),
             ),
             ScrollableButtonRow(
               names: upperBodyMuscleGroups,
               isExercise: false,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(15,25,15,15),
-              child: Text("Lower Body Muscle Groups", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+              padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+              child: Text(
+                "Lower Body Muscle Groups",
+                style: theme.textTheme.titleLarge!
+                    .copyWith(color: theme.colorScheme.onBackground),
+                textAlign: TextAlign.left,
+              ),
             ),
             ScrollableButtonRow(
               names: lowerBodyMuscleGroups,
               isExercise: false,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(15,25,15,15),
-              child: Text("Favorite Exercises", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onBackground), textAlign: TextAlign.left,),
+              padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+              child: Text(
+                "Favorite Exercises",
+                style: theme.textTheme.titleLarge!
+                    .copyWith(color: theme.colorScheme.onBackground),
+                textAlign: TextAlign.left,
+              ),
             ),
             ScrollableButtonRow(
-              names: appState.favoriteExercises.map((exercise) => exercise.name).toList(),
+              names: appState.favoriteExercises
+                  .map((exercise) => exercise.name)
+                  .toList(),
               isExercise: true,
             ),
           ],
@@ -235,7 +270,8 @@ class SquareButton extends StatelessWidget {
   final VoidCallback onPressed;
   Widget image = Placeholder();
 
-  SquareButton({required this.name, required this.isExercise, required this.onPressed});
+  SquareButton(
+      {required this.name, required this.isExercise, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +280,9 @@ class SquareButton extends StatelessWidget {
     if (!isExercise) {
       image = MuscleGroupImageContainer(muscleGroup: name);
     } else {
-      image = ImageContainer(exercise: appState.favoriteExercises.firstWhere((exercise) => exercise.name == name));
+      image = ImageContainer(
+          exercise: appState.favoriteExercises
+              .firstWhere((exercise) => exercise.name == name));
     }
     return GestureDetector(
       onTap: onPressed,
@@ -266,7 +304,10 @@ class SquareButton extends StatelessWidget {
             width: 120,
             child: Text(
               name,
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).colorScheme.onBackground),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge!
+                  .copyWith(color: Theme.of(context).colorScheme.onBackground),
               textAlign: TextAlign.center,
             ),
           ),
@@ -300,10 +341,13 @@ class ScrollableButtonRow extends StatelessWidget {
                 isExercise: isExercise,
                 onPressed: () {
                   // Handle button press
-                  if (!isExercise) { // Muscle group
-                  appState.changePageToMuscleGroup(names[index]);
-                  } else { // Favorite Exercise
-                  appState.changePageToExercise(appState.favoriteExercises[index]);
+                  if (!isExercise) {
+                    // Muscle group
+                    appState.changePageToMuscleGroup(names[index]);
+                  } else {
+                    // Favorite Exercise
+                    appState.changePageToExercise(
+                        appState.favoriteExercises[index]);
                   }
                 },
               ),

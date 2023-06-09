@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:typed_data';
-
 
 import 'dart:io';
 
@@ -21,7 +19,6 @@ class IndividualExercisePage extends StatelessWidget {
     // List<Exercise> exercises = appState.muscleGroups[appState.currentMuscleGroup]!;
     // Exercise exercise = Exercise(name: "", description: "", musclesWorked: "", videoLink: "", waitMultiplier: -1, mainMuscleGroup: "");
     Exercise exercise = appState.currentExercise;
-
 
     // Below - DEPRECATED: Search of exercises
 
@@ -131,91 +128,173 @@ class IndividualExercisePage extends StatelessWidget {
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
-      body:  ListView(
-      children: [
-        // Back(appState: appState, index: backIndex),
+      body: ListView(
+        children: [
+          // Back(appState: appState, index: backIndex),
 
-        // Column(
-        //   children: [
-            //
+          // Column(
+          //   children: [
+          //
 
-            // Padding(
-            //   padding: const EdgeInsets.all(20),
-            //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-            //   child: Text(
-            //     exercise.name,
-            //     style: titleStyle,
-            //     textAlign: TextAlign.center,
-            //   ),
-            // ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(50, 10, 50, 20),
-              child: ImageContainer(exercise: exercise),
+          // Padding(
+          //   padding: const EdgeInsets.all(20),
+          //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
+          //   child: Text(
+          //     exercise.name,
+          //     style: titleStyle,
+          //     textAlign: TextAlign.center,
+          //   ),
+          // ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(50, 10, 50, 20),
+            child: ImageContainer(exercise: exercise),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ExerciseCard(
+                  exercise: exercise,
+                  // name: exercise.name,
+                  // description: exercise.description,
+                  // mainMuscleGroup: exercise.mainMuscleGroup,
+                  // musclesWorked: exercise.musclesWorked,
+                  expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
+                          exercise.waitMultiplier *
+                          ((appState.gymCount as int).toDouble() /
+                              appState.maxCapacity.toDouble()))
+                      .toStringAsFixed(0),
+                ), // Remove decimal place
+                // imageUrl: exercise.imageUrl,
+                // averageRating: exercise.starRating,
+                // userRating: exercise.userRating),
+                SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
+                      onPressed: () {
+                        appState.toggleFavorite(exercise);
+                      },
+                      icon: Icon(icon, color: theme.colorScheme.primary),
+                      label: Text('Favorite exercise',
+                          style:
+                              TextStyle(color: theme.colorScheme.onBackground)),
+                    ),
+                    SizedBox(
+                      width: 15,
+                    ),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
+                      onPressed: () {
+                        launchUrl(Uri.parse(exercise.videoLink));
+                      },
+                      child: Text('Tutorial video',
+                          style:
+                              TextStyle(color: theme.colorScheme.onBackground)),
+                    ),
+                  ],
+                )
+              ],
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ExerciseCard(
-                    name: exercise.name,
-                    description: exercise.description,
-                    musclesWorked: exercise.musclesWorked,
-                    expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
-                            exercise.waitMultiplier *
-                            ((appState.gymCount as int).toDouble() /
-                                appState.maxCapacity.toDouble()))
-                        .toStringAsFixed(0), // Remove decimal place
-                    imageUrl: exercise.imageUrl,
-                    averageRating: exercise.starRating,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          appState.toggleFavorite(exercise);
-                        },
-                        style: ButtonStyle(backgroundColor: resolveColor(theme.colorScheme.onPrimary)),
-                        icon: Icon(icon, color: appState.onBackground),
-                        label: Text('Favorite exercise', style: TextStyle(color: appState.onBackground)),
-                      ),
-                      SizedBox(
-                        width: 15,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          launchUrl(Uri.parse(exercise.videoLink));
-                        },
-                        style: ButtonStyle(backgroundColor: resolveColor(theme.colorScheme.onPrimary)),
-                        child: Text('Tutorial video', style: TextStyle(color: appState.onBackground)),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ),
+          ),
 
-            //
+          //
 
-            // Text(exercise.name),
-            // Text(exercise.description),
-            // Text(exercise.musclesWorked),
-            // Text(exercise.videoLink),
-            // Text(exercise.waitMultiplier.toString()),
-            // if (exercise != null)
-            // ExerciseSelectorButton(exerciseName: exercise.name),
-            // BigButton(text: muscleGroupName, index: 0),4
-        //   ],
-        // ),
-        // ),
-      ],
-    ),);
+          // Text(exercise.name),
+          // Text(exercise.description),
+          // Text(exercise.musclesWorked),
+          // Text(exercise.videoLink),
+          // Text(exercise.waitMultiplier.toString()),
+          // if (exercise != null)
+          // ExerciseSelectorButton(exerciseName: exercise.name),
+          // BigButton(text: muscleGroupName, index: 0),4
+          //   ],
+          // ),
+          // ),
+        ],
+      ),
+    );
   }
-
-  
 }
 
+// class StarRatingButton extends StatefulWidget {
+//   final Function(double) onRatingSelected;
 
+//   const StarRatingButton({required this.onRatingSelected});
+
+//   @override
+//   _StarRatingButtonState createState() => _StarRatingButtonState();
+// }
+
+// class _StarRatingButtonState extends State<StarRatingButton> {
+//   double _selectedRating = 0.0;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     ThemeData theme = Theme.of(context);
+//     return GestureDetector(
+//       onHorizontalDragUpdate: (details) {
+//         _updateRatingFromDrag(details.localPosition);
+//       },
+//       onHorizontalDragEnd: (_) {
+//         widget.onRatingSelected(_selectedRating);
+//       },
+//       onTapUp: (details) {
+//         final tapPosition = details.localPosition;
+//         _updateRatingFromTap(tapPosition);
+//         widget.onRatingSelected(_selectedRating);
+//       },
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: List.generate(5, (index) {
+//           final starValue = (index + 1) * 0.5;
+//           return GestureDetector(
+//             onTap: () {
+//               setState(() {
+//                 _selectedRating = starValue;
+//               });
+//               widget.onRatingSelected(_selectedRating);
+//             },
+//             child: _selectedRating >= starValue ? Icon(Icons.star, color: theme.colorScheme.primary,) : Icon(Icons.star_border, color: theme.colorScheme.primary,),
+//           );
+//         }),
+//       ),
+//     );
+//   }
+
+//   void _updateRatingFromDrag(Offset position) {
+//     final box = context.findRenderObject() as RenderBox?;
+//     if (box != null) {
+//       final dx = position.dx.clamp(0.0, box.size.width);
+//       final totalWidth = box.size.width;
+//       final ratingPercentage = dx / totalWidth;
+//       setState(() {
+//         _selectedRating = ratingPercentage * 5.0;
+//       });
+//     }
+//   }
+
+//   void _updateRatingFromTap(Offset position) {
+//     final box = context.findRenderObject() as RenderBox?;
+//     if (box != null) {
+//       final dx = position.dx.clamp(0.0, box.size.width);
+//       final totalWidth = box.size.width;
+//       final ratingPercentage = dx / totalWidth;
+//       setState(() {
+//         _selectedRating = ratingPercentage * 5.0;
+//       });
+//     }
+//   }
+// }

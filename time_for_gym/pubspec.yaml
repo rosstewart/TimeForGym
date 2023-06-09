@@ -27,6 +27,8 @@ dependencies:
   firebase_core: ^2.11.0
   firebase_database: ^10.1.2
   # csv: ^5.0.2
+  device_info: ^2.0.0
+  flutter_rating_bar: ^4.0.0
 
 dev_dependencies:
   flutter_test:

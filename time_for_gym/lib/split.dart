@@ -143,10 +143,10 @@ class TrainingDay {
 
   @override
   String toString() {
-    if (isNotRestDay) {
+    // if (isNotRestDay) {
       return splitDay; // - $muscleGroups";
-    }
-    return "Rest day";
+    // }
+    // return "Rest day";
   }
 
   // Convert the TrainingDay object to a JSON Map
@@ -170,8 +170,8 @@ class TrainingDay {
     muscleGroups.insert(index, muscleGroup);
   }
 
-  void removeMuscleGroup(int index) {
-    muscleGroups.removeAt(index);
+  String removeMuscleGroup(int index) {
+    return muscleGroups.removeAt(index);
   }
 
 
