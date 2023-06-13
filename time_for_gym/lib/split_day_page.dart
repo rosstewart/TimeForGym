@@ -1,17 +1,18 @@
-import 'dart:ffi';
+// import 'dart:ffi';
 
-import 'package:flutter/gestures.dart';
+// import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-import 'dart:io';
+// import 'dart:io';
 
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/split.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
 
+// ignore: must_be_immutable
 class SplitDayPage extends StatefulWidget {
   int dayIndex;
   // int scrollingHeight = 532;
@@ -80,7 +81,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
     Split split;
     List<List<int>> exerciseIndices;
 
-    if (widget.dayIndex == -1) { 
+    if (widget.dayIndex == -1) {
       return Placeholder();
     }
 
@@ -95,7 +96,6 @@ class _SplitDayPageState extends State<SplitDayPage> {
     }
 
     List<TrainingDay> trainingDays = split.trainingDays;
-
 
     // Draggable cards for reorder mode
     List<Widget> muscleGroupCards = List.generate(
@@ -191,23 +191,24 @@ class _SplitDayPageState extends State<SplitDayPage> {
                           style:
                               TextStyle(color: theme.colorScheme.onBackground),
                         )),
-                        if (muscleGroupCards.length > 1) // If 0 or 1 muscle groups, no option to reorder
-                    ElevatedButton.icon(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () {
-                          appState.toSplitDayReorderMode(true);
-                        },
-                        icon:
-                            Icon(Icons.reorder, color: theme.colorScheme.primary),
-                        label: Text(
-                          "Reorder Muscle Groups",
-                          style:
-                              TextStyle(color: theme.colorScheme.onBackground),
-                        )),
+                    if (muscleGroupCards.length >
+                        1) // If 0 or 1 muscle groups, no option to reorder
+                      ElevatedButton.icon(
+                          style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                  theme.colorScheme.primaryContainer),
+                              surfaceTintColor: resolveColor(
+                                  theme.colorScheme.primaryContainer)),
+                          onPressed: () {
+                            appState.toSplitDayReorderMode(true);
+                          },
+                          icon: Icon(Icons.reorder,
+                              color: theme.colorScheme.primary),
+                          label: Text(
+                            "Reorder Muscle Groups",
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
+                          )),
                   ],
                 ),
               if (appState.splitDayEditMode || appState.splitDayReorderMode)
@@ -269,6 +270,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                       ]),
                 ),
 
+              // ignore: unnecessary_null_comparison
               if (split.trainingDays[widget.dayIndex] != null)
                 if (appState
                     .splitDayReorderMode) // Drag and drop muscle group cards
@@ -295,8 +297,10 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                   newIndex -=
                                       1; // Adjust the index when moving an item down
                                 }
-                                final card = muscleGroupCards.removeAt(oldIndex);
-                                final List<dynamic> muscleGroupAndExerciseIndex =
+                                final card =
+                                    muscleGroupCards.removeAt(oldIndex);
+                                final List<dynamic>
+                                    muscleGroupAndExerciseIndex =
                                     appState.removeTempMuscleGroupFromSplit(
                                         widget.dayIndex, oldIndex);
                                 muscleGroupCards.insert(newIndex, card);
@@ -319,7 +323,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                       ),
                     ],
                   ),
-                if (!appState.splitDayReorderMode)
+              if (!appState.splitDayReorderMode)
                 for (int i = 0;
                     i < split.trainingDays[widget.dayIndex].muscleGroups.length;
                     i++)
@@ -575,6 +579,7 @@ class _AddButtonState extends State<AddButton> {
   }
 }
 
+// ignore: must_be_immutable
 class SplitMuscleGroupCard extends StatefulWidget {
   SplitMuscleGroupCard({
     super.key,
@@ -637,11 +642,12 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     // appState.saveSplitDayExerciseIndicesData();
   }
 
-  void toExercise(var appState, Exercise exercise) {
+  void toExercise(MyAppState appState, Exercise exercise) {
     print(widget.exerciseIndices[appState.currentDayIndex]
         [widget.splitDayCardIndex]);
     print(appState.muscleGroups[widget.muscleGroup]![widget
         .exerciseIndices[appState.currentDayIndex][widget.splitDayCardIndex]]);
+    appState.currentExerciseFromSplitDayPage = exercise;
     appState.changePageToExercise(exercise);
   }
 
@@ -830,8 +836,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     } else {
       // Draggable
       return Padding(
-        padding: const EdgeInsets.fromLTRB(0,10,0,10),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           SizedBox(width: 20),
           Container(
             color: theme.colorScheme.onBackground,
@@ -842,7 +849,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                     widget.exerciseIndices[appState.currentDayIndex]
                         [widget.splitDayCardIndex]]),
           ),
-          SizedBox(width: 20,),
+          SizedBox(
+            width: 20,
+          ),
           Text(
               // exercise index
               appState
@@ -852,9 +861,11 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                   .name,
               style: smallTextStyle,
               textAlign: TextAlign.center),
-      
           Spacer(),
-          Icon(Icons.reorder, color: theme.colorScheme.primary,),
+          Icon(
+            Icons.reorder,
+            color: theme.colorScheme.primary,
+          ),
           SizedBox(width: 20),
         ]),
       );

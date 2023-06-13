@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'dart:io';
+// import 'dart:io';
 
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/exercise.dart';
@@ -14,11 +14,27 @@ class IndividualExercisePage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = Provider.of<MyAppState>(context); // Listening to MyAppState
 
-    int backIndex;
-
     // List<Exercise> exercises = appState.muscleGroups[appState.currentMuscleGroup]!;
     // Exercise exercise = Exercise(name: "", description: "", musclesWorked: "", videoLink: "", waitMultiplier: -1, mainMuscleGroup: "");
-    Exercise exercise = appState.currentExercise;
+
+    int backIndex = 4; // Exercises Page
+    Exercise exercise;
+
+    // if (appState.fromFavorites) {
+    //   backIndex = 2;
+    if (appState.fromSplitDayPage) {
+      backIndex = 7; // Split Day Page
+      exercise = appState.currentExerciseFromSplitDayPage;
+    } else if (appState.fromSearchPage) {
+      backIndex = 8; // Search Page
+      exercise = appState.currentExercise;
+    } else { // From exercises page or bottom icon
+      exercise = appState.currentExercise;
+    }
+
+    print("From search page: ${appState.fromSearchPage} ${appState.currentExercise}, From split day page: ${appState.fromSplitDayPage} ${appState.currentExerciseFromSplitDayPage}");
+
+    // print("${appState.fromFavorites}")
 
     // Below - DEPRECATED: Search of exercises
 
@@ -106,16 +122,6 @@ class IndividualExercisePage extends StatelessWidget {
     }
     if (!foundFavorite) {
       icon = Icons.favorite_border;
-    }
-
-    backIndex = 4;
-
-    if (appState.fromFavorites) {
-      backIndex = 2;
-    } else if (appState.fromSplitDayPage) {
-      backIndex = 7;
-    } else if (appState.fromSearchPage) {
-      backIndex = 8;
     }
 
     return Scaffold(

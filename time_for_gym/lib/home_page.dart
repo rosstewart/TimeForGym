@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 import 'package:time_for_gym/main.dart';
-import 'package:flutter/services.dart' show rootBundle;
+// import 'package:flutter/services.dart' show rootBundle;
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>(); // Listening to MyAppState
+    // var appState = context.watch<MyAppState>(); // Listening to MyAppState
     // var pair = appState.current;
     final theme = Theme.of(context);
     final titleStyle1 = theme.textTheme.displayMedium!.copyWith(
@@ -52,41 +52,7 @@ class HomePage extends StatelessWidget {
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 10,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.copyright_outlined, color: theme.colorScheme.primary,),
-              SizedBox(
-                width: 10,
-              ),
-              Text(
-                "Ross Stewart",
-                style: TextStyle(color: theme.colorScheme.primary),
-              )
-            ],
-          ),
-          // SizedBox(
-          //   height: 50,
-          // ),
-          // Padding(
-          //   padding: const EdgeInsets.all(20),
-          //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-          //   child: Text(
-          //     "Time for Gym",
-          //     style: titleStyle,
-          //     textAlign: TextAlign.center,
-          //   ),
-          // ),
-          // Padding(
-          //   padding: const EdgeInsets.fromLTRB(150, 20, 150, 70),
-          //   child: Image.asset('assets/images/um_logo.png'),
-          // ),
-          SizedBox(
-            height: 100,
-          ),
+      body: 
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -96,8 +62,6 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
     );
   }
 }

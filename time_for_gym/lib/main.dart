@@ -1,6 +1,6 @@
 import 'dart:io';
 //import 'dart:js_util';
-import 'dart:ui';
+// import 'dart:ui';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,16 +13,16 @@ import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import 'package:time_for_gym/exercise.dart';
-import 'package:time_for_gym/favorites_page.dart';
+// import 'package:time_for_gym/favorites_page.dart';
 import 'package:time_for_gym/home_page.dart';
-import 'package:time_for_gym/muscle_groups_page.dart';
+// import 'package:time_for_gym/muscle_groups_page.dart';
 import 'package:time_for_gym/exercises_page.dart';
 import 'package:time_for_gym/individual_exercise_page.dart';
 import 'package:time_for_gym/gym_crowd_page.dart';
@@ -125,7 +125,7 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   late SharedPreferences _prefs;
   String _favoritesString = '';
-  String _currentSplitString = '';
+  // String _currentSplitString = '';
   String _splitDayExerciseIndicesString = '';
 
   final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
@@ -244,6 +244,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 //   return prefs.getString(key);
 // }
 
+  bool isInitializing = true;
+
   var favoriteExercises = <Exercise>[];
   var pageIndex = 0;
 
@@ -256,8 +258,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   var currentMuscleGroup = ""; // String
   var currentExercise = Exercise();
+  var currentExerciseFromSplitDayPage = Exercise();
 
-  var fromFavorites = false;
+  // var fromFavorites = false;
   var fromSplitDayPage = false;
   var fromSearchPage = false;
 
@@ -451,6 +454,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     initializeOldFavorites();
     retrieveSplitFromSharedPreferences();
     initializeSplitDataAndExerciseIndices();
+    isInitializing = false;
+    notifyListeners();
   }
 
   Future<Map<String, List<Exercise>>> readLinesFromFile(String url) async {
@@ -469,6 +474,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     String muscleGroup = "";
     bool start = true;
+
+    Map<String, List<double?>> exerciseStarDataMap = await fetchExerciseData();
 
     for (final line in lines) {
       if (line.isEmpty) {
@@ -492,30 +499,39 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         attributes = line.split("|");
 
         // User rating will be null if there doesn't exist an entry for that user under the exercise
-        List<double?> userRatingAndAverageRating =
-            await fetchExerciseData(attributes[0]);
-
-        if (userRatingAndAverageRating[1] == null) {
-          // No rating data
-          userRatingAndAverageRating[1] =
-              0.0; // Default value for average star rating
+        // List<double?> userRatingAndAverageRating =
+        //     await fetchExerciseData(attributes[0]);
+        List<double?> userRatingAndAverageRating;
+        if (exerciseStarDataMap[attributes[0]] == null) {
+          // No star data for this exercise
+          userRatingAndAverageRating = [null, 0.0];
+        } else {
+          // Average rating will never be null
+          userRatingAndAverageRating = exerciseStarDataMap[attributes[0]]!;
         }
+        print(
+            "${attributes[0]} ${userRatingAndAverageRating[0]} ${userRatingAndAverageRating[1]}");
+
+        // if (userRatingAndAverageRating[1] == null) {
+        //   // No rating data
+        //   userRatingAndAverageRating[1] =
+        //       0.0; // Default value for average star rating
+        // }
 
         // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
         exercise = Exercise(
-          name: attributes[0],
-          description: attributes[1],
-          musclesWorked: attributes[2],
-          videoLink: attributes[3],
-          waitMultiplier: double.parse(attributes[4]),
-          mainMuscleGroup: muscleGroup,
-          // starRating: double.parse(attributes[5]),
-          starRating: userRatingAndAverageRating[1]!,
-          // Temporarily all image must be gifs and images have same name as exercise name
-          imageUrl:
-              "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
-          userRating: userRatingAndAverageRating[0],
-        );
+            name: attributes[0],
+            description: attributes[1],
+            musclesWorked: attributes[2],
+            videoLink: attributes[3],
+            waitMultiplier: double.parse(attributes[4]),
+            mainMuscleGroup: muscleGroup,
+            starRating: userRatingAndAverageRating[1]!,
+            // Temporarily all image must be gifs and images have same name as exercise name
+            imageUrl:
+                "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
+            userRating: userRatingAndAverageRating[0],
+            resourcesRequired: attributes[5].split(","));
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -789,18 +805,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     print("Submitted exercise popularity data to firebase database");
   }
 
-  Future<List<double?>> fetchExerciseData(String exerciseName) async {
-    double? userNumStars;
-    double? avgNumStars;
-    double userCounter = 0.0;
+  Future<Map<String, List<double?>>> fetchExerciseData() async {
+    Map<String, List<double?>> exerciseStarDataMap = <String, List<double?>>{};
 
     try {
-      DatabaseEvent event = await databaseRef
-          .child('exercisePopularityData')
-          // .orderByChild('exerciseName')
-          // .equalTo(exerciseName)
-          .child(exerciseName)
-          .once();
+      DatabaseEvent event =
+          await databaseRef.child('exercisePopularityData').once();
+      // .orderByChild('exerciseName')
+      // .equalTo(exerciseName)
+      // .child(exerciseName)
+      // .once();
 
       DataSnapshot snapshot = event.snapshot;
 
@@ -810,36 +824,62 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       // print (exerciseData.toString());
 
       if (exerciseData != null) {
-        avgNumStars = 0.0;
-        exerciseData.forEach((key, data) {
-          String uid = key.toString();
-          Map<dynamic, dynamic> exercisePopularity = data;
+        exerciseData.forEach((exercise, uidData) {
+          String exerciseName = exercise.toString();
+          Map<dynamic, dynamic> userIDData = uidData;
 
-          String exerciseName = exercisePopularity['exerciseName'];
-          String mainMuscleGroup = exercisePopularity['mainMuscleGroup'];
-          if (uid == userID) {
-            userNumStars = exercisePopularity['numStars'] + 0.0; // Avoid error
+          double? userNumStars;
+          double avgNumStars = 0.0;
+          double userCounter = 0.0;
+
+          // String exerciseName;
+          String? mainMuscleGroup;
+
+          userIDData.forEach((key, data) {
+            String uid = key.toString();
+            Map<dynamic, dynamic> exercisePopularity = data;
+
+            // exerciseName = exercisePopularity['exerciseName'];
+            mainMuscleGroup = exercisePopularity['mainMuscleGroup'];
+            if (uid == userID) {
+              userNumStars =
+                  exercisePopularity['numStars'] + 0.0; // Avoid error
+            }
+            avgNumStars = avgNumStars +
+                (exercisePopularity['numStars'] + 0.0); // Avoid error
+            userCounter++;
+
+            print("User ID: $uid");
+            // print("User ID: $uid");
+            // print("Main Muscle Group: $mainMuscleGroup");
+            // print("Number of Stars: ${exercisePopularity['numStars']}");
+          });
+
+          print(
+              "Exercise Name: $exerciseName, Main Muscle Group: $mainMuscleGroup");
+
+          if (userCounter > 0) {
+            avgNumStars = avgNumStars / userCounter;
+            avgNumStars =
+                (avgNumStars * 2.0).round() / 2.0; // Round to nearest half
           }
-          avgNumStars = avgNumStars! +
-              (exercisePopularity['numStars'] + 0.0); // Avoid error
-          userCounter++;
 
-          print("Exercise Name: $exerciseName, User ID: $uid, Number of Stars: ${exercisePopularity['numStars']}");
-          // print("User ID: $uid");
-          // print("Main Muscle Group: $mainMuscleGroup");
-          // print("Number of Stars: ${exercisePopularity['numStars']}");
+          print(
+              "User number of stars: $userNumStars, Average number of Stars: $avgNumStars");
+
+          // Star data for each exercise
+          exerciseStarDataMap.putIfAbsent(
+              exerciseName, () => [userNumStars, avgNumStars]);
         });
       } else {
-        print("No user popularity data found for exercise: $exerciseName");
+        // print("No user popularity data found for exercise: $exerciseName");
+        print("exerciseData is null");
       }
     } catch (error) {
       print("Error retrieving exercise popularity data: $error");
     }
-    if (userCounter > 0) {
-      avgNumStars = avgNumStars! / userCounter;
-      avgNumStars = (avgNumStars! * 2.0).round() / 2.0; // Round to nearest half
-    }
-    return [userNumStars, avgNumStars];
+
+    return exerciseStarDataMap;
   }
 
   // Future<void> initializeFirebase() async {
@@ -863,11 +903,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  // Depr
   void changePageToMuscleGroup(String muscleGroupName) {
     pageIndex = 4;
     currentMuscleGroup = muscleGroupName;
-    fromFavorites = false;
+    // fromFavorites = false;
     fromSplitDayPage = false;
     notifyListeners();
   }
@@ -877,16 +916,20 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     pageIndex = 5;
     // currentMuscleGroup should match the correct muscleGroup for the exercise
     // Need a different approach for viewing exercises from favorites because of back button
-    currentExercise = exercise;
+    if (fromSplitDayPage) {
+      currentExerciseFromSplitDayPage = exercise;
+    } else {
+      currentExercise = exercise;
+    }
     notifyListeners();
   }
 
-  void changePageToFavoriteExercise(Exercise exercise) {
-    pageIndex = 5;
-    currentExercise = exercise;
-    fromFavorites = true;
-    notifyListeners();
-  }
+  // void changePageToFavoriteExercise(Exercise exercise) {
+  //   pageIndex = 5;
+  //   currentExercise = exercise;
+  //   fromFavorites = true;
+  //   notifyListeners();
+  // }
 
   void toggleFavorite(Exercise exercise) {
     // if (favoriteExercises.contains(exercise)) {
@@ -942,15 +985,88 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _bottomNavigationIndex = 0;
 
-  final List<Widget> _bottomScreens = [
-    HomePage(),
-    MuscleGroupsPage(),
-    SplitPage(),
-  ];
+  // final List<Widget> _bottomScreens = [
+  //   HomePage(),
+  //   MuscleGroupsPage(),
+  //   SplitPage(),
+  // ];
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
+
+    final titleStyle1 = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.primary,
+      fontFamily: 'Courier',
+    );
+    final titleStyle2 = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.secondary,
+      fontWeight: FontWeight.bold,
+      fontFamily: 'Courier',
+    );
+
+    if (appState.isInitializing) {
+      return LayoutBuilder(builder: (context, constraints) {
+        return Scaffold(
+            appBar: AppBar(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'Gym',
+                          style: titleStyle1,
+                        ),
+                        TextSpan(
+                          text: 'Brain',
+                          style: titleStyle2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Icon(
+                    Icons.self_improvement_sharp,
+                    color: theme.colorScheme.secondary,
+                  )
+                ],
+              ),
+              backgroundColor: theme.scaffoldBackgroundColor,
+            ),
+            body: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.copyright_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "Ross Stewart",
+                        style: TextStyle(color: theme.colorScheme.primary),
+                      )
+                    ],
+                  ),
+                  Spacer(),
+                  CircularProgressIndicator(),
+                  Spacer(),
+                  SizedBox(
+                    height: 150,
+                  ),
+                ]));
+      });
+    }
 
     Widget page;
     switch (appState.pageIndex) {
@@ -960,19 +1076,21 @@ class _MyHomePageState extends State<MyHomePage> {
         page = HomePage();
         break;
       case 1: // Deprecated
-        page = MuscleGroupsPage();
+        // page = MuscleGroupsPage();
+        page = Placeholder();
         break;
       case 2: // Deprecated
-        appState.fromFavorites = true;
-        appState.fromSplitDayPage = false;
-        appState.fromSearchPage = false;
-        page = FavoritesPage(); // Favorites page
+        // appState.fromFavorites = true;
+        // appState.fromSplitDayPage = false;
+        // appState.fromSearchPage = false;
+        // page = FavoritesPage(); // Favorites page
+        page = Placeholder();
         break;
       case 3:
         page = GymCrowdPage(); // Gym crowd page
         break;
       case 4:
-        appState.fromFavorites = false;
+        // appState.fromFavorites = false;
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = false;
         appState.presetSearchPage = 1;
@@ -980,7 +1098,15 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 5:
         // appState.splitDayEditMode = false;
-        appState.presetSearchPage = 2;
+        // Only remembers exercise from search page if an exercise is not looked at from another page
+        // if (appState.fromSearchPage) {
+        if (!appState.fromSplitDayPage) {
+          // Only update if clicking on exercise from search page or exercises page
+          appState.presetSearchPage = 2;
+        }
+        // } else if (appState.fromFavorites || appState.fromSplitDayPage) {
+        //   appState.presetSearchPage = 0;
+        // }
         page = IndividualExercisePage(); // Exercise page
         break;
       case 6:
@@ -997,7 +1123,7 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 7:
         appState.splitWeekEditMode = false;
-        appState.fromFavorites = false;
+        // appState.fromFavorites = false;
         appState.fromSplitDayPage = true;
         appState.fromSearchPage = false;
         appState.goStraightToSplitDayPage =
@@ -1006,7 +1132,7 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 8:
         // Search screen
-        appState.fromFavorites = false;
+        // appState.fromFavorites = false;
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = true;
         _bottomNavigationIndex = 1; // Update navigation bar
@@ -1070,8 +1196,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 appState.splitWeekEditMode = false;
               } else if (index == 1) {
                 // Search Page
+
                 if (appState.pageIndex == 4 ||
-                    appState.pageIndex == 5 ||
+                    (appState.pageIndex == 5 && !appState.fromSplitDayPage) ||
                     appState.presetSearchPage == 0) {
                   // Exercises page or individual exercise page or other tab, or if search page is preset
                   appState.changePage(8);
@@ -1079,7 +1206,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       false; // Cancel changes when changing to different screen
                   appState.splitDayReorderMode = false;
                   appState.splitWeekEditMode = false;
+                  appState.fromSplitDayPage = false;
                 } else {
+                  appState.fromSplitDayPage = false;
                   if (appState.presetSearchPage == 1) {
                     appState.changePage(4);
                   } else {
@@ -1088,7 +1217,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 }
               } else if (index == 2) {
-                print("${appState.currentDayIndex} ${appState.pageIndex}");
+                appState.fromSearchPage = false;
+                print(
+                    "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
                 // Split Page
                 if (appState.pageIndex == 7 ||
                     !appState.goStraightToSplitDayPage) {
@@ -1211,18 +1342,18 @@ class Back extends StatelessWidget {
   }
 }
 
-class BackFromSplitPage extends Back {
-  BackFromSplitPage({required super.appState, required super.index});
+// class BackFromSplitPage extends Back {
+//   BackFromSplitPage({required super.appState, required super.index});
 
-  @override
-  void togglePressed() {
-    if (appState.currentSplit != null && appState.makeNewSplit) {
-      // On the regenerate split page
-      appState.makeNewSplit = false;
-    }
-    appState.changePage(index);
-  }
-}
+//   @override
+//   void togglePressed() {
+//     if (appState.currentSplit != null && appState.makeNewSplit) {
+//       // On the regenerate split page
+//       appState.makeNewSplit = false;
+//     }
+//     appState.changePage(index);
+//   }
+// }
 
 class MuscleGroupSelectorButton extends StatelessWidget {
   const MuscleGroupSelectorButton({
@@ -1292,7 +1423,7 @@ class ExerciseSelectorButton extends StatelessWidget {
     void togglePressed() {
       // Coming from individual muscle group page
       appState.fromSearchPage = false;
-      appState.fromFavorites = false;
+      // appState.fromFavorites = false;
       appState.fromSplitDayPage = false;
       appState.changePageToExercise(exercise);
     }
@@ -1306,7 +1437,7 @@ class ExerciseSelectorButton extends StatelessWidget {
             height: 80,
             width: 80,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(5),
                 color: theme.colorScheme.onBackground),
             child: Padding(
               padding: const EdgeInsets.all(1.0),
@@ -1342,53 +1473,54 @@ class ExerciseSelectorButton extends StatelessWidget {
   }
 }
 
-class FavoriteExerciseSelectorButton extends StatelessWidget {
-  const FavoriteExerciseSelectorButton({
-    super.key,
-    required this.exercise,
-    // required this.index,
-  });
+// class FavoriteExerciseSelectorButton extends StatelessWidget {
+//   const FavoriteExerciseSelectorButton({
+//     super.key,
+//     required this.exercise,
+//     // required this.index,
+//   });
 
-  final Exercise exercise;
-  // final int index;
+//   final Exercise exercise;
+//   // final int index;
 
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
-    final style = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
+//   @override
+//   Widget build(BuildContext context) {
+//     var appState = context.watch<MyAppState>();
+//     final theme = Theme.of(context);
+//     final style = theme.textTheme.titleLarge!.copyWith(
+//       color: theme.colorScheme.onPrimary,
+//     );
 
-    void togglePressed() {
-      appState.changePageToFavoriteExercise(exercise);
-    }
+//     void togglePressed() {
+//       appState.changePageToFavoriteExercise(exercise);
+//     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
-      child: ElevatedButton(
-        style: ButtonStyle(
-          backgroundColor:
-              MaterialStateProperty.all<Color>(theme.colorScheme.primary),
-          // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-        ),
-        onPressed: togglePressed,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-          child: Center(
-            child: Text(
-              exercise.name,
-              style: style,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(30, 15, 30, 15),
+//       child: ElevatedButton(
+//         style: ButtonStyle(
+//           backgroundColor:
+//               MaterialStateProperty.all<Color>(theme.colorScheme.primary),
+//           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+//         ),
+//         onPressed: togglePressed,
+//         child: Padding(
+//           padding: const EdgeInsets.all(20),
+//           // child: Text("${wordPair.first} ${wordPair.second}", style: style),
+//           child: Center(
+//             child: Text(
+//               exercise.name,
+//               style: style,
+//               textAlign: TextAlign.center,
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
+// ignore: must_be_immutable
 class ExerciseCard extends StatefulWidget {
   ExerciseCard({
     super.key,
@@ -1418,6 +1550,17 @@ class ExerciseCard extends StatefulWidget {
 class _ExerciseCardState extends State<ExerciseCard> {
   bool _isSubmitButtonPressed = false;
   Timer? _timer;
+  double? initialStars;
+  double? starsToSubmit;
+
+  @override
+  void initState() {
+    super.initState();
+    initialStars = widget.exercise.userRating;
+    initialStars ??= 2.5; // if null set to 2.5
+    starsToSubmit = initialStars;
+    print("initial stars $initialStars");
+  }
 
   @override
   void dispose() {
@@ -1431,7 +1574,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
     });
 
     widget.exercise.userRating =
-            starsToSubmit; // Update exercise data in memory
+        starsToSubmit; // Update exercise data in memory
 
     _timer = Timer(Duration(seconds: 2), () {
       setState(() {
@@ -1442,19 +1585,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
     });
 
     // _timer;
-    
   }
+
 
   // final String imageUrl;
   @override
   Widget build(BuildContext context) {
-    double initialStars = 2.5;
-    if (widget.exercise.userRating != null) {
-      initialStars = widget.exercise.userRating!;
-    }
-
-    double starsToSubmit = initialStars;
-
     var appState = context.watch<MyAppState>();
 
     final theme = Theme.of(context);
@@ -1471,7 +1607,9 @@ class _ExerciseCardState extends State<ExerciseCard> {
 
     Icon submittedIcon;
     Text submittedText;
-    if (!_isSubmitButtonPressed) {
+    print("$_isSubmitButtonPressed ${widget.exercise.userRating} $starsToSubmit");
+    if (!_isSubmitButtonPressed &&
+        widget.exercise.userRating != starsToSubmit) {
       submittedIcon = Icon(
         Icons.send,
         color: theme.colorScheme.primary,
@@ -1485,6 +1623,20 @@ class _ExerciseCardState extends State<ExerciseCard> {
       );
       submittedText = Text('Submitted',
           style: TextStyle(color: theme.colorScheme.onBackground));
+    }
+
+    String equipmentNeededString = "None";
+    if (widget.exercise.resourcesRequired != null &&
+        widget.exercise.resourcesRequired!.isNotEmpty) {
+      equipmentNeededString = "";
+      for (String resourceRequired in widget.exercise.resourcesRequired!) {
+        equipmentNeededString += "$resourceRequired, ";
+      }
+      if (equipmentNeededString.isNotEmpty) {
+        // Remove trailing comma and space
+        equipmentNeededString = equipmentNeededString.substring(
+            0, equipmentNeededString.length - 2);
+      }
     }
 
     return Padding(
@@ -1589,7 +1741,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
 
                 RatingBar.builder(
                   unratedColor: theme.colorScheme.primaryContainer,
-                  initialRating: initialStars,
+                  initialRating: initialStars!,
                   minRating: 0,
                   direction: Axis.horizontal,
                   allowHalfRating: true,
@@ -1602,7 +1754,9 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   onRatingUpdate: (rating) {
                     // Handle the selected rating value
                     print('Selected rating: $rating');
-                    starsToSubmit = rating;
+                    setState(() {
+                      starsToSubmit = rating;
+                    });
                   },
                 ),
 
@@ -1632,13 +1786,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   // User hasn't submitted data for this exercise yet
 
                   // Doesn't matter if user has submitted data already
-                  if (!_isSubmitButtonPressed) {
+                  if (!_isSubmitButtonPressed && widget.exercise.userRating != starsToSubmit) {
                     appState.submitExercisePopularityDataToFirebase(
                         appState.userID,
                         widget.exercise.name,
                         widget.exercise.mainMuscleGroup,
-                        starsToSubmit);
-                    _handleSubmitButtonPress(starsToSubmit);
+                        starsToSubmit!);
+                    _handleSubmitButtonPress(starsToSubmit!);
                   }
                   // } else {
                   // User has already submitted data for this exercise, update data
@@ -1653,6 +1807,18 @@ class _ExerciseCardState extends State<ExerciseCard> {
                 label: submittedIcon,
                 icon: submittedText,
               ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              'Equipment Needed',
+              style: headingStyle,
+            ),
+            SizedBox(height: 5),
+            Text(
+              equipmentNeededString,
+              style: textStyle,
             ),
           ],
         ),

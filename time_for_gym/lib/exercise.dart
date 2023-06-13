@@ -11,6 +11,7 @@ class Exercise implements Comparable<Exercise> {
     this.imageUrl = "",
     this.starRating = 0,
     this.userRating,
+    this.resourcesRequired,
   });
 
   @override
@@ -30,6 +31,7 @@ class Exercise implements Comparable<Exercise> {
   final double waitMultiplier;
   final double starRating;
   double? userRating;
+  final List<String>? resourcesRequired;
 
   @override
   int compareTo(Exercise other) {

@@ -264,6 +264,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
+// ignore: must_be_immutable
 class SquareButton extends StatelessWidget {
   final String name;
   final bool isExercise;
@@ -353,6 +354,7 @@ class ScrollableButtonRow extends StatelessWidget {
               ),
             ),
           ).toList(),
+          SizedBox(width: 10), // Buffer
         ],
       ),
     );
