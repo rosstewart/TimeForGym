@@ -32,4 +32,7 @@ Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves|https://
 MuscleGroup: Abs
 Hanging Leg Raises|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar
 Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Abs|https://youtu.be/pvz7k5gO-DE|0.4|Bench
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/origin/main
