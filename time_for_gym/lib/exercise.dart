@@ -12,6 +12,7 @@ class Exercise implements Comparable<Exercise> {
     this.starRating = 0,
     this.userRating,
     this.resourcesRequired,
+    this.userOneRepMax,
   });
 
   @override
@@ -31,12 +32,14 @@ class Exercise implements Comparable<Exercise> {
   final double waitMultiplier;
   final double starRating;
   double? userRating;
+  int? userOneRepMax;
   final List<String>? resourcesRequired;
 
   @override
   int compareTo(Exercise other) {
     return other.starRating.compareTo(starRating); // Sort from highest to lowest rating
   }
+
 
   // factory Exercise.fromJson(Map<String, dynamic> json) {
   //   return Exercise(
@@ -68,14 +71,16 @@ class Exercise implements Comparable<Exercise> {
 
 class ExercisePopularityData {
   String userID, exerciseName, mainMuscleGroup;
-  double numStars;
+  double? numStars;
+  int? oneRepMax;
 
-  ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup, this.numStars);
+  ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup, this.numStars, this.oneRepMax);
 
   Map<String, dynamic> toJson() => {
         'userID': userID,
         'exerciseName': exerciseName,
         'mainMuscleGroup': mainMuscleGroup,
         'numStars': numStars,
+        'oneRepMax': oneRepMax,
       };
 }

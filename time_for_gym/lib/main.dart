@@ -1,3 +1,4 @@
+// import 'dart:ffi';
 import 'dart:io';
 //import 'dart:js_util';
 // import 'dart:ui';
@@ -85,6 +86,10 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
       dialogTheme: DialogTheme(
           surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
           backgroundColor: Color.fromRGBO(20, 20, 20, 1)),
+      appBarTheme: AppBarTheme(
+        // color: Color.fromRGBO(20, 20, 20, 1),
+        surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
+      )
     );
 
     // Create a new theme based on the original theme with the updated onBackground color
@@ -288,6 +293,18 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   String userID = '';
 
+  List<Widget> appPages = [
+    HomePage(),
+    Placeholder(),
+    Placeholder(),
+    GymCrowdPage(),
+    ExercisesPage(),
+    IndividualExercisePage(),
+    SplitPage(),
+    SplitDayPage(0),
+    SearchPage()
+  ];
+
   void setSplit(Split split) {
     currentSplit = split;
     makeNewSplit = false;
@@ -475,7 +492,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     String muscleGroup = "";
     bool start = true;
 
-    Map<String, List<double?>> exerciseStarDataMap = await fetchExerciseData();
+    Map<String, List<double?>> exerciseDataMap = await fetchExerciseData();
 
     for (final line in lines) {
       if (line.isEmpty) {
@@ -501,16 +518,25 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         // User rating will be null if there doesn't exist an entry for that user under the exercise
         // List<double?> userRatingAndAverageRating =
         //     await fetchExerciseData(attributes[0]);
-        List<double?> userRatingAndAverageRating;
-        if (exerciseStarDataMap[attributes[0]] == null) {
-          // No star data for this exercise
-          userRatingAndAverageRating = [null, 0.0];
+        List<double?> userRatingAndAverageRatingAnd1RM;
+        int? userOneRepMax;
+        if (exerciseDataMap[attributes[0]] == null) {
+          // No star data or one rep max data for this exercise
+          userRatingAndAverageRatingAnd1RM = [null, 0.0, null]; // user rating and one rep max are null
+          userOneRepMax = null;
         } else {
-          // Average rating will never be null
-          userRatingAndAverageRating = exerciseStarDataMap[attributes[0]]!;
+          userRatingAndAverageRatingAnd1RM = exerciseDataMap[attributes[0]]!;
+          if (userRatingAndAverageRatingAnd1RM[1] == null) {
+            userRatingAndAverageRatingAnd1RM[1] = 0.0;
+          }
+          if (userRatingAndAverageRatingAnd1RM[2] != null) {
+            userOneRepMax = userRatingAndAverageRatingAnd1RM[2]!.toInt();
+          } else {
+            userOneRepMax = null;
+          }
         }
         print(
-            "${attributes[0]} ${userRatingAndAverageRating[0]} ${userRatingAndAverageRating[1]}");
+            "${attributes[0]} ${userRatingAndAverageRatingAnd1RM[0]} ${userRatingAndAverageRatingAnd1RM[1]} $userOneRepMax");
 
         // if (userRatingAndAverageRating[1] == null) {
         //   // No rating data
@@ -526,12 +552,13 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             videoLink: attributes[3],
             waitMultiplier: double.parse(attributes[4]),
             mainMuscleGroup: muscleGroup,
-            starRating: userRatingAndAverageRating[1]!,
+            starRating: userRatingAndAverageRatingAnd1RM[1]!,
             // Temporarily all image must be gifs and images have same name as exercise name
             imageUrl:
                 "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
-            userRating: userRatingAndAverageRating[0],
-            resourcesRequired: attributes[5].split(","));
+            userRating: userRatingAndAverageRatingAnd1RM[0],
+            resourcesRequired: attributes[5].split(","),
+            userOneRepMax: userOneRepMax);
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -788,11 +815,15 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     return deviceId ?? ''; // Return a default value if deviceId is null
   }
 
-  void submitExercisePopularityDataToFirebase(String userID,
-      String exerciseName, String mainMuscleGroup, double numStars) {
+  void submitExercisePopularityDataToFirebase(
+      String userID,
+      String exerciseName,
+      String mainMuscleGroup,
+      double? numStars,
+      int? oneRepMax) {
     // String timestamp = DateTime.now().toString();
-    ExercisePopularityData data =
-        ExercisePopularityData(userID, exerciseName, mainMuscleGroup, numStars);
+    ExercisePopularityData data = ExercisePopularityData(
+        userID, exerciseName, mainMuscleGroup, numStars, oneRepMax);
     // Unique child for each exercise name
     databaseRef
         .child('exercisePopularityData')
@@ -803,6 +834,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // hasSubmittedData = true;
     // notifyListeners();
     print("Submitted exercise popularity data to firebase database");
+    // Null values simply don't appear as entries on database
   }
 
   Future<Map<String, List<double?>>> fetchExerciseData() async {
@@ -831,6 +863,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           double? userNumStars;
           double avgNumStars = 0.0;
           double userCounter = 0.0;
+          double? userOneRepMax;
 
           // String exerciseName;
           String? mainMuscleGroup;
@@ -842,12 +875,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             // exerciseName = exercisePopularity['exerciseName'];
             mainMuscleGroup = exercisePopularity['mainMuscleGroup'];
             if (uid == userID) {
+              if (exercisePopularity['numStars'] != null){
               userNumStars =
                   exercisePopularity['numStars'] + 0.0; // Avoid error
+              }
+              if (exercisePopularity['oneRepMax'] != null) {
+              userOneRepMax = exercisePopularity['oneRepMax'] + 0.0; // Avoid error
+              }
             }
+            if (exercisePopularity['numStars'] != null) {
             avgNumStars = avgNumStars +
                 (exercisePopularity['numStars'] + 0.0); // Avoid error
             userCounter++;
+            }
 
             print("User ID: $uid");
             // print("User ID: $uid");
@@ -865,11 +905,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           }
 
           print(
-              "User number of stars: $userNumStars, Average number of Stars: $avgNumStars");
+              "User number of stars: $userNumStars, Average number of Stars: $avgNumStars, User one rep max: $userOneRepMax");
 
           // Star data for each exercise
           exerciseStarDataMap.putIfAbsent(
-              exerciseName, () => [userNumStars, avgNumStars]);
+              exerciseName, () => [userNumStars, avgNumStars, userOneRepMax]);
         });
       } else {
         // print("No user popularity data found for exercise: $exerciseName");
@@ -952,9 +992,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     //   }
     // }
     bool foundFavorite = false;
+    print(favoriteExercises);
     for (Exercise favoriteExercise in favoriteExercises) {
-      if (exercise.compareTo(favoriteExercise) == 0) {
-        // If duplicate exercise is already in favorites
+      if (favoriteExercise.name == exercise.name) {
         favoriteExercises.remove(favoriteExercise);
         foundFavorite = true;
         break;
@@ -964,7 +1004,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       favoriteExercises.add(exercise);
     }
 
-    favoriteExercises.sort(); // Sort favorite exercises alphabetically
+    favoriteExercises.sort(); // Sort favorite exercises by star rating
 
     /* In case there are deprecated exercises in favoriteExercises:
     favoriteExercises.clear();
@@ -1342,6 +1382,109 @@ class Back extends StatelessWidget {
   }
 }
 
+class SwipeBack extends StatefulWidget {
+  const SwipeBack({
+    Key? key,
+    required this.appState,
+    required this.index,
+    required this.child,
+  }) : super(key: key);
+
+  final MyAppState appState;
+  final int index;
+  final Widget child;
+
+  @override
+  _SwipeBackState createState() => _SwipeBackState();
+}
+
+class _SwipeBackState extends State<SwipeBack> {
+  bool _isDismissed = false;
+
+  void toggleSwipe() {
+    widget.appState.changePage(widget.index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget swipeChild = widget.appState.appPages[widget.index];
+    return _isDismissed
+        ? SizedBox.shrink() // Remove the Dismissible widget from the tree
+        : Stack(
+            children: [
+              swipeChild, // Show the swipeChild beneath the Dismissible
+              Dismissible(
+                key: const Key('back'),
+                direction: DismissDirection.startToEnd,
+                onDismissed: (direction) {
+                  if (direction == DismissDirection.startToEnd) {
+                    toggleSwipe();
+                    setState(() {
+                      _isDismissed = true;
+                    });
+                  }
+                },
+                child: widget.child,
+              ),
+            ],
+          );
+  }
+}
+
+// class SwipeBack extends StatefulWidget {
+//   const SwipeBack({
+//     Key? key,
+//     required this.appState,
+//     required this.index,
+//     required this.child,
+//   }) : super(key: key);
+
+//   final MyAppState appState;
+//   final int index;
+//   final Widget child;
+
+//   @override
+//   _SwipeBackState createState() => _SwipeBackState();
+// }
+
+// class _SwipeBackState extends State<SwipeBack> {
+//   final PageController _pageController = PageController();
+
+//   void toggleSwipe() {
+//     widget.appState.changePage(widget.index);
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+
+//     List<Widget> pages = context.watch<MyAppState>().appPages;
+//     return GestureDetector(
+//       onHorizontalDragUpdate: (details) {
+//         // Calculate the drag percentage
+//         final screenWidth = MediaQuery.of(context).size.width;
+//         final dragPercentage = details.primaryDelta! / screenWidth;
+
+//         // Update the page controller to show the page as you swipe
+//         _pageController.jumpTo(_pageController.offset + dragPercentage);
+//       },
+//       onHorizontalDragEnd: (details) {
+//         // Calculate the velocity of the swipe
+//         final swipeVelocity = details.velocity.pixelsPerSecond.dx;
+
+//         // Determine if the swipe was significant to navigate to the previous page
+//         if (swipeVelocity < -1000) {
+//           toggleSwipe();
+//         }
+//       },
+//       child: PageView(
+//               controller: _pageController,
+//               physics: NeverScrollableScrollPhysics(), // Disable swiping between pages
+//               children: pages,
+//             ),
+//     );
+//   }
+// }
+
 // class BackFromSplitPage extends Back {
 //   BackFromSplitPage({required super.appState, required super.index});
 
@@ -1587,7 +1730,6 @@ class _ExerciseCardState extends State<ExerciseCard> {
     // _timer;
   }
 
-
   // final String imageUrl;
   @override
   Widget build(BuildContext context) {
@@ -1607,7 +1749,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
 
     Icon submittedIcon;
     Text submittedText;
-    print("$_isSubmitButtonPressed ${widget.exercise.userRating} $starsToSubmit");
+    print(
+        "$_isSubmitButtonPressed ${widget.exercise.userRating} $starsToSubmit");
     if (!_isSubmitButtonPressed &&
         widget.exercise.userRating != starsToSubmit) {
       submittedIcon = Icon(
@@ -1786,12 +1929,14 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   // User hasn't submitted data for this exercise yet
 
                   // Doesn't matter if user has submitted data already
-                  if (!_isSubmitButtonPressed && widget.exercise.userRating != starsToSubmit) {
+                  if (!_isSubmitButtonPressed &&
+                      widget.exercise.userRating != starsToSubmit) {
                     appState.submitExercisePopularityDataToFirebase(
                         appState.userID,
                         widget.exercise.name,
                         widget.exercise.mainMuscleGroup,
-                        starsToSubmit!);
+                        starsToSubmit,
+                        widget.exercise.userOneRepMax);
                     _handleSubmitButtonPress(starsToSubmit!);
                   }
                   // } else {
@@ -2206,36 +2351,59 @@ MaterialStateColor resolveColor(Color color) {
   });
 }
 
-class BottomNavigation extends StatefulWidget {
-  @override
-  _BottomNavigationState createState() => _BottomNavigationState();
+// Verify inputs before calling method
+int calculateOneRepMax(int weightLifted, int repetitions) {
+  // print(((weightLifted) / ((1.0278) - (0.0278 * repetitions))));
+  // Returns a truncated double
+  return (weightLifted) ~/ ((1.0278) - (0.0278 * repetitions));
 }
 
-class _BottomNavigationState extends State<BottomNavigation> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bottom Navigation'),
-      ),
-    );
+int calculateWeightToReps(int weight, int oneRepMax) {
+  // return oneRepMax = (weight) ~/ ((1.0278) - (0.0278 * repetitions));
+  List<double> percentageWeightPerNumReps = [1.0,.97,.94,.92,.89,.86,.83,.81,.78,.75,.73,.71,.7,.68,.67,.65,.64,.63,.61,.6,.59,.58,.57,.56,.55,.54,.53,.52,.51,.5];
+  double percentage = weight.toDouble()/oneRepMax.toDouble();
+  if (percentage < .5) {
+    return percentageWeightPerNumReps.length + 1;
   }
+  int index = binarySearchBackwardsClosestIndex(percentageWeightPerNumReps, percentage);
+  if (index == -1) {
+    return -1;
+  }
+  return index + 1;
 }
 
-class SearchScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Search Screen'),
-    );
-  }
+int calculateRepsToWeight(int reps, int oneRepMax) {
+  // return (oneRepMax * ((1.0278) - (0.0278 * reps))).toInt();
+  List<double> percentageWeightPerNumReps = [1.0,.97,.94,.92,.89,.86,.83,.81,.78,.75,.73,.71,.7,.68,.67,.65,.64,.63,.61,.6,.59,.58,.57,.56,.55,.54,.53,.52,.51,.5];
+  return (percentageWeightPerNumReps[reps - 1] * oneRepMax).toInt();
 }
 
-class YourSplitScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Your Split Screen'),
-    );
+int binarySearchBackwardsClosestIndex(List<double> numbers, double target) {
+  int low = 0;
+  int high = numbers.length - 1;
+  int closestIndex = 0;
+
+  while (low <= high) {
+    int mid = (low + high) ~/ 2;
+    double current = numbers[mid];
+
+    // Check if the current value is equal to the target
+    if (current == target) {
+      return mid;
+    }
+
+    // Update the closest index if needed
+    if ((target - current).abs() < (target - numbers[closestIndex]).abs()) {
+      closestIndex = mid;
+    }
+
+    // Update the search range based on the comparison with the target
+    if (current < target) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
   }
+
+  return closestIndex;
 }

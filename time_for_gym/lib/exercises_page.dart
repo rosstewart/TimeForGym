@@ -51,7 +51,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
       }).toList();
     }
 
-    return Scaffold(
+    return SwipeBack(
+        appState: appState,
+        index: 8,
+        child: Scaffold(
       appBar: AppBar(
         leading: Back(appState: appState, index: 8),
         leadingWidth: 70,
@@ -62,81 +65,82 @@ class _ExercisesPageState extends State<ExercisesPage> {
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
       body: ListView(
-        children: [
-          SizedBox(height: 20),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 5, // Buffer space from left
-                ),
-                ...filterOptions.map((option) {
-                  bool isSelected = option == selectedFilterOption;
-                  if (isSelected) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            if (!isSelected) {
+          children: [
+            SizedBox(height: 20),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 5, // Buffer space from left
+                  ),
+                  ...filterOptions.map((option) {
+                    bool isSelected = option == selectedFilterOption;
+                    if (isSelected) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              if (!isSelected) {
+                                selectedFilterOption = option;
+                              } else {
+                                selectedFilterOption = 'None';
+                              }
+                            });
+                          },
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  resolveColor(theme.colorScheme.primary),
+                              surfaceTintColor:
+                                  resolveColor(theme.colorScheme.primary)),
+                          label: Text(
+                            option,
+                            style:
+                                TextStyle(color: theme.colorScheme.onBackground),
+                          ),
+                          icon: Icon(
+                            Icons.cancel,
+                            color: theme.colorScheme.onBackground,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
                               selectedFilterOption = option;
-                            } else {
-                              selectedFilterOption = 'None';
-                            }
-                          });
-                        },
-                        style: ButtonStyle(
-                            backgroundColor:
-                                resolveColor(theme.colorScheme.primary),
-                            surfaceTintColor:
-                                resolveColor(theme.colorScheme.primary)),
-                        label: Text(
-                          option,
-                          style:
-                              TextStyle(color: theme.colorScheme.onBackground),
+                            });
+                          },
+                          style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                  theme.colorScheme.primaryContainer),
+                              surfaceTintColor: resolveColor(
+                                  theme.colorScheme.primaryContainer)),
+                          child: Text(
+                            option,
+                            style:
+                                TextStyle(color: theme.colorScheme.onBackground),
+                          ),
                         ),
-                        icon: Icon(
-                          Icons.cancel,
-                          color: theme.colorScheme.onBackground,
-                        ),
-                      ),
-                    );
-                  } else {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedFilterOption = option;
-                          });
-                        },
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        child: Text(
-                          option,
-                          style:
-                              TextStyle(color: theme.colorScheme.onBackground),
-                        ),
-                      ),
-                    );
-                  }
-                }).toList(),
-                SizedBox(
-                  width: 5, // Buffer space from left
-                ),
-              ],
+                      );
+                    }
+                  }).toList(),
+                  SizedBox(
+                    width: 5, // Buffer space from left
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          for (Exercise exercise in filteredExercises)
-            ExerciseSelectorButton(exercise: exercise),
-        ],
+            SizedBox(
+              height: 20,
+            ),
+            for (Exercise exercise in filteredExercises)
+              ExerciseSelectorButton(exercise: exercise),
+          ],
+        ),
       ),
       // ),
     );

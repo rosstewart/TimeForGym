@@ -18,7 +18,10 @@ class GymCrowdPage extends StatelessWidget {
       color: theme.colorScheme.onBackground,
     );
 
-    return Scaffold(
+    return SwipeBack(
+        appState: appState,
+        index: 0,
+        child: Scaffold(
       appBar: AppBar(
         leading: Back(appState: appState, index: 0),
         leadingWidth: 70,
@@ -29,38 +32,39 @@ class GymCrowdPage extends StatelessWidget {
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
       body: ListView(
-        children: [
-          SizedBox(height: 30),
-          // Padding(
-          //   padding: const EdgeInsets.all(20),
-          //   child: Text(
-          //     "Gym Occupancy",
-          //     style: titleStyle,
-          //     textAlign: TextAlign.center,
-          //   ),
-          // ),
-          // SizedBox(
-          //   height: 20,
-          // ),
-          GymCrowdCard(
-              chart: CustomCircularProgressIndicator(
-                  percentCapacity: (appState.gymCount).toDouble() /
-                      (appState.maxCapacity).toDouble(),
-                  strokeWidth: 10)),
-          // PageSelectorButton(text: "Popular times", index: 6),
-          // FloatingActionButton(
-          //   onPressed: () {
-          //     // Code to execute when the button is pressed
-          //     submitOccupancyData(69);
-          //   },
-          //   tooltip: 'Submit Current Occupancy',
-          //   child: Icon(Icons.add),
-          // ),
-          SizedBox(
-            height: 50,
-          ),
-          OccupancyForm(),
-        ],
+          children: [
+            SizedBox(height: 30),
+            // Padding(
+            //   padding: const EdgeInsets.all(20),
+            //   child: Text(
+            //     "Gym Occupancy",
+            //     style: titleStyle,
+            //     textAlign: TextAlign.center,
+            //   ),
+            // ),
+            // SizedBox(
+            //   height: 20,
+            // ),
+            GymCrowdCard(
+                chart: CustomCircularProgressIndicator(
+                    percentCapacity: (appState.gymCount).toDouble() /
+                        (appState.maxCapacity).toDouble(),
+                    strokeWidth: 10)),
+            // PageSelectorButton(text: "Popular times", index: 6),
+            // FloatingActionButton(
+            //   onPressed: () {
+            //     // Code to execute when the button is pressed
+            //     submitOccupancyData(69);
+            //   },
+            //   tooltip: 'Submit Current Occupancy',
+            //   child: Icon(Icons.add),
+            // ),
+            SizedBox(
+              height: 50,
+            ),
+            OccupancyForm(),
+          ],
+        ),
       ),
       // ),
     );
@@ -159,7 +163,10 @@ class _OccupancyFormState extends State<OccupancyForm> {
               SizedBox(height: 10.0),
               ElevatedButton(
                 style: ButtonStyle(
-                    backgroundColor: resolveColor(theme.colorScheme.primaryContainer), surfaceTintColor: resolveColor(theme.colorScheme.primaryContainer)),
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();

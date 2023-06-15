@@ -119,7 +119,10 @@ class _SplitDayPageState extends State<SplitDayPage> {
 
     // bool scrollBarThumbVisibility = appState.splitDayEditMode;
 
-    return Scaffold(
+    return SwipeBack(
+        appState: appState,
+        index: 6,
+        child: Scaffold(
       appBar: AppBar(
         leading: Back(appState: appState, index: 6),
         leadingWidth: 70,
@@ -130,69 +133,51 @@ class _SplitDayPageState extends State<SplitDayPage> {
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
       body: OuterScroll(
-        scrollMode: appState.splitDayReorderMode,
-        children: [
-          Column(
-            children: [
-              SizedBox(
-                height: 10,
-              ),
-              if (!appState.splitDayEditMode)
-                Text(
-                  trainingDays[widget.dayIndex].splitDay,
-                  style: titleStyle,
-                  textAlign: TextAlign.center,
+          scrollMode: appState.splitDayReorderMode,
+          children: [
+            Column(
+              children: [
+                SizedBox(
+                  height: 10,
                 ),
-              if (appState.splitDayEditMode)
-                Form(
-                  key: _titleFormKey,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 250,
-                    ),
-                    child: TextFormField(
-                      initialValue: trainingDays[widget.dayIndex].splitDay,
-                      style: titleStyle,
-                      textAlign: TextAlign.center,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a value';
-                        }
-                        return null; // Return null to indicate the input is valid
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          trainingDays[widget.dayIndex].splitDay = value;
-                        });
-                      },
+                if (!appState.splitDayEditMode)
+                  Text(
+                    trainingDays[widget.dayIndex].splitDay,
+                    style: titleStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                if (appState.splitDayEditMode)
+                  Form(
+                    key: _titleFormKey,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 250,
+                      ),
+                      child: TextFormField(
+                        initialValue: trainingDays[widget.dayIndex].splitDay,
+                        style: titleStyle,
+                        textAlign: TextAlign.center,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter a value';
+                          }
+                          return null; // Return null to indicate the input is valid
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            trainingDays[widget.dayIndex].splitDay = value;
+                          });
+                        },
+                      ),
                     ),
                   ),
+                SizedBox(
+                  height: 20,
                 ),
-              SizedBox(
-                height: 20,
-              ),
-              if (!appState.splitDayEditMode && !appState.splitDayReorderMode)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () {
-                          appState.toSplitDayEditMode(true);
-                        },
-                        icon:
-                            Icon(Icons.edit, color: theme.colorScheme.primary),
-                        label: Text(
-                          "Edit Day",
-                          style:
-                              TextStyle(color: theme.colorScheme.onBackground),
-                        )),
-                    if (muscleGroupCards.length >
-                        1) // If 0 or 1 muscle groups, no option to reorder
+                if (!appState.splitDayEditMode && !appState.splitDayReorderMode)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
                       ElevatedButton.icon(
                           style: ButtonStyle(
                               backgroundColor: resolveColor(
@@ -200,23 +185,17 @@ class _SplitDayPageState extends State<SplitDayPage> {
                               surfaceTintColor: resolveColor(
                                   theme.colorScheme.primaryContainer)),
                           onPressed: () {
-                            appState.toSplitDayReorderMode(true);
+                            appState.toSplitDayEditMode(true);
                           },
-                          icon: Icon(Icons.reorder,
-                              color: theme.colorScheme.primary),
+                          icon:
+                              Icon(Icons.edit, color: theme.colorScheme.primary),
                           label: Text(
-                            "Reorder Muscle Groups",
-                            style: TextStyle(
-                                color: theme.colorScheme.onBackground),
+                            "Edit Day",
+                            style:
+                                TextStyle(color: theme.colorScheme.onBackground),
                           )),
-                  ],
-                ),
-              if (appState.splitDayEditMode || appState.splitDayReorderMode)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                      if (muscleGroupCards.length >
+                          1) // If 0 or 1 muscle groups, no option to reorder
                         ElevatedButton.icon(
                             style: ButtonStyle(
                                 backgroundColor: resolveColor(
@@ -224,129 +203,154 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                 surfaceTintColor: resolveColor(
                                     theme.colorScheme.primaryContainer)),
                             onPressed: () {
-                              if (appState.splitDayEditMode) {
-                                cancelEditChanges(appState);
-                              } else {
-                                cancelReorderChanges(appState);
-                              }
+                              appState.toSplitDayReorderMode(true);
                             },
-                            icon: Icon(
-                              Icons.cancel,
-                              color: theme.colorScheme.primary,
-                            ),
+                            icon: Icon(Icons.reorder,
+                                color: theme.colorScheme.primary),
                             label: Text(
-                              "Cancel",
+                              "Reorder Muscle Groups",
                               style: TextStyle(
-                                color: theme.colorScheme.onBackground,
-                              ),
+                                  color: theme.colorScheme.onBackground),
                             )),
-                        Spacer(),
-                        ElevatedButton.icon(
-                            style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                    theme.colorScheme.primaryContainer),
-                                surfaceTintColor: resolveColor(
-                                    theme.colorScheme.primaryContainer)),
-                            onPressed: () {
-                              if (appState.splitDayEditMode) {
-                                // Can only edit title in edit mode, not reorder mode
-                                if (_titleFormKey.currentState!.validate()) {
-                                  saveEditChanges(appState);
-                                }
-                              } else {
-                                saveReorderChanges(appState);
-                              }
-                            },
-                            icon: Icon(
-                              Icons.save_alt,
-                              color: theme.colorScheme.primary,
-                            ),
-                            label: Text(
-                              "Save",
-                              style: TextStyle(
-                                color: theme.colorScheme.onBackground,
-                              ),
-                            ))
-                      ]),
-                ),
-
-              // ignore: unnecessary_null_comparison
-              if (split.trainingDays[widget.dayIndex] != null)
-                if (appState
-                    .splitDayReorderMode) // Drag and drop muscle group cards
-                  Column(
-                    children: [
-                      SizedBox(height: 20),
-                      SizedBox(
-                        height: 599,
-                        child: ReorderableListView(
-                          children: muscleGroupCards,
-                          onReorder: (oldIndex, newIndex) {
-                            print(
-                                "Muscle groups before reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
-                            print(
-                                "Exercise indices before reorder: ${exerciseIndices[widget.dayIndex]}");
-                            try {
-                              setState(() {
-                                // if (newIndex >= muscleGroupCards.length ||
-                                //     newIndex < 0) {
-                                //   // Avoid out of bounds error
-                                //   return;
-                                // }
-                                if (newIndex > oldIndex) {
-                                  newIndex -=
-                                      1; // Adjust the index when moving an item down
-                                }
-                                final card =
-                                    muscleGroupCards.removeAt(oldIndex);
-                                final List<dynamic>
-                                    muscleGroupAndExerciseIndex =
-                                    appState.removeTempMuscleGroupFromSplit(
-                                        widget.dayIndex, oldIndex);
-                                muscleGroupCards.insert(newIndex, card);
-                                appState.addTempMuscleGroupToSplit(
-                                    widget.dayIndex,
-                                    newIndex,
-                                    muscleGroupAndExerciseIndex[0],
-                                    muscleGroupAndExerciseIndex[1]);
-
-                                print(
-                                    "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
-                                print(
-                                    "Exercise indices after reorder: ${exerciseIndices[widget.dayIndex]}");
-                              });
-                            } catch (e) {
-                              print("Drag and drop error - $e");
-                            }
-                          },
-                        ),
-                      ),
                     ],
                   ),
-              if (!appState.splitDayReorderMode)
-                for (int i = 0;
-                    i < split.trainingDays[widget.dayIndex].muscleGroups.length;
-                    i++)
-                  SplitMuscleGroupCard(
-                    muscleGroup:
-                        split.trainingDays[widget.dayIndex].muscleGroups[i],
-                    splitDayCardIndex: i,
-                    split: split,
-                    exerciseIndices: exerciseIndices,
-                    isDraggable: false,
+                if (appState.splitDayEditMode || appState.splitDayReorderMode)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              onPressed: () {
+                                if (appState.splitDayEditMode) {
+                                  cancelEditChanges(appState);
+                                } else {
+                                  cancelReorderChanges(appState);
+                                }
+                              },
+                              icon: Icon(
+                                Icons.cancel,
+                                color: theme.colorScheme.primary,
+                              ),
+                              label: Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: theme.colorScheme.onBackground,
+                                ),
+                              )),
+                          Spacer(),
+                          ElevatedButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              onPressed: () {
+                                if (appState.splitDayEditMode) {
+                                  // Can only edit title in edit mode, not reorder mode
+                                  if (_titleFormKey.currentState!.validate()) {
+                                    saveEditChanges(appState);
+                                  }
+                                } else {
+                                  saveReorderChanges(appState);
+                                }
+                              },
+                              icon: Icon(
+                                Icons.save_alt,
+                                color: theme.colorScheme.primary,
+                              ),
+                              label: Text(
+                                "Save",
+                                style: TextStyle(
+                                  color: theme.colorScheme.onBackground,
+                                ),
+                              ))
+                        ]),
                   ),
-              if (appState.splitDayEditMode) SizedBox(height: 15),
-              if (appState.splitDayEditMode)
-                AddButton(
-                    appState: appState,
-                    dayIndex: widget.dayIndex,
-                    cardIndex: split.trainingDays[widget.dayIndex].muscleGroups
-                        .length), // Add to end
-              // BigButton(text: muscleGroupName, index: 0),4
-            ],
-          ),
-          // ),
-        ],
+      
+                // ignore: unnecessary_null_comparison
+                if (split.trainingDays[widget.dayIndex] != null)
+                  if (appState
+                      .splitDayReorderMode) // Drag and drop muscle group cards
+                    Column(
+                      children: [
+                        SizedBox(height: 20),
+                        SizedBox(
+                          height: 599,
+                          child: ReorderableListView(
+                            children: muscleGroupCards,
+                            onReorder: (oldIndex, newIndex) {
+                              print(
+                                  "Muscle groups before reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
+                              print(
+                                  "Exercise indices before reorder: ${exerciseIndices[widget.dayIndex]}");
+                              try {
+                                setState(() {
+                                  // if (newIndex >= muscleGroupCards.length ||
+                                  //     newIndex < 0) {
+                                  //   // Avoid out of bounds error
+                                  //   return;
+                                  // }
+                                  if (newIndex > oldIndex) {
+                                    newIndex -=
+                                        1; // Adjust the index when moving an item down
+                                  }
+                                  final card =
+                                      muscleGroupCards.removeAt(oldIndex);
+                                  final List<dynamic>
+                                      muscleGroupAndExerciseIndex =
+                                      appState.removeTempMuscleGroupFromSplit(
+                                          widget.dayIndex, oldIndex);
+                                  muscleGroupCards.insert(newIndex, card);
+                                  appState.addTempMuscleGroupToSplit(
+                                      widget.dayIndex,
+                                      newIndex,
+                                      muscleGroupAndExerciseIndex[0],
+                                      muscleGroupAndExerciseIndex[1]);
+      
+                                  print(
+                                      "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
+                                  print(
+                                      "Exercise indices after reorder: ${exerciseIndices[widget.dayIndex]}");
+                                });
+                              } catch (e) {
+                                print("Drag and drop error - $e");
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                if (!appState.splitDayReorderMode)
+                  for (int i = 0;
+                      i < split.trainingDays[widget.dayIndex].muscleGroups.length;
+                      i++)
+                    SplitMuscleGroupCard(
+                      muscleGroup:
+                          split.trainingDays[widget.dayIndex].muscleGroups[i],
+                      splitDayCardIndex: i,
+                      split: split,
+                      exerciseIndices: exerciseIndices,
+                      isDraggable: false,
+                    ),
+                if (appState.splitDayEditMode) SizedBox(height: 15),
+                if (appState.splitDayEditMode)
+                  AddButton(
+                      appState: appState,
+                      dayIndex: widget.dayIndex,
+                      cardIndex: split.trainingDays[widget.dayIndex].muscleGroups
+                          .length), // Add to end
+                // BigButton(text: muscleGroupName, index: 0),4
+              ],
+            ),
+            // ),
+          ],
+        ),
       ),
     );
   }

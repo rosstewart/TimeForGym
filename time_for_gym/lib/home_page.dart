@@ -19,6 +19,7 @@ class HomePage extends StatelessWidget {
       fontFamily: 'Courier',
     );
 
+
     // IconData icon;
     // if (appState.favorites.contains(pair)) {
     //   icon = Icons.favorite;
