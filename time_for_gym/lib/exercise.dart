@@ -101,7 +101,9 @@ class ExercisePopularityData {
         'mainMuscleGroup': mainMuscleGroup,
         'numStars': numStars,
         'oneRepMax': oneRepMax,
+        if (splitWeightAndReps.isNotEmpty)
         'splitWeight': splitWeightAndReps[0],
+        if (splitWeightAndReps.length > 1)
         'splitReps': splitWeightAndReps[1],
       };
 }
