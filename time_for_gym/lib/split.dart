@@ -9,6 +9,7 @@ class TrainingDay {
   bool isNotRestDay = false;
   int dayOfWeek = -1;
   String splitDay = "Rest Day";
+  List<int> setsPerMuscleGroup = [];
 
   TrainingDay(this.isNotRestDay, this.dayOfWeek);
 
@@ -156,6 +157,7 @@ class TrainingDay {
       'isNotRestDay': isNotRestDay,
       'dayOfWeek': dayOfWeek,
       'splitDay': splitDay,
+      'setsPerMuscleGroup': setsPerMuscleGroup,
     };
   }
 
@@ -164,14 +166,19 @@ class TrainingDay {
     isNotRestDay = json['isNotRestDay'] ?? false;
     dayOfWeek = json['dayOfWeek'] ?? 0;
     splitDay = json['splitDay'] ?? "none";
+    setsPerMuscleGroup = List<int>.from(json['setsPerMuscleGroup'] ?? []);
   }
 
-  void insertMuscleGroup(int index, String muscleGroup) {
+  void insertMuscleGroup(int index, String muscleGroup, int numSets) {
     muscleGroups.insert(index, muscleGroup);
+    setsPerMuscleGroup.insert(index, numSets);
   }
 
-  String removeMuscleGroup(int index) {
-    return muscleGroups.removeAt(index);
+  List<dynamic> removeMuscleGroup(int index) {
+    List<dynamic> toReturn = [];
+    toReturn.add(muscleGroups.removeAt(index));
+    toReturn.add(setsPerMuscleGroup.removeAt(index));
+    return toReturn;
   }
 
 
@@ -180,6 +187,7 @@ class TrainingDay {
     this.isNotRestDay,
     this.dayOfWeek,
     this.splitDay,
+    this.setsPerMuscleGroup,
   );
 
   TrainingDay.deepCopy(TrainingDay original) : this._internal(
@@ -187,6 +195,7 @@ class TrainingDay {
     original.isNotRestDay,
     original.dayOfWeek,
     original.splitDay,
+    List<int>.from(original.setsPerMuscleGroup),
   );
 }
 
@@ -231,6 +240,13 @@ class Split {
             focusedMuscleGroups);
         trainingDayIndex++;
       }
+    }
+  }
+
+  void initializeNumSets() {
+    for (TrainingDay trainingDay in trainingDays) {
+      // 3 sets default per muscle gruop
+      trainingDay.setsPerMuscleGroup = List.filled(trainingDay.muscleGroups.length, 3);
     }
   }
 
@@ -521,6 +537,7 @@ class Split {
             print("ERROR - training days per week");
             return;
         }
+        initializeNumSets();
         break;
       case "Build Strength":
         break;

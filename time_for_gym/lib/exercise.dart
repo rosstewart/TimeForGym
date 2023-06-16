@@ -1,5 +1,7 @@
 // import 'package:flutter/material.dart';
 
+import 'package:time_for_gym/main.dart';
+
 class Exercise implements Comparable<Exercise> {
   Exercise({
     this.name = "",
@@ -13,6 +15,8 @@ class Exercise implements Comparable<Exercise> {
     this.userRating,
     this.resourcesRequired,
     this.userOneRepMax,
+    this.isAccessoryMovement,
+    required this.splitWeightAndReps,
   });
 
   @override
@@ -34,10 +38,24 @@ class Exercise implements Comparable<Exercise> {
   double? userRating;
   int? userOneRepMax;
   final List<String>? resourcesRequired;
+  bool? isAccessoryMovement = true;
+  List<int> splitWeightAndReps = [];
 
   @override
   int compareTo(Exercise other) {
     return other.starRating.compareTo(starRating); // Sort from highest to lowest rating
+  }
+
+  // Returns true on success, initializes splitWeightAndReps
+  List<int>? initializeSplitWeightAndRepsFrom1RM() {
+    if (userOneRepMax == null || isAccessoryMovement == null) {
+      return null;
+    }
+    // Middle of 8-12 or 6-8
+    int reps = isAccessoryMovement! ? 10 : 7;
+    int weight = calculateRepsToWeight(reps, userOneRepMax!);
+    splitWeightAndReps = [weight,reps];
+    return splitWeightAndReps;
   }
 
 
@@ -73,8 +91,9 @@ class ExercisePopularityData {
   String userID, exerciseName, mainMuscleGroup;
   double? numStars;
   int? oneRepMax;
+  List<int> splitWeightAndReps = [];
 
-  ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup, this.numStars, this.oneRepMax);
+  ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup, this.numStars, this.oneRepMax, this.splitWeightAndReps);
 
   Map<String, dynamic> toJson() => {
         'userID': userID,
@@ -82,5 +101,7 @@ class ExercisePopularityData {
         'mainMuscleGroup': mainMuscleGroup,
         'numStars': numStars,
         'oneRepMax': oneRepMax,
+        'splitWeight': splitWeightAndReps[0],
+        'splitReps': splitWeightAndReps[1],
       };
 }

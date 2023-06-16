@@ -341,7 +341,8 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
         widget.exercise.name,
         widget.exercise.mainMuscleGroup,
         widget.exercise.userRating,
-        widget.exercise.userOneRepMax);
+        widget.exercise.userOneRepMax,
+        widget.exercise.splitWeightAndReps);
     print(
         'submitted to firebase: Weight: $weight, Reps: $reps, One rep max: ${widget.exercise.userOneRepMax}');
   }
@@ -420,43 +421,74 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
             canPredict ? "Edit Strength Level" : "Calculate Strength Level",
             style: headingStyle,
           ),
+          SizedBox(
+            height: 10,
+          ),
           Form(
             key: _strengthFormKey,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    validator: (value) {
-                      return validateWeightInput(value);
-                    },
-                    style: formTextStyle,
-                    controller: weightController,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      labelStyle: labelStyle,
-                      labelText: 'Weight Lifted (lbs)',
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: theme.colorScheme.secondaryContainer),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                      child: TextFormField(
+                        validator: (value) {
+                          return validateWeightInput(value);
+                        },
+                        style: formTextStyle,
+                        controller: weightController,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          labelStyle: labelStyle,
+                          labelText: 'Weight Lifted (lbs)',
+                          errorMaxLines: 2,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(
+                  width: 10,
+                ),
                 Expanded(
-                  child: TextFormField(
-                    validator: (value) {
-                      return validateStrengthRepsInput(value);
-                    },
-                    style: formTextStyle,
-                    controller: repsController,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      labelStyle: labelStyle,
-                      labelText: 'Number of Reps',
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: theme.colorScheme.secondaryContainer),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                      child: TextFormField(
+                        validator: (value) {
+                          return validateStrengthRepsInput(value);
+                        },
+                        style: formTextStyle,
+                        controller: repsController,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          labelStyle: labelStyle,
+                          labelText: 'Number of Reps',
+                          errorMaxLines: 2,
+                        ),
+                      ),
                     ),
                   ),
+                ),
+                SizedBox(
+                  width: 10,
                 ),
                 if (!canPredict)
                   ElevatedButton(
@@ -498,7 +530,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  height: 30,
+                  height: 20,
                 ),
                 Text(
                   'Your One-Rep Max',
@@ -534,7 +566,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                   constraints: BoxConstraints(maxWidth: double.infinity),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Column(
@@ -544,22 +576,37 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                               'Predict Reps',
                               style: headingStyle,
                             ),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Form(
                               key: _weightToRepsFormKey,
-                              child: TextFormField(
-                                validator: (value) {
-                                  return validateWeightInput(value);
-                                },
-                                style: formTextStyle,
-                                controller: weightToRepsController,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.done,
-                                decoration: InputDecoration(
-                                  labelStyle: labelStyle,
-                                  labelText: 'Weight (lbs)',
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color:
+                                        theme.colorScheme.secondaryContainer),
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      return validateWeightInput(value);
+                                    },
+                                    style: formTextStyle,
+                                    controller: weightToRepsController,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.done,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      labelStyle: labelStyle,
+                                      labelText: 'Weight (lbs)',
+                                      errorMaxLines: 2,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -575,7 +622,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
                         child: IconButton(
                             style: ButtonStyle(
                               padding:
@@ -602,26 +649,42 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                               'Predict Weight',
                               style: headingStyle,
                             ),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Form(
                               key: _repsToWeightFormKey,
-                              child: TextFormField(
-                                validator: (value) {
-                                  String? validate = validateRepsInput(value);
-                                  if (validate == 'Enter number ≤ 30') {
-                                    repsToWeightController.text = '30';
-                                  }
-                                  return validate;
-                                },
-                                style: formTextStyle,
-                                controller: repsToWeightController,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.done,
-                                decoration: InputDecoration(
-                                  labelStyle: labelStyle,
-                                  labelText: 'Number of Reps',
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color:
+                                        theme.colorScheme.secondaryContainer),
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      String? validate =
+                                          validateRepsInput(value);
+                                      if (validate == 'Enter number ≤ 30') {
+                                        repsToWeightController.text = '30';
+                                      }
+                                      return validate;
+                                    },
+                                    style: formTextStyle,
+                                    controller: repsToWeightController,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.done,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      labelStyle: labelStyle,
+                                      labelText: 'Number of Reps',
+                                      errorMaxLines: 2,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -637,7 +700,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
                         child: IconButton(
                             style: ButtonStyle(
                               padding:

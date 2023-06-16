@@ -30,6 +30,7 @@ import 'package:time_for_gym/gym_crowd_page.dart';
 import 'package:time_for_gym/split_page.dart';
 import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/search_page.dart';
+// import 'package:time_for_gym/split_exercise_index.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,26 +72,45 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
       },
     );
 
+//     final textTheme = TextTheme(
+//   displayLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   displayMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   displaySmall: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   headlineLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   headlineMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   headlineSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   titleLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   titleMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   titleSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   bodyLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   bodyMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   bodySmall: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   labelLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   labelMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
+//   labelSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
+// );
+
+
     ThemeData theme = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSwatch(
-        primarySwatch: primarySwatch,
-        primaryColorDark: onBackground,
-        accentColor: secondaryColor,
-        // cardColor: Color.fromRGBO(20, 20, 20, 1),
-        backgroundColor: Color.fromRGBO(20, 20, 20, 1),
-      ),
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
-      dialogBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
-      dialogTheme: DialogTheme(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: primarySwatch,
+          primaryColorDark: onBackground,
+          accentColor: secondaryColor,
+          // cardColor: Color.fromRGBO(20, 20, 20, 1),
+          backgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        ),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        dialogBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
+        // textTheme: textTheme,
+        dialogTheme: DialogTheme(
+            surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
+            backgroundColor: Color.fromRGBO(20, 20, 20, 1)),
+        appBarTheme: AppBarTheme(
+          // color: Color.fromRGBO(20, 20, 20, 1),
           surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
-          backgroundColor: Color.fromRGBO(20, 20, 20, 1)),
-      appBarTheme: AppBarTheme(
-        // color: Color.fromRGBO(20, 20, 20, 1),
-        surfaceTintColor: Color.fromRGBO(20, 20, 20, 1),
-      )
-    );
+        ));
 
     // Create a new theme based on the original theme with the updated onBackground color
     theme = theme.copyWith(
@@ -100,6 +120,8 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
         onPrimary: Color.fromRGBO(235, 235, 235, 1),
         tertiary: Color.fromRGBO(17, 75, 95, 1),
         primaryContainer: Color.fromRGBO(30, 30, 30, 1),
+        secondaryContainer: Color.fromRGBO(40, 40, 40, 1),
+        tertiaryContainer: Color.fromRGBO(50, 50, 50, 1),
       ),
     );
 
@@ -262,8 +284,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var isGymCountInitialized = false;
 
   var currentMuscleGroup = ""; // String
-  var currentExercise = Exercise();
-  var currentExerciseFromSplitDayPage = Exercise();
+  var currentExercise = Exercise(splitWeightAndReps: []);
+  var currentExerciseFromSplitDayPage = Exercise(splitWeightAndReps: []);
 
   // var fromFavorites = false;
   var fromSplitDayPage = false;
@@ -422,21 +444,22 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void addTempMuscleGroupToSplit(int dayIndex, int cardIndex,
-      String muscleGroup, int muscleGroupExerciseIndex) {
+      String muscleGroup, int muscleGroupExerciseIndex, int numSets) {
     editModeTempSplit.trainingDays[dayIndex]
-        .insertMuscleGroup(cardIndex, muscleGroup);
+        .insertMuscleGroup(cardIndex, muscleGroup, numSets);
     editModeTempExerciseIndices[dayIndex]
         .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
   }
 
   List<dynamic> removeTempMuscleGroupFromSplit(int dayIndex, int cardIndex) {
-    final muscleGroup =
+    final muscleGroupAndNumSets =
         editModeTempSplit.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
     final exerciseIndex =
         editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     notifyListeners();
-    return [muscleGroup, exerciseIndex];
+    // muscle group, exercise index, number of sets
+    return [muscleGroupAndNumSets[0], exerciseIndex, muscleGroupAndNumSets[1]];
   }
 
   void initializeMuscleGroups() async {
@@ -448,22 +471,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     String url =
         'https://raw.githubusercontent.com/rosstewart/TimeForGym/main/time_for_gym/ExerciseData.txt';
     muscleGroups = await readLinesFromFile(url);
-
-    // var exercises = <Exercise>[];
-    // var exercises2 = <Exercise>[];
-    // var exercise = Exercise(
-    //     name: "Bench Press",
-    //     description:
-    //         "Lie down on bench, grip the bar, lower to your chest, and press up.",
-    //     musclesWorked: "Chest, Front Delts, Triceps",
-    //     videoLink: "https://youtu.be/rT7DgCr-3pg",
-    //     waitMultiplier: 1.0);
-    // exercises.add(exercise);
-    // exercises2.add(Exercise(name: "Barbell Row", description: "While standing, hinge down and pull a barbell to your stomach.", musclesWorked: "Back, Biceps, Rear Delts", videoLink: "https://youtu.be/FWJR5Ve8bnQ", waitMultiplier: 0.5));
-    // muscleGroups.putIfAbsent("Chest", () => exercises);
-    // // muscleGroups.putIfAbsent("Shoulders", () => exercises);
-    // // muscleGroups.putIfAbsent("Arms", () => exercises);
-    // muscleGroups.putIfAbsent("Back", () => exercises2);
 
     areMuscleGroupsInitialized = true;
 
@@ -497,7 +504,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     for (final line in lines) {
       if (line.isEmpty) {
         // EOF
-        // print("exit");
         break;
       }
       if (line.startsWith('MuscleGroup: ')) {
@@ -518,25 +524,39 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         // User rating will be null if there doesn't exist an entry for that user under the exercise
         // List<double?> userRatingAndAverageRating =
         //     await fetchExerciseData(attributes[0]);
-        List<double?> userRatingAndAverageRatingAnd1RM;
+        List<double?> userRatingAndAverageRatingAnd1RMAndWeightAndReps;
         int? userOneRepMax;
+        List<int> userSplitWeightAndReps;
         if (exerciseDataMap[attributes[0]] == null) {
           // No star data or one rep max data for this exercise
-          userRatingAndAverageRatingAnd1RM = [null, 0.0, null]; // user rating and one rep max are null
+          userRatingAndAverageRatingAnd1RMAndWeightAndReps = [
+            null,
+            0.0,
+            null, null, null
+          ]; // user rating and one rep max are null
           userOneRepMax = null;
+          userSplitWeightAndReps = [];
         } else {
-          userRatingAndAverageRatingAnd1RM = exerciseDataMap[attributes[0]]!;
-          if (userRatingAndAverageRatingAnd1RM[1] == null) {
-            userRatingAndAverageRatingAnd1RM[1] = 0.0;
+          userRatingAndAverageRatingAnd1RMAndWeightAndReps =
+              exerciseDataMap[attributes[0]]!;
+          if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[1] == null) {
+            userRatingAndAverageRatingAnd1RMAndWeightAndReps[1] = 0.0;
           }
-          if (userRatingAndAverageRatingAnd1RM[2] != null) {
-            userOneRepMax = userRatingAndAverageRatingAnd1RM[2]!.toInt();
+          if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[2] != null) {
+            userOneRepMax =
+                userRatingAndAverageRatingAnd1RMAndWeightAndReps[2]!.toInt();
           } else {
             userOneRepMax = null;
           }
+          if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[3] != null && userRatingAndAverageRatingAnd1RMAndWeightAndReps[4] != null) {
+            userSplitWeightAndReps =
+                [userRatingAndAverageRatingAnd1RMAndWeightAndReps[3]!.toInt(),userRatingAndAverageRatingAnd1RMAndWeightAndReps[4]!.toInt()];
+          } else {
+            userSplitWeightAndReps = [];
+          }
         }
         print(
-            "${attributes[0]} ${userRatingAndAverageRatingAnd1RM[0]} ${userRatingAndAverageRatingAnd1RM[1]} $userOneRepMax");
+            "${attributes[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]} $userOneRepMax $userSplitWeightAndReps");
 
         // if (userRatingAndAverageRating[1] == null) {
         //   // No rating data
@@ -552,13 +572,15 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             videoLink: attributes[3],
             waitMultiplier: double.parse(attributes[4]),
             mainMuscleGroup: muscleGroup,
-            starRating: userRatingAndAverageRatingAnd1RM[1]!,
+            starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
             // Temporarily all image must be gifs and images have same name as exercise name
             imageUrl:
                 "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
-            userRating: userRatingAndAverageRatingAnd1RM[0],
+            userRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[0],
             resourcesRequired: attributes[5].split(","),
-            userOneRepMax: userOneRepMax);
+            userOneRepMax: userOneRepMax,
+            isAccessoryMovement: int.parse(attributes[6]) != 0,
+            splitWeightAndReps: userSplitWeightAndReps);
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -820,10 +842,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       String exerciseName,
       String mainMuscleGroup,
       double? numStars,
-      int? oneRepMax) {
+      int? oneRepMax,
+      List<int> splitWeightAndReps) {
     // String timestamp = DateTime.now().toString();
-    ExercisePopularityData data = ExercisePopularityData(
-        userID, exerciseName, mainMuscleGroup, numStars, oneRepMax);
+    ExercisePopularityData data = ExercisePopularityData(userID, exerciseName,
+        mainMuscleGroup, numStars, oneRepMax, splitWeightAndReps);
     // Unique child for each exercise name
     databaseRef
         .child('exercisePopularityData')
@@ -864,6 +887,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           double avgNumStars = 0.0;
           double userCounter = 0.0;
           double? userOneRepMax;
+          double? userSplitWeight;
+          double? userSplitReps;
 
           // String exerciseName;
           String? mainMuscleGroup;
@@ -875,18 +900,27 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             // exerciseName = exercisePopularity['exerciseName'];
             mainMuscleGroup = exercisePopularity['mainMuscleGroup'];
             if (uid == userID) {
-              if (exercisePopularity['numStars'] != null){
-              userNumStars =
-                  exercisePopularity['numStars'] + 0.0; // Avoid error
+              if (exercisePopularity['numStars'] != null) {
+                userNumStars =
+                    exercisePopularity['numStars'] + 0.0; // Avoid error
               }
               if (exercisePopularity['oneRepMax'] != null) {
-              userOneRepMax = exercisePopularity['oneRepMax'] + 0.0; // Avoid error
+                userOneRepMax =
+                    exercisePopularity['oneRepMax'] + 0.0; // Avoid error
+              }
+              if (exercisePopularity['splitWeight'] != null) {
+                userSplitWeight = exercisePopularity['splitWeight'] +
+                    0.0; // Avoid error
+              }
+              if (exercisePopularity['splitReps'] != null) {
+                userSplitReps = exercisePopularity['splitReps'] +
+                    0.0; // Avoid error
               }
             }
             if (exercisePopularity['numStars'] != null) {
-            avgNumStars = avgNumStars +
-                (exercisePopularity['numStars'] + 0.0); // Avoid error
-            userCounter++;
+              avgNumStars = avgNumStars +
+                  (exercisePopularity['numStars'] + 0.0); // Avoid error
+              userCounter++;
             }
 
             print("User ID: $uid");
@@ -909,7 +943,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
           // Star data for each exercise
           exerciseStarDataMap.putIfAbsent(
-              exerciseName, () => [userNumStars, avgNumStars, userOneRepMax]);
+              exerciseName, () => [userNumStars, avgNumStars, userOneRepMax, userSplitWeight, userSplitReps]);
         });
       } else {
         // print("No user popularity data found for exercise: $exerciseName");
@@ -1936,7 +1970,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         widget.exercise.name,
                         widget.exercise.mainMuscleGroup,
                         starsToSubmit,
-                        widget.exercise.userOneRepMax);
+                        widget.exercise.userOneRepMax,
+                        widget.exercise.splitWeightAndReps);
                     _handleSubmitButtonPress(starsToSubmit!);
                   }
                   // } else {
@@ -2360,12 +2395,44 @@ int calculateOneRepMax(int weightLifted, int repetitions) {
 
 int calculateWeightToReps(int weight, int oneRepMax) {
   // return oneRepMax = (weight) ~/ ((1.0278) - (0.0278 * repetitions));
-  List<double> percentageWeightPerNumReps = [1.0,.97,.94,.92,.89,.86,.83,.81,.78,.75,.73,.71,.7,.68,.67,.65,.64,.63,.61,.6,.59,.58,.57,.56,.55,.54,.53,.52,.51,.5];
-  double percentage = weight.toDouble()/oneRepMax.toDouble();
+  List<double> percentageWeightPerNumReps = [
+    1.0,
+    .97,
+    .94,
+    .92,
+    .89,
+    .86,
+    .83,
+    .81,
+    .78,
+    .75,
+    .73,
+    .71,
+    .7,
+    .68,
+    .67,
+    .65,
+    .64,
+    .63,
+    .61,
+    .6,
+    .59,
+    .58,
+    .57,
+    .56,
+    .55,
+    .54,
+    .53,
+    .52,
+    .51,
+    .5
+  ];
+  double percentage = weight.toDouble() / oneRepMax.toDouble();
   if (percentage < .5) {
     return percentageWeightPerNumReps.length + 1;
   }
-  int index = binarySearchBackwardsClosestIndex(percentageWeightPerNumReps, percentage);
+  int index =
+      binarySearchBackwardsClosestIndex(percentageWeightPerNumReps, percentage);
   if (index == -1) {
     return -1;
   }
@@ -2374,7 +2441,38 @@ int calculateWeightToReps(int weight, int oneRepMax) {
 
 int calculateRepsToWeight(int reps, int oneRepMax) {
   // return (oneRepMax * ((1.0278) - (0.0278 * reps))).toInt();
-  List<double> percentageWeightPerNumReps = [1.0,.97,.94,.92,.89,.86,.83,.81,.78,.75,.73,.71,.7,.68,.67,.65,.64,.63,.61,.6,.59,.58,.57,.56,.55,.54,.53,.52,.51,.5];
+  List<double> percentageWeightPerNumReps = [
+    1.0,
+    .97,
+    .94,
+    .92,
+    .89,
+    .86,
+    .83,
+    .81,
+    .78,
+    .75,
+    .73,
+    .71,
+    .7,
+    .68,
+    .67,
+    .65,
+    .64,
+    .63,
+    .61,
+    .6,
+    .59,
+    .58,
+    .57,
+    .56,
+    .55,
+    .54,
+    .53,
+    .52,
+    .51,
+    .5
+  ];
   return (percentageWeightPerNumReps[reps - 1] * oneRepMax).toInt();
 }
 
