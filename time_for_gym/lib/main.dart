@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:connectivity/connectivity.dart';
 
 import 'package:time_for_gym/exercise.dart';
 // import 'package:time_for_gym/favorites_page.dart';
@@ -43,7 +44,9 @@ void main() async {
 
 class MyApp extends StatelessWidget with WidgetsBindingObserver {
   // const?
-  MyApp({super.key});
+  MyApp({
+    super.key,
+  });
 
   // final Color primaryColor = Color.fromRGBO(0, 159, 153, 1);
 
@@ -90,7 +93,6 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 //   labelSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
 // );
 
-
     ThemeData theme = ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSwatch(
@@ -129,19 +131,6 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Time for Gym',
-        // theme: ThemeData(
-        //   useMaterial3: true,
-        //   colorScheme: ColorScheme.fromSwatch(
-        //     primarySwatch: primarySwatch,
-        //     primaryColorDark: onBackground,
-        //     accentColor: secondaryColor,
-        //     // cardColor: Color.fromRGBO(69, 105, 144, 1),
-        //     // cardColor: Color.fromRGBO(20, 20, 20, 1),
-        //     backgroundColor: Color.fromRGBO(20, 20, 20, 1),
-        //   ),
-        //   brightness: Brightness.light,
-        //   scaffoldBackgroundColor: Color.fromRGBO(20, 20, 20, 1),
-        // ),
         theme: theme,
         home: MyHomePage(),
       ),
@@ -155,17 +144,38 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // String _currentSplitString = '';
   String _splitDayExerciseIndicesString = '';
 
-  final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
+  // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
+
+  bool noInternetInitialization = false;
 
   MyAppState() {
     initEverything();
   }
 
+  Future<bool> checkConnectivity() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      return false;
+      // _connectionStatus = 'No internet connection';
+    } else {
+      return true;
+      // _connectionStatus = 'Connected';
+    }
+  }
+
   void initEverything() async {
+    if (!(await checkConnectivity())) {
+      // No internet connection
+      noInternetInitialization = true;
+      notifyListeners();
+      return;
+    }
+    noInternetInitialization = false;
+    notifyListeners();
     await initializeUserID(); // Need user id for muscle group exercise user popularity data
-    initializeMuscleGroups();
-    initializeGymCount();
-    initPrefs(); // Initializes the user's old favorite exercises
+    await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
+    await initializeMuscleGroups();
+    await initializeGymCount();
     // initializeOldFavorites();
     // initializeFirebase(); // For storing user-reported occupancy data
   }
@@ -462,7 +472,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     return [muscleGroupAndNumSets[0], exerciseIndex, muscleGroupAndNumSets[1]];
   }
 
-  void initializeMuscleGroups() async {
+  Future<void> initializeMuscleGroups() async {
     if (areMuscleGroupsInitialized) {
       // Stop from initializing multiple times
       return;
@@ -503,8 +513,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     for (final line in lines) {
       if (line.isEmpty) {
-        // EOF
-        break;
+        continue;
       }
       if (line.startsWith('MuscleGroup: ')) {
         if (!start) {
@@ -532,7 +541,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           userRatingAndAverageRatingAnd1RMAndWeightAndReps = [
             null,
             0.0,
-            null, null, null
+            null,
+            null,
+            null
           ]; // user rating and one rep max are null
           userOneRepMax = null;
           userSplitWeightAndReps = [];
@@ -548,9 +559,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           } else {
             userOneRepMax = null;
           }
-          if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[3] != null && userRatingAndAverageRatingAnd1RMAndWeightAndReps[4] != null) {
-            userSplitWeightAndReps =
-                [userRatingAndAverageRatingAnd1RMAndWeightAndReps[3]!.toInt(),userRatingAndAverageRatingAnd1RMAndWeightAndReps[4]!.toInt()];
+          if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[3] != null &&
+              userRatingAndAverageRatingAnd1RMAndWeightAndReps[4] != null) {
+            userSplitWeightAndReps = [
+              userRatingAndAverageRatingAnd1RMAndWeightAndReps[3]!.toInt(),
+              userRatingAndAverageRatingAnd1RMAndWeightAndReps[4]!.toInt()
+            ];
           } else {
             userSplitWeightAndReps = [];
           }
@@ -564,13 +578,75 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         //       0.0; // Default value for average star rating
         // }
 
+        String videoLink = attributes[3];
+        if (videoLink.isEmpty || videoLink == 'Video Link') {
+          // If no video link attribute
+          videoLink =
+              "https://www.youtube.com/results?search_query=how+to+${attributes[0].replaceAll(' ', '+')}";
+        }
+
+        List<String> resourcesRequired = attributes[5].split(",");
+        double waitMultiplier = 0.0;
+        if (!resourcesRequired.contains('None')) {
+          resourceRequiredLoop:
+          for (String resourceRequired in resourcesRequired) {
+            // TODO:
+            // To accurately calculate wait multiplier, will need list of how many of each resource available in the gym
+            // Also, will need to loop through every exercise and add up the popularity of benches, dumbbells, etc.
+            switch (resourceRequired) {
+              // Wait multiplier estimation for UM gym
+              case 'Barbell':
+                waitMultiplier += 0.4;
+                break;
+              case 'Dumbbells':
+                waitMultiplier += 0.2;
+                break;
+              case 'Bench':
+                waitMultiplier += 0.6;
+                break;
+              case 'Cable':
+                waitMultiplier += 0.5;
+                break;
+              case 'EZ-bar':
+                waitMultiplier += 0.3;
+                break;
+              case 'Pull-Up Bar':
+                waitMultiplier += 0.2;
+                break;
+              case 'Machine':
+                // If machine, wait multiplier will just be how popular the machine is on average
+                waitMultiplier =
+                    userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]! /
+                        5.0; // Always a number 0-5 or 0
+                break resourceRequiredLoop;
+              case 'Preacher Curl Bench':
+                waitMultiplier += 0.3;
+                break;
+              case 'Parallel Bars':
+                waitMultiplier += 0.2;
+                break;
+              case 'Rack':
+                waitMultiplier += 0.5;
+                break;
+              default:
+                print('Unsupported: $resourceRequired');
+                break;
+            }
+          }
+        }
+        if (waitMultiplier > 1.0) {
+          waitMultiplier = 1.0;
+        }
+
         // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
         exercise = Exercise(
             name: attributes[0],
             description: attributes[1],
             musclesWorked: attributes[2],
-            videoLink: attributes[3],
-            waitMultiplier: double.parse(attributes[4]),
+            // videoLink: attributes[3],
+            videoLink: videoLink,
+            // waitMultiplier: double.parse(attributes[4]),
+            waitMultiplier: waitMultiplier,
             mainMuscleGroup: muscleGroup,
             starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
             // Temporarily all image must be gifs and images have same name as exercise name
@@ -635,7 +711,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void initializeGymCount() async {
+  Future<void> initializeGymCount() async {
     if (isGymCountInitialized) {
       // Stop from initializing multiple times
       return;
@@ -909,12 +985,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                     exercisePopularity['oneRepMax'] + 0.0; // Avoid error
               }
               if (exercisePopularity['splitWeight'] != null) {
-                userSplitWeight = exercisePopularity['splitWeight'] +
-                    0.0; // Avoid error
+                userSplitWeight =
+                    exercisePopularity['splitWeight'] + 0.0; // Avoid error
               }
               if (exercisePopularity['splitReps'] != null) {
-                userSplitReps = exercisePopularity['splitReps'] +
-                    0.0; // Avoid error
+                userSplitReps =
+                    exercisePopularity['splitReps'] + 0.0; // Avoid error
               }
             }
             if (exercisePopularity['numStars'] != null) {
@@ -943,7 +1019,14 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
           // Star data for each exercise
           exerciseStarDataMap.putIfAbsent(
-              exerciseName, () => [userNumStars, avgNumStars, userOneRepMax, userSplitWeight, userSplitReps]);
+              exerciseName,
+              () => [
+                    userNumStars,
+                    avgNumStars,
+                    userOneRepMax,
+                    userSplitWeight,
+                    userSplitReps
+                  ]);
         });
       } else {
         // print("No user popularity data found for exercise: $exerciseName");
@@ -1059,6 +1142,26 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _bottomNavigationIndex = 0;
 
+  bool isReloadingInternet = false;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void reloadInternetAnimation() {
+    setState(() {
+      isReloadingInternet = true;
+    });
+    _timer = Timer(Duration(milliseconds: 300), () {
+      setState(() {
+        isReloadingInternet = false;
+      });
+    });
+  }
+
   // final List<Widget> _bottomScreens = [
   //   HomePage(),
   //   MuscleGroupsPage(),
@@ -1069,44 +1172,16 @@ class _MyHomePageState extends State<MyHomePage> {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
 
-    final titleStyle1 = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.primary,
-      fontFamily: 'Courier',
-    );
-    final titleStyle2 = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.secondary,
-      fontWeight: FontWeight.bold,
-      fontFamily: 'Courier',
-    );
-
-    if (appState.isInitializing) {
+    if (appState.noInternetInitialization) {
       return LayoutBuilder(builder: (context, constraints) {
         return Scaffold(
             appBar: AppBar(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(),
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: 'Gym',
-                          style: titleStyle1,
-                        ),
-                        TextSpan(
-                          text: 'Brain',
-                          style: titleStyle2,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Icon(
-                    Icons.self_improvement_sharp,
-                    color: theme.colorScheme.secondary,
-                  )
-                ],
+              title: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: SizedBox(
+                  height: 50,
+                  child: Image.asset('assets/images/gym_brain_logo.png'),
+                ),
               ),
               backgroundColor: theme.scaffoldBackgroundColor,
             ),
@@ -1114,7 +1189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(
-                    height: 10,
+                    height: 20,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1128,7 +1203,84 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       Text(
                         "Ross Stewart",
-                        style: TextStyle(color: theme.colorScheme.primary),
+                        style: TextStyle(color: theme.colorScheme.onBackground),
+                      )
+                    ],
+                  ),
+                  Spacer(),
+                  Text(
+                    "Check Internet Connection",
+                    style: theme.textTheme.titleMedium!.copyWith(
+                      color: theme.colorScheme.onBackground,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  if (isReloadingInternet) CircularProgressIndicator(),
+                  if (!isReloadingInternet)
+                    ElevatedButton.icon(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              theme.colorScheme.primary),
+                          surfaceTintColor: MaterialStateProperty.all<Color>(
+                              theme.colorScheme.primary),
+                        ),
+                        onPressed: () async {
+                          // Restart app
+                          reloadInternetAnimation();
+                          appState.initEverything();
+                        },
+                        icon: Icon(
+                          Icons.refresh,
+                          color: theme.colorScheme.onBackground,
+                        ),
+                        label: Text(
+                          'Refresh',
+                          style:
+                              TextStyle(color: theme.colorScheme.onBackground),
+                        )),
+                  // CircularProgressIndicator(),
+                  Spacer(),
+                  SizedBox(
+                    height: 150,
+                  ),
+                ]));
+      });
+    }
+
+    if (appState.isInitializing) {
+      return LayoutBuilder(builder: (context, constraints) {
+        return Scaffold(
+            appBar: AppBar(
+              title: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: SizedBox(
+                  height: 50,
+                  child: Image.asset('assets/images/gym_brain_logo.png'),
+                ),
+              ),
+              backgroundColor: theme.scaffoldBackgroundColor,
+            ),
+            body: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.copyright_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "Ross Stewart",
+                        style: TextStyle(color: theme.colorScheme.onBackground),
                       )
                     ],
                   ),
@@ -1987,9 +2139,6 @@ class _ExerciseCardState extends State<ExerciseCard> {
                 label: submittedIcon,
                 icon: submittedText,
               ),
-            ),
-            SizedBox(
-              height: 30,
             ),
             Text(
               'Equipment Needed',

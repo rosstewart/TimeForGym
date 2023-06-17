@@ -40,7 +40,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
           }
         } else if (selectedFilterOption == 'No Equipment') {
           if (exercise.resourcesRequired != null) {
-            return exercise.resourcesRequired!.isEmpty;
+            return exercise.resourcesRequired!.contains('None');
           }
         } else if (selectedFilterOption == 'Machine-Only') {
           if (exercise.resourcesRequired != null) {

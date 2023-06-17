@@ -10,7 +10,17 @@ import 'package:time_for_gym/exercise.dart';
 
 const WAIT_MULTIPLIER_TO_MINUTES = 10;
 
-class IndividualExercisePage extends StatelessWidget {
+class IndividualExercisePage extends StatefulWidget {
+  @override
+  State<IndividualExercisePage> createState() => _IndividualExercisePageState();
+}
+
+class _IndividualExercisePageState extends State<IndividualExercisePage> {
+  void _dismissKeyboard() {
+    // Unfocus the text fields when tapped outside
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = Provider.of<MyAppState>(context); // Listening to MyAppState
@@ -109,119 +119,110 @@ class IndividualExercisePage extends StatelessWidget {
       icon = Icons.favorite_border;
     }
 
-    return SwipeBack(
-      appState: appState,
-      index: backIndex,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: Back(appState: appState, index: backIndex),
-          leadingWidth: 70,
-          title: Text(
-            exercise.name,
-            style: titleStyle,
-          ),
-          backgroundColor: theme.scaffoldBackgroundColor,
-        ),
-        body: ListView(
-          children: [
-            // Back(appState: appState, index: backIndex),
-
-            // Column(
-            //   children: [
-            //
-
-            // Padding(
-            //   padding: const EdgeInsets.all(20),
-            //   // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-            //   child: Text(
-            //     exercise.name,
-            //     style: titleStyle,
-            //     textAlign: TextAlign.center,
-            //   ),
-            // ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(100, 10, 100, 20),
-              child: ImageContainer(exercise: exercise),
+    return GestureDetector(
+      //   behavior: HitTestBehavior.opaque, // Handle the tap gesture directly
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: SwipeBack(
+        appState: appState,
+        index: backIndex,
+        child: Scaffold(
+          appBar: AppBar(
+            leading: Back(appState: appState, index: backIndex),
+            leadingWidth: 70,
+            title: Text(
+              exercise.name,
+              style: titleStyle,
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ExerciseCard(
-                    exercise: exercise,
-                    // name: exercise.name,
-                    // description: exercise.description,
-                    // mainMuscleGroup: exercise.mainMuscleGroup,
-                    // musclesWorked: exercise.musclesWorked,
-                    expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
-                            exercise.waitMultiplier *
-                            ((appState.gymCount as int).toDouble() /
-                                appState.maxCapacity.toDouble()))
-                        .toStringAsFixed(0),
-                  ), // Remove decimal place
-                  // imageUrl: exercise.imageUrl,
-                  // averageRating: exercise.starRating,
-                  // userRating: exercise.userRating),
-                  StrengthLevelForm(exercise: exercise),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
+            backgroundColor: theme.scaffoldBackgroundColor,
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+
+                SizedBox(height: 5,),
+                Container(
+                  color: theme.colorScheme.onBackground,
+                  height: 200,
+                  width: 200,
+                  child: ImageContainer(exercise: exercise),
+                ),
+                SizedBox(height: 20,),
+                Center(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton.icon(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () {
-                          appState.toggleFavorite(exercise);
-                        },
-                        icon: Icon(icon, color: theme.colorScheme.primary),
-                        label: Text('Favorite exercise',
-                            style: TextStyle(
-                                color: theme.colorScheme.onBackground)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer,
+                              ),
+                              surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer,
+                              ),
+                            ),
+                            onPressed: () {
+                              appState.toggleFavorite(exercise);
+                            },
+                            icon: Icon(
+                              icon,
+                              color: theme.colorScheme.primary,
+                            ),
+                            label: Text(
+                              'Favorite Exercise',
+                              style: TextStyle(
+                                color: theme.colorScheme.onBackground,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 15),
+                          ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer,
+                              ),
+                              surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer,
+                              ),
+                            ),
+                            onPressed: () {
+                              launchUrl(Uri.parse(exercise.videoLink));
+                            },
+                            child: Text(
+                              'Video Tutorial',
+                              style: TextStyle(
+                                color: theme.colorScheme.onBackground,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(
-                        width: 15,
+                      ExerciseCard(
+                        exercise: exercise,
+                        expectedWaitTime: (WAIT_MULTIPLIER_TO_MINUTES *
+                                exercise.waitMultiplier *
+                                ((appState.gymCount as int).toDouble() /
+                                    appState.maxCapacity.toDouble()))
+                            .toStringAsFixed(0),
                       ),
-                      ElevatedButton(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () {
-                          launchUrl(Uri.parse(exercise.videoLink));
-                        },
-                        child: Text('Tutorial video',
-                            style: TextStyle(
-                                color: theme.colorScheme.onBackground)),
-                      ),
+                      StrengthLevelForm(exercise: exercise),
+                      // SizedBox(
+                      //     height:
+                      //         200), // Add some empty space at the bottom for scrolling
                     ],
-                  )
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
-
-            //
-
-            // Text(exercise.name),
-            // Text(exercise.description),
-            // Text(exercise.musclesWorked),
-            // Text(exercise.videoLink),
-            // Text(exercise.waitMultiplier.toString()),
-            // if (exercise != null)
-            // ExerciseSelectorButton(exerciseName: exercise.name),
-            // BigButton(text: muscleGroupName, index: 0),4
-            //   ],
-            // ),
-            // ),
-          ],
+          ),
         ),
       ),
     );
+
   }
 }
 
@@ -565,7 +566,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                 Container(
                   constraints: BoxConstraints(maxWidth: double.infinity),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
@@ -622,7 +623,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                        padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
                         child: IconButton(
                             style: ButtonStyle(
                               padding:
@@ -700,7 +701,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 40, 0, 0),
+                        padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
                         child: IconButton(
                             style: ButtonStyle(
                               padding:

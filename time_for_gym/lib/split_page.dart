@@ -1,6 +1,7 @@
 // import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:core';
 
 // import 'dart:io';
 
@@ -12,7 +13,49 @@ import 'package:multi_select_flutter/multi_select_flutter.dart';
 // import 'package:time_for_gym/exercise.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
 
-class SplitPage extends StatelessWidget {
+
+
+class SplitPage extends StatefulWidget {
+  @override
+  State<SplitPage> createState() => _SplitPageState();
+}
+
+class _SplitPageState extends State<SplitPage> {
+
+  late String realTimeDayOfWeek;
+
+  String getDayOfWeekString(int dayOfWeek) {
+  switch (dayOfWeek) {
+    case 1:
+      return 'Monday';
+    case 2:
+      return 'Tuesday';
+    case 3:
+      return 'Wednesday';
+    case 4:
+      return 'Thursday';
+    case 5:
+      return 'Friday';
+    case 6:
+      return 'Saturday';
+    case 7:
+      return 'Sunday';
+    default:
+      return '';
+  }
+}
+
+
+  @override
+  void initState() {
+    super.initState();
+    DateTime now = DateTime.now();
+    int dayOfWeek = now.weekday;
+
+    realTimeDayOfWeek = getDayOfWeekString(dayOfWeek);
+    // print('Today is $dayOfWeekString');
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
@@ -38,7 +81,7 @@ class SplitPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: appState.makeNewSplit
                 ? GymGoalAndDayOfWeekSelector()
-                : SplitCard(),
+                : SplitCard(realTimeDayOfWeek),
           ),
         ],
       ),
@@ -54,6 +97,9 @@ class GymGoalAndDayOfWeekSelector extends StatefulWidget {
 
 class _GymGoalAndDayOfWeekSelectorState
     extends State<GymGoalAndDayOfWeekSelector> {
+  final GlobalKey<FormFieldState<List<String>>> _multiSelectKey =
+      GlobalKey<FormFieldState<List<String>>>();
+
   String? selectedGymGoalOption = "Build Muscle";
 
   List<String> gymGoalOptions = [
@@ -75,6 +121,7 @@ class _GymGoalAndDayOfWeekSelectorState
   ];
 
   List<String> selectedMuscleGroups = [];
+  List<MultiSelectItem<String>> chipItems = [];
 
   void submitSplitOnPressed(var appState) {
     // Since selectedDayOfWeekOptions is unsorted:
@@ -87,7 +134,6 @@ class _GymGoalAndDayOfWeekSelectorState
       }
     }
     // Set at 60 training minutes per session temporarily
-    // No focused muscle groups temporarily
     if (selectedGymGoalOption != null) {
       appState.setSplit(Split(
           selectedGymGoalOption!, trainingDaysInput, 60, selectedMuscleGroups));
@@ -124,6 +170,30 @@ class _GymGoalAndDayOfWeekSelectorState
 
   void restorePreviousSplit(var appState) {
     appState.setMakeNewSplit(false);
+  }
+
+  void toggleChipSelection(String value) {
+    print(selectedMuscleGroups);
+    // setState(() {
+    //   if (selectedMuscleGroups.contains(value)) {
+    //     selectedMuscleGroups.remove(value);
+    //   }
+    // });
+
+    // setState(() {
+    //   // Modify the chipItems list as needed
+    //   chipItems = selectedMuscleGroups.map((value) {
+    //     return MultiSelectItem<String>(value, value);
+    //   }).toList();
+    // });
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final state = _multiSelectKey.currentState;
+    //   if (state != null) {
+    //     state.didChange(selectedMuscleGroups);
+    //   }
+    // });
+    // print(selectedMuscleGroups);
   }
 
   @override
@@ -291,13 +361,14 @@ class _GymGoalAndDayOfWeekSelectorState
           //     dialogBackgroundColor: Colors.white,
           //   ),
           child: MultiSelectDialogField<String>(
+            key: _multiSelectKey,
             buttonText: Text(
               "Select none for a balanced split",
               style: whiteTextStyle,
             ),
             buttonIcon: Icon(
               Icons.keyboard_arrow_down,
-              color: Color.fromRGBO(80, 80, 80, 1),
+              color: theme.colorScheme.onBackground,
             ),
             items: muscleGroupOptions
                 .map((muscleGroupOption) => MultiSelectItem<String>(
@@ -333,21 +404,24 @@ class _GymGoalAndDayOfWeekSelectorState
             onConfirm: (List<String> results) {
               setState(() {
                 selectedMuscleGroups = results;
+                chipItems = selectedMuscleGroups.map((value) {
+                  return MultiSelectItem<String>(value, value);
+                }).toList();
               });
             },
             chipDisplay: MultiSelectChipDisplay<String>(
+              textStyle: TextStyle(color: theme.colorScheme.onBackground),
+              items: chipItems,
               onTap: (value) {
-                setState(() {
-                  selectedMuscleGroups.remove(value);
-                });
+                toggleChipSelection(value);
               },
             ),
           ),
-        ), //),
+        ),
         SizedBox(
           height: 30,
         ),
-        ElevatedButton(
+        ElevatedButton.icon(
             style: ButtonStyle(
                 backgroundColor:
                     resolveColor(theme.colorScheme.primaryContainer),
@@ -356,9 +430,13 @@ class _GymGoalAndDayOfWeekSelectorState
             onPressed: () {
               submitSplitOnPressed(appState);
             },
-            child: Text(
+            icon: Icon(
+              Icons.add,
+              color: theme.colorScheme.primary,
+            ),
+            label: Text(
               "Generate Split",
-              style: textStyle,
+              style: textStyle.copyWith(color: theme.colorScheme.onBackground),
             ))
       ],
     );
@@ -366,11 +444,16 @@ class _GymGoalAndDayOfWeekSelectorState
 }
 
 class SplitCard extends StatefulWidget {
+
+  SplitCard (this.realTimeDayOfWeek);
+  final String realTimeDayOfWeek;
+  
   @override
   State<SplitCard> createState() => _SplitCardState();
 }
 
 class _SplitCardState extends State<SplitCard> {
+
   final List<String> daysOfWeek = [
     "Monday",
     "Tuesday",
@@ -401,8 +484,8 @@ class _SplitCardState extends State<SplitCard> {
       color: theme.colorScheme.onBackground,
       // fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.bodyLarge!.copyWith(
-      color: theme.colorScheme.primary,
+    final textStyle = theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.onBackground,
     );
 
     Split split;
@@ -424,8 +507,9 @@ class _SplitCardState extends State<SplitCard> {
           i: i,
           headingStyle: headingStyle,
           split: split,
-          textStyle: textStyle,
-          appState: appState),
+          textStyle: textStyle.copyWith(),
+          appState: appState,
+          realTimeDayOfWeek: widget.realTimeDayOfWeek),
     );
 
     return Column(
@@ -447,7 +531,7 @@ class _SplitCardState extends State<SplitCard> {
                         cancelEditChanges(appState);
                       },
                       icon: Icon(
-                        Icons.cancel,
+                        Icons.close,
                         color: theme.colorScheme.primary,
                       ),
                       label: Text("Cancel", style: headingStyle)),
@@ -552,48 +636,45 @@ class _SplitCardState extends State<SplitCard> {
         SizedBox(
           height: 20,
         ),
-
         if (!appState.splitWeekEditMode)
-        for (Widget dayOfWeekButton in dayOfWeekButtons)
-          dayOfWeekButton,
-
+          for (Widget dayOfWeekButton in dayOfWeekButtons) dayOfWeekButton,
         if (appState.splitWeekEditMode)
-        SizedBox(
-          height: 521,
-          child: ReorderableListView(
-            children: dayOfWeekButtons,
-            onReorder: (oldIndex, newIndex) {
-              print(
-                  "Training days before reorder: ${split.trainingDays}");
-              print(
-                  "Exercise indices before reorder: $exerciseIndices");
-              try {
-                setState(() {
-                  // if (newIndex >= dayOfWeekButtons.length || newIndex < 0) {
-                  //   // Avoid out of bounds error
-                  //   return;
-                  // }
-                  if (newIndex > oldIndex) {
-                    newIndex -= 1; // Adjust the index when moving an item down
-                  }
-                  final card = dayOfWeekButtons.removeAt(oldIndex);
-                  final TrainingDay trainingDay = split.trainingDays.removeAt(oldIndex);
-                  final List<int> exerciseIndicesForTheDay = exerciseIndices.removeAt(oldIndex);
-                  dayOfWeekButtons.insert(newIndex, card);
-                  split.trainingDays.insert(newIndex, trainingDay);
-                  exerciseIndices.insert(newIndex,exerciseIndicesForTheDay);
+          SizedBox(
+            height: 521,
+            child: ReorderableListView(
+              children: dayOfWeekButtons,
+              onReorder: (oldIndex, newIndex) {
+                print("Training days before reorder: ${split.trainingDays}");
+                print("Exercise indices before reorder: $exerciseIndices");
+                try {
+                  setState(() {
+                    // if (newIndex >= dayOfWeekButtons.length || newIndex < 0) {
+                    //   // Avoid out of bounds error
+                    //   return;
+                    // }
+                    if (newIndex > oldIndex) {
+                      newIndex -=
+                          1; // Adjust the index when moving an item down
+                    }
+                    final card = dayOfWeekButtons.removeAt(oldIndex);
+                    final TrainingDay trainingDay =
+                        split.trainingDays.removeAt(oldIndex);
+                    final List<int> exerciseIndicesForTheDay =
+                        exerciseIndices.removeAt(oldIndex);
+                    dayOfWeekButtons.insert(newIndex, card);
+                    split.trainingDays.insert(newIndex, trainingDay);
+                    exerciseIndices.insert(newIndex, exerciseIndicesForTheDay);
 
-                  print(
-                      "Trainings days after reorder: ${split.trainingDays}");
-                  print(
-                      "Exercise indices after reorder: $exerciseIndices");
-                });
-              } catch (e) {
-                print("Drag and drop error - $e");
-              }
-            },
+                    print(
+                        "Trainings days after reorder: ${split.trainingDays}");
+                    print("Exercise indices after reorder: $exerciseIndices");
+                  });
+                } catch (e) {
+                  print("Drag and drop error - $e");
+                }
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -609,6 +690,7 @@ class DayOfWeekButton extends StatelessWidget {
     required this.split,
     required this.textStyle,
     required this.appState,
+    required this.realTimeDayOfWeek,
   });
 
   final ThemeData theme;
@@ -618,6 +700,7 @@ class DayOfWeekButton extends StatelessWidget {
   final Split split;
   final TextStyle textStyle;
   final MyAppState appState;
+  final String realTimeDayOfWeek;
 
   void viewDayOfWeek(MyAppState appState, int dayIndex) {
     appState.currentDayIndex = dayIndex;
@@ -626,6 +709,13 @@ class DayOfWeekButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final Color dayColor;
+    if (realTimeDayOfWeek == daysOfWeek[i]) {
+      dayColor = theme.colorScheme.primary;
+    } else {
+      dayColor = theme.colorScheme.onBackground;
+    }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
@@ -647,6 +737,7 @@ class DayOfWeekButton extends StatelessWidget {
                   '${daysOfWeek[i]}:',
                   style: headingStyle.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: dayColor,
                   ),
                   textAlign: TextAlign.left,
                 ),
@@ -654,7 +745,7 @@ class DayOfWeekButton extends StatelessWidget {
                 Expanded(
                   child: Text(
                     split.trainingDays[i].toString(),
-                    style: textStyle,
+                    style: textStyle.copyWith(color: dayColor),
                     textAlign: TextAlign.right,
                   ),
                 ),
@@ -674,7 +765,6 @@ class DayOfWeekButton extends StatelessWidget {
     );
   }
 }
-
 
 class OuterScroll extends StatelessWidget {
   final bool scrollMode;

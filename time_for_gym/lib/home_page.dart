@@ -9,15 +9,6 @@ class HomePage extends StatelessWidget {
     // var appState = context.watch<MyAppState>(); // Listening to MyAppState
     // var pair = appState.current;
     final theme = Theme.of(context);
-    final titleStyle1 = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.primary,
-      fontFamily: 'Courier',
-    );
-    final titleStyle2 = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.secondary,
-      fontWeight: FontWeight.bold,
-      fontFamily: 'Courier',
-    );
 
 
     // IconData icon;
@@ -29,28 +20,33 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            RichText(
-              text: TextSpan(
-                style: TextStyle(),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'Gym',
-                    style: titleStyle1,
-                  ),
-                  TextSpan(
-                    text: 'Brain',
-                    style: titleStyle2,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 10),
-            Icon(Icons.self_improvement_sharp, color: theme.colorScheme.secondary,)
-          ],
+        title: Padding(
+          padding: const EdgeInsets.fromLTRB(0,10,0,0),
+          child: SizedBox(height: 50, child: Image.asset('assets/images/gym_brain_logo.png'),),
         ),
+        
+        // title: Row(
+        //   mainAxisAlignment: MainAxisAlignment.center,
+        //   children: [
+        //     RichText(
+        //       text: TextSpan(
+        //         style: TextStyle(),
+        //         children: <TextSpan>[
+        //           TextSpan(
+        //             text: 'Gym',
+        //             style: titleStyle1,
+        //           ),
+        //           TextSpan(
+        //             text: 'Brain',
+        //             style: titleStyle2,
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //     SizedBox(width: 10),
+        //     Icon(Icons.self_improvement_sharp, color: theme.colorScheme.secondary,)
+        //   ],
+        // ),
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
       body: 
