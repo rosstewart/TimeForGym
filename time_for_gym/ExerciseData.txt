@@ -42,6 +42,7 @@ MuscleGroup: Side Delts
 
 Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until they reach shoulder level, 30° in front of you.|Side Delts|https://youtu.be/3VcKaXpzqRo|0.2|Dumbbells|1
 Cable Lateral Raise|Attach a D-handle to a cable at hip height, stand sideways to the cable machine, raise the handle out to the side until it reaches shoulder height, and return to the starting position with control.|Side Delts|Video Link|0.0|Cable|1
+Incline Dumbbell Y-Raise|Lie face down on an incline bench, holding light dumbbells with your arms straight and palms facing in. Lift your arms up and out to form a "Y" shape with your body, pause briefly, then lower the weights back down.|Side Delts|Video Link|0.0|Dumbbells,Bench|1
 
 MuscleGroup: Rear Delts
 
