@@ -6,7 +6,7 @@ Incline Barbell Bench|Lie down on the incline bench, grip the bar, lower to your
 Incline Dumbbell Bench|Lie down on the incline bench and press dummbells, keeping your arms about 45° in front of you.|Chest, Front Delts, Triceps|https://youtu.be/8iPEnn-ltC8|0.7|Dumbbells,Bench|0
 Dumbbell Fly|Lie down on a flat bench with dumbbells, bring them out to the sides, and squeeze your chest.|Chest|https://youtu.be/eozdVDA78K0|0.7|Dumbbells,Bench|1
 Dumbbell Bench Press|Lie down on a bench, hold dumbbells at shoulder level, lower them to your chest, and press up.|Chest, Front Delts, Triceps|Video Link|0.0|Dumbbells,Bench|0
-Push-Up|Start in a plank position, lower your body by bending your elbows, and push back up.|Chest, Shoulders, Triceps|Video Link|0.0||1
+Push-Up|Start in a plank position, lower your body by bending your elbows, and push back up.|Chest, Shoulders, Triceps|Video Link|0.0|None|1
 
 MuscleGroup: Back
 
