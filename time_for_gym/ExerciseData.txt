@@ -35,25 +35,32 @@ MuscleGroup: Front Delts
 
 Seated Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75|Dumbbells,Bench|0
 Military Press|Stand with a barbell in front of your shoulders, press it up overhead, and lower it back down in a controlled manner.|Front Delts, Triceps|Video Link|0.5|Barbell|0
+Arnold Press|Hold dumbbells at shoulder level with palms facing you, press the dumbbells overhead while rotating your palms away from you, and lower them back down with a reverse motion.|Front Delts, Triceps|Video Link|0.0|Dumbbells|0
+Front Dumbbell Raise|Hold dumbbells in front of your thighs with palms facing your body, raise the dumbbells straight out in front of you until they reach shoulder height, and lower them back down slowly.|Front Delts|Video Link|0.0|Dumbbells|1
 
 MuscleGroup: Side Delts
 
-Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until your head, 30° in front of you.|Side delts|https://youtu.be/3VcKaXpzqRo|0.2|Dumbbells|1
+Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until they reach shoulder level, 30° in front of you.|Side Delts|https://youtu.be/3VcKaXpzqRo|0.2|Dumbbells|1
+Cable Lateral Raise|Attach a D-handle to a cable at hip height, stand sideways to the cable machine, raise the handle out to the side until it reaches shoulder height, and return to the starting position with control.|Side Delts|Video Link|0.0|Cable|1
 
 MuscleGroup: Rear Delts
 
-Machine Rear Delt Fly|Bring your arms back to your side while keeping them striaght.|Rear delts|https://youtu.be/6yMdhi2DVao|0.6|Machine|1
+Machine Rear Delt Fly|Bring your arms back to your side while keeping them striaght.|Rear Delts|https://youtu.be/6yMdhi2DVao|0.6|Machine|1
+Bent-Over Dumbbell Reverse Fly|Bend forward at the hips with a dumbbell in each hand, raise the dumbbells out to the sides until they reach shoulder level, and squeeze your shoulder blades together at the top. (Optional - Rest head on bench during the movement.)|Rear Delts|Video Link|0.0|Dumbbells|1
+Face Pull|Attach a rope handle to a cable machine at face height, grasp the rope with an overhand grip, pull the rope towards your face while squeezing your shoulder blades together, and return to the starting position.|Rear Delts, Upper Back|Video Link|0.0|Cable|1
 
 MuscleGroup: Glutes
 
 Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes, Quads, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Rack|0
 Dumbbell RDL|Keeping bent legs, hinge back while keeping the dumbbells close and squeezing the glutes on the way up.|Glutes, Hamstrings|https://youtu.be/6_F82F5thmE|0.4|Dumbbells|1
+Glute Bridge|Lie on your back with knees bent and feet flat on the floor, lift your hips off the ground by squeezing your glutes, and hold for a few seconds before lowering back down.|Glutes, Hamstrings|Video Link|0.0|None|1
 
 MuscleGroup: Quads
 
 Leg Extension|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75|Machine|1
 Quad-Focused Hack Squat|Take your feet as low as possible with your feet flat and squat through the entire range of motion|Quads, Glutes|https://youtu.be/yptPTetoxik|0.7|Machine|0
 Dumbbell Lunge|While holding dumbbells to your side, stand with your feet hip-width apart, take a step forward with one leg, lower your body until your front knee is bent at a 90-degree angle, then push back up to the starting position.|Quads, Glutes, Hamstrings|Video Link|0.1|Dumbbells|0
+Bulgarian Split Squat|While holding dumbbells at your side, stand in a split stance with one foot elevated behind you, lower your body by bending your front knee until your rear knee is close to the ground, then push back up to the starting position.|Quads, Glutes, Hamstrings|Video Link|0.0|Dumbbells, Bench|0
 
 MuscleGroup: Hamstrings
 
@@ -67,5 +74,5 @@ Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves|https://
 
 MuscleGroup: Abs
 
-Hanging Leg Raises|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar|1
+Hanging Leg Raise|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar|1
 Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Abs|https://youtu.be/pvz7k5gO-DE|0.4|Bench|1
