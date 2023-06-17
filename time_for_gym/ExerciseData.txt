@@ -1,41 +1,71 @@
 MuscleGroup: Chest
+
 Barbell Bench Press|Lie down on bench, grip the bar, lower to your chest, and press up.|Chest, Front Delts, Triceps|https://youtu.be/rT7DgCr-3pg|1.0|Barbell,Bench|0
 Cable Chest Fly|Bring two cables together at chest height, squeeze your chest.|Chest|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
 Incline Barbell Bench|Lie down on the incline bench, grip the bar, lower to your chest, and press up.|Chest, Front Delts, Triceps|https://youtu.be/jPLdzuHckI8|0.6|Barbell,Bench|0
 Incline Dumbbell Bench|Lie down on the incline bench and press dummbells, keeping your arms about 45° in front of you.|Chest, Front Delts, Triceps|https://youtu.be/8iPEnn-ltC8|0.7|Dumbbells,Bench|0
 Dumbbell Fly|Lie down on a flat bench with dumbbells, bring them out to the sides, and squeeze your chest.|Chest|https://youtu.be/eozdVDA78K0|0.7|Dumbbells,Bench|1
+Dumbbell Bench Press|Lie down on a bench, hold dumbbells at shoulder level, lower them to your chest, and press up.|Chest, Front Delts, Triceps|Video Link|0.0|Dumbbells,Bench|0
+Push-Up|Start in a plank position, lower your body by bending your elbows, and push back up.|Chest, Shoulders, Triceps|Video Link|0.0||1
+
 MuscleGroup: Back
+
 Barbell Row|While standing, hinge down and pull a barbell to your stomach.|Back, Biceps, Rear Delts|https://youtu.be/FWJR5Ve8bnQ|0.5|Barbell|0
 Lat Pulldown|Pull the bar down to your chin while keeping your elbows tucked.|Back, Biceps|https://youtu.be/CAwf7n6Luuc|0.5|Machine|0
 Deadlift|Stand with the barbell in front of you, bend down, grab the bar, and stand up, keeping your back straight.|Back, Glutes, Hamstrings|https://youtube.com/shorts/vfKwjT5-86k?feature=share|1.0|Barbell|0
 Pull-Up|Hang from a bar with an overhand grip, pull yourself up until your chin is above the bar, and lower back down.|Back, Biceps|https://youtu.be/eGo4IYlbE5g|0.2|Pull-Up Bar|1
+Seated Cable Row|Sit on a rowing machine, grab the cable handles, pull them towards your abdomen while keeping your back straight, and squeeze your shoulder blades together.|Back, Biceps|Video Link|0.7|Cable|0
+
 MuscleGroup: Biceps
+
 Dumbbell Curl|Keep your shoulders still and bring the weight up to around 40 degrees.|Biceps|https://youtu.be/ykJmrZ5v0Oo|0.1|Dumbbells|1
 Barbell Curl|Stand with a barbell, palms facing up, curl the barbell up towards your chest, and lower back down.|Biceps|https://youtu.be/QZEqB6wUPxQ|0.3|Barbell|1
 Hammer Curl|Hold dumbbells with a neutral grip, curl the dumbbells up while keeping your palms facing each other, and lower back down.|Biceps|https://youtu.be/zC3nLlEvin4|0.2|Dumbbells|1
+EZ-Bar Preacher Curl|Sit on a preacher curl bench, hold an EZ-bar with an underhand grip, and curl it up towards your shoulders while keeping your upper arms on the bench.|Biceps|Video Link|0.8|Preacher Curl Bench,EZ-bar|1
+
 MuscleGroup: Triceps
-Cable Straight Bar Pushdown|Keep your shoulders still and extend your arm fullys from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3|Cable|1
-Skull Crushers|On a bench, lower an EZ-bar behind your head by moving your elbows|Triceps|https://youtu.be/d_KZxkY_0cM|0.5|EZ-bar,Bench|1
+
+Rope Pushdown|Attach a rope handle to a cable machine, grasp the rope with an overhand grip, and push it down while keeping your upper arms stationary.|Triceps|Video Link|0.3|Cable|1
+Straight Bar Pushdown|Keep your shoulders still and extend your arm fully from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3|Cable|1
+Skull Crusher|Lie down on a bench, hold an EZ-bar with an overhand grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|Triceps|https://youtu.be/d_KZxkY_0cM|0.5|EZ-bar,Bench|1
 Tricep Dip|Use parallel bars, lower your body by bending your elbows, and push back up.|Triceps, Chest, Shoulders|https://youtu.be/sM6XUdt1rm4|0.4|Parallel Bars|1
 Close Grip Bench Press|Lie down on a bench, grip the bar closer than shoulder-width, lower it to your chest, and press up.|Triceps, Chest|https://youtu.be/nEF0bv2FW94|0.9|Barbell, Bench|0
+
 MuscleGroup: Front Delts
-Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75|Dumbbells,Bench|0
+
+Seated Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75|Dumbbells,Bench|0
+Military Press|Stand with a barbell in front of your shoulders, press it up overhead, and lower it back down in a controlled manner.|Front Delts, Triceps|Video Link|0.5|Barbell|0
+
 MuscleGroup: Side Delts
+
 Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until your head, 30° in front of you.|Side delts|https://youtu.be/3VcKaXpzqRo|0.2|Dumbbells|1
+
 MuscleGroup: Rear Delts
+
 Machine Rear Delt Fly|Bring your arms back to your side while keeping them striaght.|Rear delts|https://youtu.be/6yMdhi2DVao|0.6|Machine|1
+
 MuscleGroup: Glutes
+
 Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes, Quads, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Rack|0
 Dumbbell RDL|Keeping bent legs, hinge back while keeping the dumbbells close and squeezing the glutes on the way up.|Glutes, Hamstrings|https://youtu.be/6_F82F5thmE|0.4|Dumbbells|1
+
 MuscleGroup: Quads
+
 Leg Extension|Extend your legs and squeeze at the top.|Quads|https://youtu.be/ljO4jkwv8wQ|0.75|Machine|1
 Quad-Focused Hack Squat|Take your feet as low as possible with your feet flat and squat through the entire range of motion|Quads, Glutes|https://youtu.be/yptPTetoxik|0.7|Machine|0
+Dumbbell Lunge|While holding dumbbells to your side, stand with your feet hip-width apart, take a step forward with one leg, lower your body until your front knee is bent at a 90-degree angle, then push back up to the starting position.|Quads, Glutes, Hamstrings|Video Link|0.1|Dumbbells|0
+
 MuscleGroup: Hamstrings
+
 Seated Leg Curl|Push into the seat, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/ELOCsoDSmrg|0.7|Machine|1
 Lying Leg Curl|Lay down, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/1Tq3QdYUuHs|0.7|Machine|1
 Stiff-Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the dumbbells close. You should feel a stretch in the hamstrings.|Hamstrings, Glutes|https://youtu.be/R6KXyhU4nTY|0.4|Dumbbells|1
+
 MuscleGroup: Calves
+
 Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves|https://youtu.be/GAQ-oohMhog|0.3|Machine|1
+
 MuscleGroup: Abs
+
 Hanging Leg Raises|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar|1
 Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Abs|https://youtu.be/pvz7k5gO-DE|0.4|Bench|1
