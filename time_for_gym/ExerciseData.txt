@@ -72,8 +72,11 @@ Stiff-Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the 
 MuscleGroup: Calves
 
 Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves|https://youtu.be/GAQ-oohMhog|0.3|Machine|1
+Seated Calf Raise Machine|Sit on a calf raise machine with the balls of your feet on the footrest, lower your heels as far as possible, and then raise them as high as you can by pushing through the balls of your feet and contracting your calves.|Calves|Video Link|0.0|Machine|0
 
 MuscleGroup: Abs
 
 Hanging Leg Raise|Hang on a bar and bring your legs up while keeping them straight|Abs|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar|1
 Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Abs|https://youtu.be/pvz7k5gO-DE|0.4|Bench|1
+Plank|Start in a push-up position, but with your forearms on the ground, engage your core and hold your body in a straight line from head to heels for a set amount of time.|Abs|Video Link|0.0|None|1
+Russian Twist|Sit on the ground with your knees bent, lean back slightly, lift your feet off the ground, and twist your torso from side to side, touching the ground on each side.|Abs, Obliques|Video Link|0.0|None|1
