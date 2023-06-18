@@ -36,7 +36,7 @@ MuscleGroup: Front Delts
 Seated Dumbbell Shoulder Press|Bring to dumbbells on your knees and kick them up. Press upward.|Front delts, Triceps|https://youtu.be/qEwKCR5JCog|0.75|Dumbbells,Bench|0
 Military Press|Stand with a barbell in front of your shoulders, press it up overhead, and lower it back down in a controlled manner.|Front Delts, Triceps|Video Link|0.5|Barbell|0
 Arnold Press|Hold dumbbells at shoulder level with palms facing you, press the dumbbells overhead while rotating your palms away from you, and lower them back down with a reverse motion.|Front Delts, Triceps|Video Link|0.0|Dumbbells|0
-Front Dumbbell Raise|Hold dumbbells in front of your thighs with palms facing your body, raise the dumbbells straight out in front of you until they reach shoulder height, and lower them back down slowly.|Front Delts|Video Link|0.0|Dumbbells|1
+Dumbbell Front Raise|Hold dumbbells in front of your thighs with palms facing your body, raise the dumbbells straight out in front of you until they reach shoulder height, and lower them back down slowly.|Front Delts|Video Link|0.0|Dumbbells|1
 
 MuscleGroup: Side Delts
 
