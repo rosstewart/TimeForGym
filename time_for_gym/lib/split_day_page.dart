@@ -114,6 +114,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
         split: split,
         exerciseIndices: exerciseIndices,
         isDraggable: true,
+        dayIndex: widget.dayIndex,
       ),
     );
 
@@ -358,6 +359,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                         split: split,
                         exerciseIndices: exerciseIndices,
                         isDraggable: false,
+                        dayIndex: widget.dayIndex,
                       ),
                   if (appState.splitDayEditMode)
                     AddButton(
@@ -564,7 +566,8 @@ class _AddButtonState extends State<AddButton> {
                   onSuggestionSelected: (suggestion) {
                     setState(() {
                       searchQuery = suggestion;
-                      searchController.text = suggestion; // Update the text field
+                      searchController.text =
+                          suggestion; // Update the text field
                     });
                   },
                 ),
@@ -583,10 +586,14 @@ class _AddButtonState extends State<AddButton> {
                     });
                     Navigator.of(context).pop();
                   },
-                  icon: Icon(Icons.add, color: theme.colorScheme.primary,),
+                  icon: Icon(
+                    Icons.add,
+                    color: theme.colorScheme.primary,
+                  ),
                   label: Text(
                     'Add',
-                    style: textStyle.copyWith(color: theme.colorScheme.onBackground),
+                    style: textStyle.copyWith(
+                        color: theme.colorScheme.onBackground),
                   ),
                 ),
               ],
@@ -601,10 +608,14 @@ class _AddButtonState extends State<AddButton> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                icon: Icon(Icons.close, color: theme.colorScheme.primary,),
+                icon: Icon(
+                  Icons.close,
+                  color: theme.colorScheme.primary,
+                ),
                 label: Text(
                   'Cancel',
-                  style: textStyle.copyWith(color: theme.colorScheme.onBackground),
+                  style:
+                      textStyle.copyWith(color: theme.colorScheme.onBackground),
                 ),
               ),
             ],
@@ -624,6 +635,7 @@ class SplitMuscleGroupCard extends StatefulWidget {
     required this.split,
     required this.exerciseIndices,
     required this.isDraggable,
+    required this.dayIndex,
   });
 
   final String muscleGroup;
@@ -632,32 +644,64 @@ class SplitMuscleGroupCard extends StatefulWidget {
   final List<List<int>> exerciseIndices;
   final bool isDraggable;
   int exerciseIndex = 0;
+  final int dayIndex;
 
   @override
   State<SplitMuscleGroupCard> createState() => _SplitMuscleGroupCardState();
 }
 
 class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
-  TextEditingController weightController = TextEditingController();
-  TextEditingController repsController = TextEditingController();
+  // TextEditingController weightController = TextEditingController();
+  // TextEditingController repsController = TextEditingController();
 
   bool showPreviousReps = false;
   bool showPreviousWeight = false;
 
-  String previousWeight = "";
-  String previousReps = "";
+  // String previousWeight = "";
+  // String previousReps = "";
+
+  late List<String> previousWeights;
+  late List<String> previousReps;
 
   final _trackTopSetFormKey = GlobalKey<FormState>();
 
   // bool _isWeightFieldEmpty = true;
   // bool _isRepsFieldEmpty = true;
 
-  Widget? weightSuffixIcon;
-  Widget? repsSuffixIcon;
+  late List<Widget?> weightSuffixIcons;
+  late List<Widget?> repsSuffixIcons;
 
   bool hasSavedTopSet = false;
 
   Timer? _timer;
+
+  late List<TextEditingController> setsWeightControllers;
+  late List<TextEditingController> setsRepsControllers;
+  late int numSets;
+
+  Widget suffixIcon =
+      Text('*', style: TextStyle(color: Colors.red, fontSize: 20));
+
+  @override
+  void initState() {
+    super.initState();
+    setsWeightControllers = [];
+    setsRepsControllers = [];
+    previousWeights = [];
+    previousReps = [];
+    weightSuffixIcons = [];
+    repsSuffixIcons = [];
+    numSets = widget.split.trainingDays[widget.dayIndex]
+        .setsPerMuscleGroup[widget.splitDayCardIndex];
+    for (int i = 0; i < numSets; i++) {
+      setsWeightControllers.add(TextEditingController());
+      setsRepsControllers.add(TextEditingController());
+      previousWeights.add('');
+      previousReps.add('');
+      weightSuffixIcons.add(null);
+      repsSuffixIcons.add(null);
+    }
+  }
 
   @override
   void dispose() {
@@ -666,8 +710,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
   }
 
   void changeExercise(var appState, bool next) {
-    widget.exerciseIndex = widget.exerciseIndices[appState.currentDayIndex]
-        [widget.splitDayCardIndex];
+    widget.exerciseIndex =
+        widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
     if (next) {
       if (widget.exerciseIndex >=
           appState.muscleGroups[widget.muscleGroup].length - 1) {
@@ -694,7 +738,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     // print("temp split ${appState.editModeTempExerciseIndices.hashCode}");
 
     // Set the "default" exercise to view in that muscle group of the split
-    widget.exerciseIndices[appState.currentDayIndex][widget.splitDayCardIndex] =
+    widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] =
         widget.exerciseIndex;
 
     // print("after next");
@@ -740,9 +784,12 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     return null;
   }
 
-  void saveTopSet(MyAppState appState, Exercise currentExercise) {
-    String weight = weightController.text;
-    String reps = repsController.text;
+  void saveTopSet(
+      MyAppState appState, Exercise currentExercise, bool showMoreSets) {
+    List<String> weights = setsWeightControllers.map((e) => e.text).toList();
+    List<String> reps = setsRepsControllers.map((e) => e.text).toList();
+    // String weight = weightController.text;
+    // String reps = repsController.text;
     bool isValidated = true;
 
     //TODO - Add kilo i/o functionality
@@ -753,77 +800,175 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     //   isValidated = false;
     // }
 
-    if (weightController.text.isNotEmpty &&
-        weightController.text != '0' &&
-        repsController.text.isNotEmpty &&
-        repsController.text != '0') {
-      setState(() {
-        weightSuffixIcon = null;
-        repsSuffixIcon = null;
-        hasSavedTopSet = true;
-      });
-      _trackTopSetFormKey.currentState!.save();
-      _timer = Timer(Duration(seconds: 2), () {
+    if (!showMoreSets) {
+      if (weights[0].isNotEmpty &&
+          weights[0] != '0' &&
+          reps[0].isNotEmpty &&
+          reps[0] != '0') {
+        setState(() {
+          weightSuffixIcons[0] = null;
+          repsSuffixIcons[0] = null;
+          hasSavedTopSet = true;
+        });
+        _trackTopSetFormKey.currentState!.save();
+        _timer = Timer(Duration(seconds: 2), () {
+          setState(() {
+            hasSavedTopSet = false;
+          });
+        });
+      } else {
         setState(() {
           hasSavedTopSet = false;
         });
-      });
+        isValidated = false;
+        if (weights[0].isEmpty || weights[0] == '0') {
+          setState(() {
+            weightSuffixIcons[0] = suffixIcon;
+          });
+        } else {
+          weightSuffixIcons[0] = null;
+        }
+        if (reps[0].isEmpty || reps[0] == '0') {
+          setState(() {
+            repsSuffixIcons[0] = suffixIcon;
+          });
+        } else {
+          repsSuffixIcons[0] = null;
+        }
+      }
+
+      if (isValidated) {
+        // Update weight and reps
+        currentExercise.splitWeightAndReps = [
+          int.parse(weights[0]),
+          int.parse(reps[0])
+        ];
+        print('updated weight and reps');
+
+        // Update one rep max if applicable
+        int? previousOneRepMax = currentExercise.userOneRepMax;
+        int newOneRepMax =
+            calculateOneRepMax(int.parse(weights[0]), int.parse(reps[0]));
+        if (int.parse(reps[0]) <= 30 &&
+            (previousOneRepMax == null || newOneRepMax > previousOneRepMax)) {
+          // Can update one rep max
+          currentExercise.userOneRepMax = newOneRepMax;
+
+          print('updated one rep max');
+        }
+
+        setState(() {
+          previousWeights[0] = weights[0];
+          previousReps[0] = reps[0];
+        });
+
+        appState.submitExercisePopularityDataToFirebase(
+            appState.userID,
+            currentExercise.name,
+            currentExercise.mainMuscleGroup,
+            currentExercise.userRating,
+            currentExercise.userOneRepMax,
+            currentExercise.splitWeightAndReps,
+            currentExercise.splitWeightPerSet,
+            currentExercise.splitRepsPerSet);
+        print('submitted split weight & rep data to firebase');
+      }
     } else {
-      setState(() {
-        hasSavedTopSet = false;
-      });
-      isValidated = false;
-      if (weightController.text.isEmpty || weightController.text == '0') {
+      // Show more sets == true
+      for (int i = 0; i < numSets; i++) {
+        if (weights[i].isEmpty) {
+          weights[i] = previousWeights[i]; // Submit previous weight if any
+        }
+        if (reps[i].isEmpty) {
+          reps[i] = previousReps[i]; // Submit previous reps if any
+        }
+        if (weights[i].isNotEmpty &&
+            weights[i] != '0' &&
+            reps[i].isNotEmpty &&
+            reps[i] != '0') {
+          setState(() {
+            weightSuffixIcons[i] = null;
+            repsSuffixIcons[i] = null;
+          });
+        } else {
+          setState(() {
+            hasSavedTopSet = false;
+          });
+          isValidated = false;
+          if (weights[i].isEmpty || weights[i] == '0') {
+            setState(() {
+              weightSuffixIcons[i] = suffixIcon;
+            });
+          } else {
+            weightSuffixIcons[i] = null;
+          }
+          if (reps[i].isEmpty || reps[i] == '0') {
+            setState(() {
+              repsSuffixIcons[i] = suffixIcon;
+            });
+          } else {
+            repsSuffixIcons[i] = null;
+          }
+        }
+      }
+
+      if (isValidated) {
         setState(() {
-          weightSuffixIcon =
-              Text('*', style: TextStyle(color: Colors.red, fontSize: 20));
+          hasSavedTopSet = true;
         });
-      } else {
-        weightSuffixIcon = null;
-      }
-      if (repsController.text.isEmpty || repsController.text == '0') {
+        _trackTopSetFormKey.currentState!.save();
+        _timer = Timer(Duration(seconds: 2), () {
+          setState(() {
+            hasSavedTopSet = false;
+          });
+        });
+        // Update weight and reps
+        currentExercise.splitWeightAndReps = [
+          int.parse(weights[0]),
+          int.parse(reps[0])
+        ];
+        currentExercise.splitWeightPerSet =
+            weights.map((string) => int.parse(string)).toList();
+        currentExercise.splitRepsPerSet =
+            reps.map((string) => int.parse(string)).toList();
+        print('updated weight and reps');
+
+        // Update one rep max if applicable
+        int? previousOneRepMax = currentExercise.userOneRepMax;
+        for (int i = 0; i < numSets; i++) {
+          // Check every set if they hit a new calculated one rep max
+          int newOneRepMax =
+              calculateOneRepMax(int.parse(weights[i]), int.parse(reps[i]));
+          if (int.parse(reps[i]) <= 30 &&
+              (previousOneRepMax == null || newOneRepMax > previousOneRepMax)) {
+            // Can update one rep max
+            currentExercise.userOneRepMax = newOneRepMax;
+
+            print('updated one rep max');
+          }
+        }
+
         setState(() {
-          repsSuffixIcon =
-              Text('*', style: TextStyle(color: Colors.red, fontSize: 20));
+          previousWeights = weights;
+          previousReps = reps;
+          // for (int i = 0; i < numSets; i++) {
+          //   previousWeights[i] = weights[i];
+          //   previousReps[i] = reps[i];
+          // }
         });
-      } else {
-        repsSuffixIcon = null;
-      }
-    }
 
-    if (isValidated) {
-      // Update weight and reps
-      currentExercise.splitWeightAndReps = [int.parse(weight), int.parse(reps)];
-      print('updated weight and reps');
-
-      // Update one rep max if applicable
-      int? previousOneRepMax = currentExercise.userOneRepMax;
-      int newOneRepMax = calculateOneRepMax(int.parse(weight), int.parse(reps));
-      if (int.parse(reps) <= 30 &&
-          (previousOneRepMax == null || newOneRepMax > previousOneRepMax)) {
-        // Can update one rep max
-        appState
-            .muscleGroups[widget.muscleGroup]![
-                widget.exerciseIndices[appState.currentDayIndex]
-                    [widget.splitDayCardIndex]]
-            .userOneRepMax = newOneRepMax;
-
-        print('updated one rep max');
-      }
-
-      setState(() {
-        previousWeight = weight;
-        previousReps = reps;
-      });
-
-      appState.submitExercisePopularityDataToFirebase(
+        appState.submitExercisePopularityDataToFirebase(
           appState.userID,
           currentExercise.name,
           currentExercise.mainMuscleGroup,
           currentExercise.userRating,
           currentExercise.userOneRepMax,
-          currentExercise.splitWeightAndReps);
-      print('submitted split weight & rep data to firebase');
+          currentExercise.splitWeightAndReps,
+          currentExercise.splitWeightPerSet,
+          currentExercise.splitRepsPerSet,
+        );
+        print('submitted split weight & rep data to firebase');
+      }
     }
   }
 
@@ -831,18 +976,18 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
-    Exercise currentExercise = appState.muscleGroups[widget.muscleGroup]![widget
-        .exerciseIndices[appState.currentDayIndex][widget.splitDayCardIndex]];
+    Exercise currentExercise = appState.muscleGroups[widget.muscleGroup]![
+        widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex]];
 
     // print(
     // 'accessory: ${appState.muscleGroups[widget.muscleGroup]![widget.exerciseIndices[appState.currentDayIndex][widget.splitDayCardIndex]].isAccessoryMovement}');
 
     final theme = Theme.of(context);
-    final headingStyle = theme.textTheme.titleLarge!.copyWith(
+    final headingStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onBackground,
       fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.titleMedium!.copyWith(
+    final textStyle = theme.textTheme.titleSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -850,7 +995,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
       color: theme.colorScheme.onBackground,
     );
 
-    final formHeadingStyle = theme.textTheme.titleSmall!.copyWith(
+    final formHeadingStyle = theme.textTheme.bodyMedium!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -863,16 +1008,14 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
 
     // If exercise isn't in exercise indices
     if (widget.splitDayCardIndex >=
-        widget.exerciseIndices[appState.currentDayIndex].length) {
-      widget.exerciseIndices[appState.currentDayIndex].add(0);
+        widget.exerciseIndices[widget.dayIndex].length) {
+      widget.exerciseIndices[widget.dayIndex].add(0);
     }
 
     // Reset exercise index if out of bounds
-    if (widget.exerciseIndices[appState.currentDayIndex]
-            [widget.splitDayCardIndex] >=
+    if (widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] >=
         appState.muscleGroups[widget.muscleGroup]!.length) {
-      widget.exerciseIndices[appState.currentDayIndex]
-          [widget.splitDayCardIndex] = 0;
+      widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] = 0;
     }
 
     CrossAxisAlignment startOrEnd = appState.splitDayEditMode
@@ -880,26 +1023,53 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         : CrossAxisAlignment.start;
 
     // No previous topset data
-    if (appState
-        .muscleGroups[widget.muscleGroup]![
-            widget.exerciseIndices[appState.currentDayIndex]
-                [widget.splitDayCardIndex]]
-        .splitWeightAndReps
-        .isEmpty) {
-      List<int>? weightAndReps =
-          currentExercise.initializeSplitWeightAndRepsFrom1RM();
+    if (currentExercise.splitWeightAndReps.isEmpty) {
+      List<List<int>>? weightAndReps =
+          currentExercise.initializeSplitWeightAndRepsFrom1RM(numSets);
       // If one rep max isn't null, initialization was successful
       if (weightAndReps != null) {
-        previousWeight = weightAndReps[0].toString();
-        previousReps = weightAndReps[1].toString();
+        for (int i = 0; i < weightAndReps[0].length; i++) {
+          previousWeights[i] = weightAndReps[0][i].toString();
+          previousReps[i] = weightAndReps[1][i].toString();
+        }
       }
       // If null, previous weight and reps will remain an empty string
     } else {
       // Previous topset data
-      List<int> weightAndReps = currentExercise.splitWeightAndReps;
-      previousWeight = weightAndReps[0].toString();
-      previousReps = weightAndReps[1].toString();
+      // List<int> weightAndReps = currentExercise.splitWeightAndReps;
+      if (currentExercise.splitWeightPerSet.isEmpty ||
+          currentExercise.splitRepsPerSet.isEmpty) {
+        List<List<int>>? weightAndReps =
+            currentExercise.initializeSetsFromTopSet(numSets);
+        if (weightAndReps != null) {
+          for (int i = 0; i < weightAndReps[0].length; i++) {
+            previousWeights[i] = weightAndReps[0][i].toString();
+            previousReps[i] = weightAndReps[1][i].toString();
+          }
+        }
+      } else {
+        previousWeights = currentExercise.splitWeightPerSet.map((e) => e.toString()).toList();
+        previousReps = currentExercise.splitRepsPerSet.map((e) => e.toString()).toList();
+        // Fill arrays if numSets was incremented
+        if (previousWeights.length < numSets) {
+          for (int i = previousWeights.length; i < numSets; i++) {
+            previousWeights.add(previousWeights[previousWeights.length-1]);
+          }
+        }
+        if (previousReps.length < numSets) {
+          for (int i = previousReps.length; i < numSets; i++) {
+            previousReps.add(previousReps[previousReps.length-1]);
+          }
+        }
+      }
     }
+
+    bool showMoreSets = (numSets > 1 &&
+        previousWeights[0].isNotEmpty &&
+        previousReps[0].isNotEmpty);
+
+    // List<String> weightAndRepsPerSet = [];
+    // if
 
     if (!widget.isDraggable) {
       return Column(
@@ -919,7 +1089,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           if (appState.splitDayEditMode)
             AddButton(
                 appState: appState,
-                dayIndex: appState.currentDayIndex,
+                dayIndex: widget.dayIndex,
                 cardIndex: widget.splitDayCardIndex),
           // ElevatedButton.icon(
           //     onPressed: () {
@@ -937,17 +1107,13 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                   children: [
                     Text('${widget.muscleGroup}   ',
                         style: headingStyle, textAlign: TextAlign.center),
-                    if (widget.split.trainingDays[appState.currentDayIndex]
-                            .setsPerMuscleGroup[widget.splitDayCardIndex] !=
-                        1)
+                    if (numSets != 1)
                       Text(
-                        '-  ${widget.split.trainingDays[appState.currentDayIndex].setsPerMuscleGroup[widget.splitDayCardIndex]} Sets',
+                        '-  $numSets Sets',
                         textAlign: TextAlign.center,
                         style: textStyle,
                       ),
-                    if (widget.split.trainingDays[appState.currentDayIndex]
-                            .setsPerMuscleGroup[widget.splitDayCardIndex] ==
-                        1)
+                    if (numSets == 1)
                       Text(
                         '-  1 Set',
                         textAlign: TextAlign.center,
@@ -961,18 +1127,20 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                             GestureDetector(
                               onTap: () {
                                 // Increment number of sets
-                                if (widget
-                                            .split
-                                            .trainingDays[appState.currentDayIndex]
-                                            .setsPerMuscleGroup[
-                                        widget.splitDayCardIndex] <
-                                    10) {
+                                if (numSets < 10) {
                                   setState(() {
-                                    widget
-                                            .split
-                                            .trainingDays[appState.currentDayIndex]
+                                    widget.split.trainingDays[widget.dayIndex]
                                             .setsPerMuscleGroup[
                                         widget.splitDayCardIndex]++;
+                                    numSets++;
+                                    setsWeightControllers
+                                        .add(TextEditingController());
+                                    setsRepsControllers
+                                        .add(TextEditingController());
+                                    previousWeights.add('');
+                                    previousReps.add('');
+                                    weightSuffixIcons.add(null);
+                                    repsSuffixIcons.add(null);
                                   });
                                 }
                               },
@@ -985,18 +1153,24 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                             GestureDetector(
                               onTap: () {
                                 // Decrement number of sets
-                                if (widget
-                                            .split
-                                            .trainingDays[appState.currentDayIndex]
-                                            .setsPerMuscleGroup[
-                                        widget.splitDayCardIndex] >
-                                    1) {
+                                if (numSets > 1) {
                                   setState(() {
-                                    widget
-                                            .split
-                                            .trainingDays[appState.currentDayIndex]
+                                    widget.split.trainingDays[widget.dayIndex]
                                             .setsPerMuscleGroup[
                                         widget.splitDayCardIndex]--;
+                                    numSets--;
+                                    setsWeightControllers[
+                                            setsWeightControllers.length - 1]
+                                        .dispose();
+                                    setsWeightControllers.removeLast();
+                                    setsRepsControllers[
+                                            setsRepsControllers.length - 1]
+                                        .dispose();
+                                    setsRepsControllers.removeLast();
+                                    previousWeights.removeLast();
+                                    previousReps.removeLast();
+                                    weightSuffixIcons.removeLast();
+                                    repsSuffixIcons.removeLast();
                                   });
                                 }
                               },
@@ -1014,13 +1188,13 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                 SizedBox(
                   height: 10,
                 ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: theme.colorScheme.primaryContainer,
-                    ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: theme.colorScheme.primaryContainer,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Row(
@@ -1053,7 +1227,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                         child: Text(
                                             // exercise index
                                             currentExercise.name,
-                                            style: textStyle,
+                                            style: smallTextStyle,
                                             textAlign: TextAlign.center),
                                       ),
                                       SizedBox(
@@ -1061,15 +1235,16 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                       ),
                                       Container(
                                         color: theme.colorScheme.onBackground,
-                                        height: 150,
-                                        width: 150,
+                                        height: 120,
+                                        width: 120,
                                         child: ImageContainer(
                                             exercise: currentExercise),
                                       ),
                                     ]),
                                   ),
                                   // If star rating of exercise >= 4, it is popular
-                                  if (currentExercise.starRating >= 4.0)
+                                  if (appState.splitDayEditMode &&
+                                      currentExercise.starRating >= 4.0)
                                     // if (widget.exerciseIndices[appState.currentDayIndex]
                                     //         [widget.splitDayCardIndex] ==
                                     //     0) // First exercise in group, thus most popular
@@ -1097,13 +1272,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                       ),
                                     ),
                                   // Placeholder to keep alignment the same with and without popular exercise label
-                                  if (appState
-                                          .muscleGroups[widget.muscleGroup]![
-                                              widget.exerciseIndices[
-                                                      appState.currentDayIndex]
-                                                  [widget.splitDayCardIndex]]
-                                          .starRating <
-                                      4.0)
+                                  if (appState.splitDayEditMode &&
+                                      currentExercise.starRating < 4.0)
                                     Padding(
                                       padding: const EdgeInsets.fromLTRB(
                                           0, 10, 0, 0),
@@ -1148,7 +1318,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                             IconButton(
                               onPressed: () {
                                 appState.removeTempMuscleGroupFromSplit(
-                                  appState.currentDayIndex,
+                                  widget.dayIndex,
                                   widget.splitDayCardIndex,
                                 );
                               },
@@ -1156,33 +1326,110 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                               color: theme.colorScheme.primary,
                             ),
                           if (!appState.splitDayEditMode)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-                              child: SizedBox(
-                                width: 179,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Track Top Set',
-                                      style: formHeadingStyle,
-                                    ),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Form(
-                                      key: _trackTopSetFormKey,
-                                      child: SizedBox(
-                                        // height: 200,
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Column(
-                                                  children: [
-                                                    Container(
-                                                      width: 80,
-                                                      height: 44,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                if (!showMoreSets)
+                                  Text(
+                                    'Track Top Set',
+                                    style: formHeadingStyle,
+                                  ),
+                                if (showMoreSets)
+                                  Text(
+                                    'Track Sets',
+                                    style: formHeadingStyle,
+                                  ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Form(
+                                  key: _trackTopSetFormKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Container(
+                                                // width: 80,
+                                                // height: 44,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: theme.colorScheme
+                                                        .tertiaryContainer),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          8, 0, 8, 0),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 42,
+                                                        height: 38,
+                                                        child: TextFormField(
+                                                          maxLength: 3,
+                                                          style: formTextStyle,
+                                                          controller:
+                                                              setsWeightControllers[
+                                                                  0],
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          // textInputAction:
+                                                          //     TextInputAction
+                                                          //         .done,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            counterText: '',
+                                                            border: InputBorder
+                                                                .none,
+                                                            floatingLabelBehavior:
+                                                                FloatingLabelBehavior
+                                                                    .never,
+                                                            labelStyle: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .65)),
+                                                            labelText:
+                                                                previousWeights[
+                                                                    0],
+                                                            // suffix: weightSuffixIcon,
+                                                            // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (weightSuffixIcons[
+                                                              0] !=
+                                                          null)
+                                                        weightSuffixIcons[0]!,
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              if (showMoreSets)
+                                                for (int i = 1;
+                                                    i < numSets;
+                                                    i++)
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .fromLTRB(0, 10, 0, 0),
+                                                    child: Container(
+                                                      // width: 80,
+                                                      // height: 44,
                                                       decoration: BoxDecoration(
                                                           borderRadius:
                                                               BorderRadius
@@ -1197,15 +1444,17 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                 8, 0, 8, 0),
                                                         child: Row(
                                                           children: [
-                                                            Container(
-                                                              width: 54,
-                                                              height: 44,
+                                                            SizedBox(
+                                                              width: 42,
+                                                              height: 38,
                                                               child:
                                                                   TextFormField(
+                                                                maxLength: 3,
                                                                 style:
                                                                     formTextStyle,
                                                                 controller:
-                                                                    weightController,
+                                                                    setsWeightControllers[
+                                                                        i],
                                                                 inputFormatters: [
                                                                   FilteringTextInputFormatter
                                                                       .digitsOnly
@@ -1218,6 +1467,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                 //         .done,
                                                                 decoration:
                                                                     InputDecoration(
+                                                                  counterText:
+                                                                      '',
                                                                   border:
                                                                       InputBorder
                                                                           .none,
@@ -1231,36 +1482,113 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           .withOpacity(
                                                                               .65)),
                                                                   labelText:
-                                                                      previousWeight,
+                                                                      previousWeights[
+                                                                          i],
                                                                   // suffix: weightSuffixIcon,
                                                                   // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
                                                                 ),
                                                               ),
                                                             ),
-                                                            if (weightSuffixIcon !=
+                                                            if (weightSuffixIcons[
+                                                                    i] !=
                                                                 null)
-                                                              weightSuffixIcon!,
+                                                              weightSuffixIcons[
+                                                                  i]!,
                                                           ],
                                                         ),
                                                       ),
                                                     ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Text(
-                                                      'Weight (lbs)',
-                                                      style: labelStyle,
-                                                    ),
-                                                  ],
+                                                  ),
+                                              SizedBox(
+                                                height: 5,
+                                              ),
+                                              Text(
+                                                'Weight (lbs)',
+                                                style: labelStyle,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Column(
+                                            children: [
+                                              Container(
+                                                // width: 80,
+                                                // height: 44,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: theme.colorScheme
+                                                        .tertiaryContainer),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          8, 0, 8, 0),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 42,
+                                                        height: 38,
+                                                        child: TextFormField(
+                                                          maxLength: 2,
+                                                          validator: (value) {
+                                                            return validateRepsInput(
+                                                                value);
+                                                          },
+                                                          style: formTextStyle,
+                                                          controller:
+                                                              setsRepsControllers[
+                                                                  0],
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          // textInputAction:
+                                                          //     TextInputAction
+                                                          //         .done,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            counterText: '',
+                                                            border: InputBorder
+                                                                .none,
+                                                            floatingLabelBehavior:
+                                                                FloatingLabelBehavior
+                                                                    .never,
+                                                            labelStyle: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .65)),
+                                                            labelText:
+                                                                previousReps[0],
+                                                            // suffix: repsSuffixIcon,
+                                                            // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (repsSuffixIcons[0] !=
+                                                          null)
+                                                        repsSuffixIcons[0]!,
+                                                    ],
+                                                  ),
                                                 ),
-                                                SizedBox(
-                                                  width: 10,
-                                                ),
-                                                Column(
-                                                  children: [
-                                                    Container(
-                                                      width: 80,
-                                                      height: 44,
+                                              ),
+                                              if (showMoreSets)
+                                                for (int i = 1;
+                                                    i < numSets;
+                                                    i++)
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .fromLTRB(0, 10, 0, 0),
+                                                    child: Container(
+                                                      // width: 80,
+                                                      // height: 44,
                                                       decoration: BoxDecoration(
                                                           borderRadius:
                                                               BorderRadius
@@ -1275,11 +1603,12 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                 8, 0, 8, 0),
                                                         child: Row(
                                                           children: [
-                                                            Container(
-                                                              width: 54,
-                                                              height: 44,
+                                                            SizedBox(
+                                                              width: 42,
+                                                              height: 38,
                                                               child:
                                                                   TextFormField(
+                                                                maxLength: 2,
                                                                 validator:
                                                                     (value) {
                                                                   return validateRepsInput(
@@ -1288,7 +1617,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                 style:
                                                                     formTextStyle,
                                                                 controller:
-                                                                    repsController,
+                                                                    setsRepsControllers[
+                                                                        i],
                                                                 inputFormatters: [
                                                                   FilteringTextInputFormatter
                                                                       .digitsOnly
@@ -1301,6 +1631,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                 //         .done,
                                                                 decoration:
                                                                     InputDecoration(
+                                                                  counterText:
+                                                                      '',
                                                                   border:
                                                                       InputBorder
                                                                           .none,
@@ -1314,85 +1646,211 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           .withOpacity(
                                                                               .65)),
                                                                   labelText:
-                                                                      previousReps,
+                                                                      previousReps[
+                                                                          i],
                                                                   // suffix: repsSuffixIcon,
                                                                   // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
                                                                 ),
                                                               ),
                                                             ),
-                                                            if (repsSuffixIcon !=
+                                                            if (repsSuffixIcons[
+                                                                    i] !=
                                                                 null)
-                                                              repsSuffixIcon!,
+                                                              repsSuffixIcons[
+                                                                  i]!,
                                                           ],
                                                         ),
                                                       ),
                                                     ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Text(
-                                                      'Reps',
-                                                      style: theme
-                                                          .textTheme.labelSmall!
-                                                          .copyWith(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .onBackground),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(
-                                              height: 10,
-                                            ),
-                                            ElevatedButton.icon(
-                                              style: ButtonStyle(
-                                                  padding:
-                                                      MaterialStateProperty.all(
-                                                          EdgeInsets.all(10)),
-                                                  backgroundColor: resolveColor(
-                                                      theme.colorScheme
-                                                          .secondaryContainer),
-                                                  surfaceTintColor:
-                                                      resolveColor(theme
-                                                          .colorScheme
-                                                          .secondaryContainer)),
-                                              onPressed: () {
-                                                saveTopSet(
-                                                    appState, currentExercise);
-                                              },
-                                              label: Text(
-                                                'Save',
-                                                style: labelStyle,
+                                                  ),
+                                              SizedBox(
+                                                height: 5,
                                               ),
-                                              icon: Icon(
-                                                Icons.save_alt,
-                                                color:
-                                                    theme.colorScheme.primary,
+                                              Text(
+                                                'Reps',
+                                                style: theme
+                                                    .textTheme.labelSmall!
+                                                    .copyWith(
+                                                        color: theme.colorScheme
+                                                            .onBackground),
                                               ),
-                                            ),
-                                            if (hasSavedTopSet)
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                        0, 5, 0, 0),
-                                                child: Text(
-                                                  'Saved',
-                                                  style: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.65),
+                                            ],
+                                          ),
+                                          // if (!showMoreSets)
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          // if (!showMoreSets)
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              SizedBox(
+                                                height: 40,
+                                                child: IconButton(
+                                                  style: ButtonStyle(
+                                                      backgroundColor:
+                                                          resolveColor(theme
+                                                              .colorScheme
+                                                              .secondaryContainer),
+                                                      surfaceTintColor:
+                                                          resolveColor(theme
+                                                              .colorScheme
+                                                              .secondaryContainer)),
+                                                  onPressed: () {
+                                                    saveTopSet(
+                                                        appState,
+                                                        currentExercise,
+                                                        showMoreSets);
+                                                  },
+                                                  // label: Text(
+                                                  //   'Save',
+                                                  //   style: labelStyle,
+                                                  // ),
+                                                  icon: Icon(
+                                                    Icons.save_alt,
+                                                    color: theme
+                                                        .colorScheme.primary,
+                                                    size: 20,
                                                   ),
                                                 ),
                                               ),
-                                          ],
-                                        ),
+                                              if (hasSavedTopSet)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          0, 5, 0, 0),
+                                                  child: Text(
+                                                    'Saved',
+                                                    style: labelStyle.copyWith(
+                                                      color: theme.colorScheme
+                                                          .onBackground
+                                                          .withOpacity(.65),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          )
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                      // SizedBox(
+                                      //   height: 10,
+                                      // ),
+                                      // if (showMoreSets)
+                                      //   Column(
+                                      //     crossAxisAlignment:
+                                      //         CrossAxisAlignment.start,
+                                      //     children: [
+                                      //       for (int i = 1; i < numSets; i++)
+                                      //         Row(
+                                      //           mainAxisAlignment:
+                                      //               MainAxisAlignment.start,
+                                      //           children: [
+                                      //             if (i < numSets - 1)
+                                      //               Text(
+                                      //                 'Set ${i + 1} -',
+                                      //                 style: labelStyle,
+                                      //               ),
+                                      //             if (i == numSets - 1)
+                                      //               Text(
+                                      //                 'Set ${i + 1} (Dropset) -',
+                                      //                 style: labelStyle,
+                                      //               ),
+                                      //           ],
+                                      //         ),
+                                      //       Column(
+                                      //         mainAxisAlignment:
+                                      //             MainAxisAlignment.start,
+                                      //         children: [
+                                      //           SizedBox(
+                                      //             child: IconButton(
+                                      //               style: ButtonStyle(
+                                      //                   backgroundColor:
+                                      //                       resolveColor(theme
+                                      //                           .colorScheme
+                                      //                           .secondaryContainer),
+                                      //                   surfaceTintColor:
+                                      //                       resolveColor(theme
+                                      //                           .colorScheme
+                                      //                           .secondaryContainer)),
+                                      //               onPressed: () {
+                                      //                 saveTopSet(appState,
+                                      //                     currentExercise);
+                                      //               },
+                                      //               // label: Text(
+                                      //               //   'Save',
+                                      //               //   style: labelStyle,
+                                      //               // ),
+                                      //               icon: Icon(
+                                      //                 Icons.save_alt,
+                                      //                 color: theme
+                                      //                     .colorScheme.primary,
+                                      //                 size: 20,
+                                      //               ),
+                                      //             ),
+                                      //           ),
+                                      //           if (hasSavedTopSet)
+                                      //             Padding(
+                                      //               padding: const EdgeInsets
+                                      //                   .fromLTRB(0, 5, 0, 0),
+                                      //               child: Text(
+                                      //                 'Saved',
+                                      //                 style:
+                                      //                     labelStyle.copyWith(
+                                      //                   color: theme.colorScheme
+                                      //                       .onBackground
+                                      //                       .withOpacity(.65),
+                                      //                 ),
+                                      //               ),
+                                      //             ),
+                                      //         ],
+                                      //       )
+                                      //     ],
+                                      //   )
+                                      // IconButton(
+                                      //   style: ButtonStyle(
+                                      //       padding:
+                                      //           MaterialStateProperty.all(
+                                      //               EdgeInsets.all(10)),
+                                      //       backgroundColor: resolveColor(
+                                      //           theme.colorScheme
+                                      //               .secondaryContainer),
+                                      //       surfaceTintColor:
+                                      //           resolveColor(theme
+                                      //               .colorScheme
+                                      //               .secondaryContainer)),
+                                      //   onPressed: () {
+                                      //     saveTopSet(
+                                      //         appState, currentExercise);
+                                      //   },
+                                      //   // label: Text(
+                                      //   //   'Save',
+                                      //   //   style: labelStyle,
+                                      //   // ),
+                                      //   icon: Icon(
+                                      //     Icons.save_alt,
+                                      //     color:
+                                      //         theme.colorScheme.primary,
+                                      //   ),
+                                      // ),
+                                      // if (hasSavedTopSet)
+                                      //   Padding(
+                                      //     padding:
+                                      //         const EdgeInsets.fromLTRB(
+                                      //             0, 5, 0, 0),
+                                      //     child: Text(
+                                      //       'Saved',
+                                      //       style: labelStyle.copyWith(
+                                      //         color: theme.colorScheme
+                                      //             .onBackground
+                                      //             .withOpacity(.65),
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                    ],
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                         ],
                       ),
@@ -1422,11 +1880,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           ),
           Text(
               // exercise index
-              appState
-                  .muscleGroups[widget.muscleGroup]![
-                      widget.exerciseIndices[appState.currentDayIndex]
-                          [widget.splitDayCardIndex]]
-                  .name,
+              currentExercise.name,
               style: smallTextStyle,
               textAlign: TextAlign.center),
           Spacer(),

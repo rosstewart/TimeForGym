@@ -343,7 +343,9 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
         widget.exercise.mainMuscleGroup,
         widget.exercise.userRating,
         widget.exercise.userOneRepMax,
-        widget.exercise.splitWeightAndReps);
+        widget.exercise.splitWeightAndReps,
+        widget.exercise.splitWeightPerSet,
+        widget.exercise.splitRepsPerSet);
     print(
         'submitted to firebase: Weight: $weight, Reps: $reps, One rep max: ${widget.exercise.userOneRepMax}');
   }

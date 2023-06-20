@@ -627,7 +627,7 @@ class _SplitCardState extends State<SplitCard> {
                   color: theme.colorScheme.primary,
                 ),
                 label: Text(
-                  "Make a New Split",
+                  "New Split",
                   style: headingStyle,
                 ),
               ),
