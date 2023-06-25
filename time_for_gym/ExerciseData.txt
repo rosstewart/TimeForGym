@@ -21,7 +21,7 @@ MuscleGroup: Biceps
 Dumbbell Curl|Keep your shoulders still and bring the weight up to around 40 degrees.|Biceps|https://youtu.be/ykJmrZ5v0Oo|0.1|Dumbbells|1
 Barbell Curl|Stand with a barbell, palms facing up, curl the barbell up towards your chest, and lower back down.|Biceps|https://youtu.be/QZEqB6wUPxQ|0.3|Barbell|1
 Hammer Curl|Hold dumbbells with a neutral grip, curl the dumbbells up while keeping your palms facing each other, and lower back down.|Biceps|https://youtu.be/zC3nLlEvin4|0.2|Dumbbells|1
-EZ-Bar Preacher Curl|Sit on a preacher curl bench, hold an EZ-bar with an underhand grip, and curl it up towards your shoulders while keeping your upper arms on the bench.|Biceps|Video Link|0.8|Preacher Curl Bench,EZ-bar|1
+EZ-Bar Preacher Curl|Sit on a preacher curl bench, hold an EZ-bar with an underhand grip, and curl it up towards your shoulders while keeping your upper arms on the bench.|Biceps|Video Link|0.8|Preacher Bench,EZ-bar|1
 
 MuscleGroup: Triceps
 
