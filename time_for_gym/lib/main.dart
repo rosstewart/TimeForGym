@@ -4,6 +4,7 @@ import 'dart:io';
 // import 'dart:ui';
 import 'dart:convert';
 
+// import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -20,8 +21,11 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:connectivity/connectivity.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:google_maps_webservice/places.dart';
 
 import 'package:time_for_gym/exercise.dart';
+import 'package:time_for_gym/gym.dart';
 // import 'package:time_for_gym/favorites_page.dart';
 import 'package:time_for_gym/home_page.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
@@ -31,9 +35,12 @@ import 'package:time_for_gym/gym_crowd_page.dart';
 import 'package:time_for_gym/split_page.dart';
 import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/search_page.dart';
+import 'package:time_for_gym/gym_page.dart';
+
 // import 'package:time_for_gym/split_exercise_index.dart';
 
 void main() async {
+  // GoogleMapsFlutter.init('YOUR_API_KEY');
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     name: 'TimeForGym',
@@ -180,9 +187,24 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     await initializeUserID(); // Need user id for muscle group exercise user popularity data
     await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
     await initializeMuscleGroups();
+    await initGyms();
     await initializeGymCount();
+    isInitializing = false;
+    notifyListeners();
     // initializeOldFavorites();
     // initializeFirebase(); // For storing user-reported occupancy data
+  }
+
+  Future<void> initGyms() async {
+    // print('5 ${databaseRef.child('gymData').once()}');
+    gyms = await fetchGymData();
+    // Retrieve user gym from shared preferences id string
+    List<Gym> userGymList =
+        gyms.values.where((gym) => gym.placeId == userGymId).toList();
+    if (userGymList.isNotEmpty) {
+      userGym = userGymList[0];
+    }
+    print(userGymId);
   }
 
   Future<void> initPrefs() async {
@@ -192,6 +214,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     _splitDayExerciseIndicesString =
         _prefs.getString('splitDayExerciseIndices') ?? '';
     // initializeOldFavorites();
+    userGymId = _prefs.getString('userGymId') ?? '';
     notifyListeners();
   }
 
@@ -291,7 +314,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var favoriteExercises = <Exercise>[];
   var pageIndex = 0;
 
-  var muscleGroups = <String, List<Exercise>>{}; // Map<String,Exercise>();
+  Map<String, List<Exercise>> muscleGroups =
+      <String, List<Exercise>>{}; // Map<String, List<Exercise>>
   var gymCount = -1;
   var maxCapacity = 200;
 
@@ -299,12 +323,17 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var isGymCountInitialized = false;
 
   var currentMuscleGroup = ""; // String
-  var currentExercise = Exercise(splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
-  var currentExerciseFromSplitDayPage = Exercise(splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+  var currentExercise = Exercise(
+      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+  var currentExerciseFromSplitDayPage = Exercise(
+      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+  var currentExerciseFromGymPage = Exercise(
+      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
 
   // var fromFavorites = false;
-  var fromSplitDayPage = false;
-  var fromSearchPage = false;
+  bool fromSplitDayPage = false;
+  bool fromSearchPage = false;
+  bool fromGymPage = false;
 
   final databaseRef = FirebaseDatabase.instance.ref();
 
@@ -324,6 +353,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool goStraightToSplitDayPage = false;
   int presetSearchPage =
       0; // 0 for search page, 1 for muscle group, 2 for exercise
+  int presetHomePage = 0;
   String searchQuery = '';
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
@@ -339,8 +369,21 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     IndividualExercisePage(),
     SplitPage(),
     SplitDayPage(0),
-    SearchPage()
+    SearchPage(),
+    GymPage(
+      gym: null,
+      isSelectedGym: false,
+    ),
   ];
+
+  bool isHomePageSearchFieldFocused = false;
+  Map<String, Gym> gyms = <String, Gym>{};
+  Gym? currentGym;
+  Gym? userGym;
+
+  List<Widget> currentGymPhotos = [];
+
+  String userGymId = '';
 
   void setSplit(Split split) {
     currentSplit = split;
@@ -493,7 +536,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     initializeOldFavorites();
     retrieveSplitFromSharedPreferences();
     initializeSplitDataAndExerciseIndices();
-    isInitializing = false;
     notifyListeners();
   }
 
@@ -579,7 +621,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           } else {
             userSplitWeightAndReps = [];
           }
-          if (exerciseDataMap[attributes[0]]![1] == null || exerciseDataMap[attributes[0]]![2] == null) {
+          if (exerciseDataMap[attributes[0]]![1] == null ||
+              exerciseDataMap[attributes[0]]![2] == null) {
             // Either they are both null or both not null
             userSplitWeightPerSet = [];
             userSplitRepsPerSet = [];
@@ -590,7 +633,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         }
         print(
             "${attributes[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]} $userOneRepMax $userSplitWeightAndReps");
-            print("$userSplitWeightPerSet $userSplitRepsPerSet");
+        print("$userSplitWeightPerSet $userSplitRepsPerSet");
 
         // if (userRatingAndAverageRating[1] == null) {
         //   // No rating data
@@ -658,27 +701,34 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           waitMultiplier = 1.0;
         }
 
+        String? machineAltName;
+        if (resourcesRequired.contains('Machine')) {
+          machineAltName = attributes[7];
+        }
+
         // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
         exercise = Exercise(
-            name: attributes[0],
-            description: attributes[1],
-            musclesWorked: attributes[2],
-            // videoLink: attributes[3],
-            videoLink: videoLink,
-            // waitMultiplier: double.parse(attributes[4]),
-            waitMultiplier: waitMultiplier,
-            mainMuscleGroup: muscleGroup,
-            starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
-            // Temporarily all image must be gifs and images have same name as exercise name
-            imageUrl:
-                "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
-            userRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[0],
-            resourcesRequired: attributes[5].split(","),
-            userOneRepMax: userOneRepMax,
-            isAccessoryMovement: int.parse(attributes[6]) != 0,
-            splitWeightAndReps: userSplitWeightAndReps,
-            splitWeightPerSet: userSplitWeightPerSet,
-            splitRepsPerSet: userSplitRepsPerSet,);
+          name: attributes[0],
+          description: attributes[1],
+          musclesWorked: attributes[2],
+          // videoLink: attributes[3],
+          videoLink: videoLink,
+          // waitMultiplier: double.parse(attributes[4]),
+          waitMultiplier: waitMultiplier,
+          mainMuscleGroup: muscleGroup,
+          starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
+          // Temporarily all image must be gifs and images have same name as exercise name
+          imageUrl:
+              "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
+          userRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[0],
+          resourcesRequired: attributes[5].split(","),
+          machineAltName: machineAltName,
+          userOneRepMax: userOneRepMax,
+          isAccessoryMovement: int.parse(attributes[6]) != 0,
+          splitWeightAndReps: userSplitWeightAndReps,
+          splitWeightPerSet: userSplitWeightPerSet,
+          splitRepsPerSet: userSplitRepsPerSet,
+        );
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -886,6 +936,22 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // }
   }
 
+  void storeUserGymInSharedPreferences() async {
+    if (userGym == null) {
+      userGymId = '';
+      print('ERROR - storing user gym, but user gym is null');
+      return;
+    }
+    userGymId = userGym!.placeId;
+    _prefs.setString('userGymId', userGymId);
+    print('stored userGymId $userGymId');
+  }
+
+  void removeUserGymFromSharedPreferences() async {
+    userGymId = '';
+    _prefs.remove('userGymId');
+  }
+
   // Storing the Split object in SharedPreferences
   void storeSplitInSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -967,6 +1033,214 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // Null values simply don't appear as entries on database
   }
 
+  void submitGymDataToFirebase(Gym gym) async {
+    // Create a list to store the converted GymImageContainers
+    try {
+      // List<String> imagesAsBase64 = [];
+
+      // for (int i = 0; i < photoUrls.length; i++) {
+      //   Uint8List imageBytes = await http
+      //       .get(Uri.parse(photoUrls[i]))
+      //       .then((response) => response.bodyBytes);
+
+      //   String base64Image = base64Encode(imageBytes);
+
+      //   imagesAsBase64.add(base64Image);
+      // }
+
+      GymData data = GymData(
+          gym.name,
+          gym.placeId,
+          gym.formattedAddress,
+          // imagesAsBase64,
+          gym.googleMapsRating,
+          gym.machinesAvailable.map((exercise) => exercise.name).toList(),
+          gym.resourcesAvailable,
+          gym.url);
+
+      databaseRef.child('gymData').child(data.placeId).set(data.toJson());
+
+      // Convert each GymImageContainer to a Map
+      // Upload each GymImageContainer image to Firebase Storage
+
+      // String timestamp = DateTime.now().toString();
+      // GymData data = GymData(gym.name, gym.placeId, gym.formattedAddress, gym.photos,
+      //     gym.googleMapsRating, gym.machinesAvailable, gym.resourcesAvailable, gym.url);
+
+      // databaseRef.child('gymData').child(data.placeId).set(data.toJson());
+      print("Submitted gym data to firebase database");
+      // Null values simply don't appear as entries on database
+    } catch (e) {
+      print('ERROR - submit gym data to firebase $e');
+    }
+  }
+
+  Future<void> loadGymPhotos(String placeId) async {
+    currentGymPhotos = [];
+    notifyListeners();
+    // for (Gym gym in gyms.values) {
+    // print(gym);
+    try {
+      DatabaseEvent event =
+          await databaseRef.child('gymPhotos').child(placeId).once();
+      DataSnapshot snapshot = event.snapshot;
+
+      List<Object?> objectData = snapshot.value as List<Object?>;
+
+      List<String> photosData = objectData.cast<String>();
+      // List<Uint8List> binaryData = objectData.cast<Uint8List>();
+
+      for (String base64Encoding in photosData) {
+        // print('$gym photo');
+        Uint8List imageBytes = base64Decode(base64Encoding);
+        // binaryData.add(imageBytes);
+        currentGymPhotos.add(GymImageContainer(bytes: imageBytes));
+      }
+      // await databaseRef.child('gymPhotos').child(gym.placeId).set(binaryData);
+    } catch (error) {
+      print("Error loading photos - $error");
+    }
+    notifyListeners();
+    // }
+  }
+
+  Future<Map<String, Gym>> fetchGymData() async {
+    Map<String, Gym> gyms = <String, Gym>{};
+    // print('5 ${databaseRef.child('gymData').once()}');
+
+    try {
+      // print('5 ${databaseRef.child('gymData').once().snapshot}');
+      // print('${(await databaseRef.child('gymData').orderByChild(path).child('ChIJ128R0nW32YgRx7bngPUd0ZA').once()).snapshot.value}');
+      // print('${(await databaseRef.once()}');
+      // List<String> placeIds = [
+      //   'ChIJ128R0nW32YgRx7bngPUd0ZA',
+      //   'ChIJ3f9F25HH2YgRTANgQAmMVno',
+      //   'ChIJ4dr6hsa22YgR42TJ1LneeRU',
+      //   'ChIJ4wCTIri32YgRx3yco1Ojd_w',
+      //   'ChIJ78w6rOK22YgRMza8Y2HOIXU',
+      //   'ChIJ91EtDsu32YgRT6IgvLBLmA0',
+      //   'ChIJBUHi5HC42YgRg1Sm4Rbk2MA',
+      //   'ChIJE8YYDVm32YgRv_bmKSwUPd0',
+      //   'ChIJEVL3cc-32YgRH4OBRXpejAE',
+      //   'ChIJEYA9iGS42YgRk22ATRJZnSM',
+      //   'ChIJG4DVFpi32YgRnuZXYjI7cEs',
+      //   'ChIJGVsE3SvB2YgREZUNWXAIkSE',
+      //   'ChIJIcLgnu632YgReeVQF-_8jyY',
+      //   'ChIJJXlTGmi32YgRiZB0358tyeA',
+      //   'ChIJJzaSzeu32YgRkZMoJoiEsLg',
+      //   'ChIJK66W4Me32YgRkYiWI6qlQW0',
+      //   'ChIJKZYj6Zu32YgR9tMgd2U4qOU',
+      //   'ChIJLxbjDWW42YgRZHml134Slgk',
+      //   'ChIJNQK-vm7H2YgRoKrE-9iHMFQ',
+      //   'ChIJNzo8Moi42YgRIUJLxVsL3qQ',
+      //   'ChIJO7bhu7DH2YgR7DEL0afQxPo',
+      //   'ChIJP5A5CgDI2YgRv9iE7x0QLtc',
+      //   'ChIJP9Ok-oK32YgRLI6FVENJ64s',
+      //   'ChIJPWAi0VK22YgRUXCfCJLMdPo',
+      //   'ChIJRaIxiGS42YgR8g24v3kvGcQ',
+      //   'ChIJUS8HNuXH2YgRGaSKAhF5n4g',
+      //   'ChIJUTwtJ3u42YgRtrD5cMNpA1k',
+      //   'ChIJUeEK4sa42YgRn_9EBx3LQNY',
+      //   'ChIJWTfeV8252YgR0vLjqRSRc50',
+      //   'ChIJXRwy4ZXH2YgRDVcQkQndIiU',
+      //   'ChIJXZCyno-42YgRLuq1vnEpAvE',
+      //   'ChIJXys049bH2YgRQONBECEDnIY',
+      //   'ChIJZzmdC5bH2YgR8xDPqiBn9vY',
+      //   'ChIJZzmdC5bH2YgRWNSGlED6ov8',
+      //   'ChIJ__8_bc-32YgRh0WL7TIbXfA',
+      //   'ChIJa1pEF5q32YgRgcGvHhKfIW0',
+      //   'ChIJaaRUpES42YgRbmquTIQze8U',
+      //   'ChIJac1WeqzH2YgR9onkgFzuAeI',
+      //   'ChIJbVJqqga52YgRZFV_CEySrFI',
+      //   'ChIJbfQaeFG22YgRWgi3ljE_Gfg',
+      //   'ChIJbx8j7ZXH2YgRqJx7PwZvRdc',
+      //   'ChIJcXeeYOO42YgR8BylrFjtPFU',
+      //   'ChIJdb4tL5q32YgRw91LKqYDJ-k',
+      //   'ChIJddQ0U0O32YgRONyhOlio1n0',
+      //   'ChIJeeY2_fnG2YgR2bXNeOga0Eg',
+      //   'ChIJgd1l3W-32YgRwxRtYc-QpQ0',
+      //   'ChIJhwoRhtG32YgROMeUOYDt8O4',
+      //   'ChIJi8H19WO32YgRJ2Wcg_y1qAA',
+      //   'ChIJiYnm-L-52YgRt_eWnl__yfQ',
+      //   'ChIJl54f4M632YgRW5BHy8LsmwI',
+      //   'ChIJm99KUNa52YgREOSu4LvwuCg',
+      //   'ChIJq2tnoZe32YgR1MdFNTphB44',
+      //   'ChIJqxe6C_622YgRry45oUZIukQ',
+      //   'ChIJr7oeoevH2YgRRSohseRRUvs',
+      //   'ChIJrVqyc0u42YgR1K4TyTLZSrc',
+      //   'ChIJt4LjLeq32YgRtZdiCgxRUSc',
+      //   'ChIJu5slXga32YgRND32Rz9NG10',
+      //   'ChIJv5yQgvrH2YgR3Ur0PZYrjjk',
+      //   'ChIJv82U_Ia32YgRt4VT4QWIfgM',
+      //   'ChIJvXx86eu32YgRuJ2JH4YMpx0',
+      //   'ChIJxXRgY_DH2YgR8zf5S-gHwEU',
+      //   'ChIJxesb4grH2YgRP7ikGVtEefA',
+      // ];
+
+      // for (String placeId in placeIds) {
+      DatabaseEvent event = await databaseRef.child('gymData').once();
+      // await databaseRef.child('gymData').child(placeId).child('photosAsBase64').remove();
+
+      DataSnapshot snapshot = event.snapshot;
+
+      print('snapshot value ${snapshot.value}');
+      // (await databaseRef.child('gymData').once()).snapshot.value;
+      // return gyms;
+
+      Map<dynamic, dynamic>? gymData = snapshot.value as Map<dynamic, dynamic>?;
+
+      if (gymData != null) {
+        // data.remove('photosAsBase64');
+        gymData.forEach((placeId, data) {
+          // List<Widget> gymImageContainers = [];
+          // List<dynamic> photosAsObjects = data['photosAsBase64'] ?? [];
+          // List<String> photosAsBase64 = photosAsObjects.cast<String>();
+          // if (photosAsBase64.isNotEmpty) {
+          //   // databaseRef.child('gymPhotos').child(placeId).set(photosAsBase64);
+          //   for (String base64 in photosAsBase64) {
+          //     Uint8List imageBytes = base64Decode(base64);
+          //     gymImageContainers.add(GymImageContainer(bytes: imageBytes));
+          //   }
+          // }
+          List<dynamic> machinesAsObjects = data['machinesAvailable'] ?? [];
+          List<String> machineNames = machinesAsObjects.cast<String>();
+
+          List<Exercise> allExercises = [];
+          for (List<Exercise> list in muscleGroups.values) {
+            allExercises.addAll(list);
+          }
+          List<Exercise> machinesAvailable = allExercises
+              .where((exercise) => machineNames.contains(exercise.name))
+              .toList();
+          Map<Object?, Object?>? resourcesObjects = data['resourcesAvailable'];
+          // If null create empty map
+          resourcesObjects ??= {};
+
+          Gym gym = Gym(
+            name: data['name'] ?? '',
+            placeId: data['placeId'] ?? '',
+            formattedAddress: data['formattedAddress'] ?? '',
+            photos: [],
+            openNow: null,
+            googleMapsRating: data['googleMapsRating'] + 0.0,
+            machinesAvailable: machinesAvailable,
+            resourcesAvailable: resourcesObjects.cast<String, int>(),
+            url: data['url'] ?? '',
+          );
+
+          gyms.putIfAbsent(data['placeId'] ?? '', () => gym);
+        });
+      } else {
+        print("ERROR - gymData is null");
+      }
+      // }
+      print('Done downloading gym data');
+    } catch (error) {
+      print("Error retrieving gym data: $error");
+    }
+    return gyms;
+  }
+
   Future<Map<String, List<dynamic>>> fetchExerciseData() async {
     Map<String, List<dynamic>> exerciseStarDataMap = <String, List<dynamic>>{};
     // String => [List<double?>, List<int>, List<int>]
@@ -974,10 +1248,14 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       DatabaseEvent event =
           await databaseRef.child('exercisePopularityData').once();
+      // print('6 ${(await databaseRef.child('exercisePopularityData').once()).snapshot.value}');
+      // print('7 ${(await databaseRef.child('gymData').once()).snapshot.value}');
+
       // .orderByChild('exerciseName')
       // .equalTo(exerciseName)
       // .child(exerciseName)
       // .once();
+      // print('1 $event');
 
       DataSnapshot snapshot = event.snapshot;
 
@@ -1027,11 +1305,13 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                     exercisePopularity['splitReps'] + 0.0; // Avoid error
               }
               if (exercisePopularity['splitWeightPerSet'] != null) {
-                List<dynamic> weightsAsObjects = exercisePopularity['splitWeightPerSet'];
+                List<dynamic> weightsAsObjects =
+                    exercisePopularity['splitWeightPerSet'];
                 userSplitWeightPerSet = weightsAsObjects.cast<int>();
               }
               if (exercisePopularity['splitRepsPerSet'] != null) {
-                List<dynamic> repsAsObjects = exercisePopularity['splitRepsPerSet'];
+                List<dynamic> repsAsObjects =
+                    exercisePopularity['splitRepsPerSet'];
                 userSplitRepsPerSet = repsAsObjects.cast<int>();
               }
             }
@@ -1121,6 +1401,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // Need a different approach for viewing exercises from favorites because of back button
     if (fromSplitDayPage) {
       currentExerciseFromSplitDayPage = exercise;
+    } else if (fromGymPage) {
+      currentExerciseFromGymPage = exercise;
     } else {
       currentExercise = exercise;
     }
@@ -1344,7 +1626,10 @@ class _MyHomePageState extends State<MyHomePage> {
     switch (appState.pageIndex) {
       case 0:
         appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
+        appState.fromGymPage = false;
         _bottomNavigationIndex = 0; // Update navigation bar
+        appState.presetHomePage = 0;
         page = HomePage();
         break;
       case 1: // Deprecated
@@ -1365,6 +1650,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // appState.fromFavorites = false;
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = false;
+        appState.fromGymPage = false;
         appState.presetSearchPage = 1;
         page = ExercisesPage();
         break;
@@ -1372,7 +1658,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // appState.splitDayEditMode = false;
         // Only remembers exercise from search page if an exercise is not looked at from another page
         // if (appState.fromSearchPage) {
-        if (!appState.fromSplitDayPage) {
+        if (!appState.fromSplitDayPage && !appState.fromGymPage) {
           // Only update if clicking on exercise from search page or exercises page
           appState.presetSearchPage = 2;
         }
@@ -1383,6 +1669,9 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 6:
         // Reversion changes are already stored in currentSplit
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
+        appState.fromGymPage = false;
         appState.splitDayEditMode = false;
         appState.splitDayReorderMode = false;
         _bottomNavigationIndex = 2; // Update navigation bar
@@ -1398,6 +1687,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // appState.fromFavorites = false;
         appState.fromSplitDayPage = true;
         appState.fromSearchPage = false;
+        appState.fromGymPage = false;
         appState.goStraightToSplitDayPage =
             true; // Go back to the split day page they were last on
         page = SplitDayPage(appState.currentDayIndex);
@@ -1407,9 +1697,20 @@ class _MyHomePageState extends State<MyHomePage> {
         // appState.fromFavorites = false;
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = true;
+        appState.fromGymPage = false;
         _bottomNavigationIndex = 1; // Update navigation bar
         appState.presetSearchPage = 0;
         page = SearchPage();
+        break;
+      case 9:
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
+        appState.fromGymPage = true;
+        appState.presetHomePage = 1;
+        page = GymPage(
+          gym: appState.currentGym,
+          isSelectedGym: appState.userGym == appState.currentGym,
+        );
         break;
       default:
         throw UnimplementedError('no widget for ${appState.pageIndex}');
@@ -1460,17 +1761,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 appState.makeNewSplit = false;
               }
               if (index == 0) {
+                appState.fromSearchPage = false;
+                appState.fromSplitDayPage = false;
                 // Home
-                appState.changePage(0);
+                if (appState.presetHomePage == 0 || appState.pageIndex == 9) {
+                  appState.changePage(0);
+                } else {
+                  // presetHomePage == 1
+                  // Current gym will stay the same
+                  appState.changePage(9);
+                }
                 appState.splitDayEditMode =
                     false; // Cancel changes when changing to different screen
                 appState.splitDayReorderMode = false;
                 appState.splitWeekEditMode = false;
               } else if (index == 1) {
                 // Search Page
-
                 if (appState.pageIndex == 4 ||
-                    (appState.pageIndex == 5 && !appState.fromSplitDayPage) ||
+                    (appState.pageIndex == 5 &&
+                        !appState.fromSplitDayPage &&
+                        !appState.fromGymPage) ||
                     appState.presetSearchPage == 0) {
                   // Exercises page or individual exercise page or other tab, or if search page is preset
                   appState.changePage(8);
@@ -1479,8 +1789,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   appState.splitDayReorderMode = false;
                   appState.splitWeekEditMode = false;
                   appState.fromSplitDayPage = false;
+                  appState.fromGymPage = false;
                 } else {
                   appState.fromSplitDayPage = false;
+                  appState.fromGymPage = false;
                   if (appState.presetSearchPage == 1) {
                     appState.changePage(4);
                   } else {
@@ -1490,6 +1802,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               } else if (index == 2) {
                 appState.fromSearchPage = false;
+                appState.fromGymPage = false;
                 print(
                     "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
                 // Split Page
@@ -1639,6 +1952,9 @@ class _SwipeBackState extends State<SwipeBack> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.index == 9) {
+      widget.appState.appPages[widget.index] = GymPage(gym: widget.appState.currentGym, isSelectedGym: widget.appState.currentGym == widget.appState.userGym);
+    }
     final Widget swipeChild = widget.appState.appPages[widget.index];
     return _isDismissed
         ? SizedBox.shrink() // Remove the Dismissible widget from the tree
@@ -2068,7 +2384,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Average Star Rating',
+                  'Average Rating',
                   style: headingStyle,
                 ),
                 Spacer(),

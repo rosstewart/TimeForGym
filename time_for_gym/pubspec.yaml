@@ -20,8 +20,10 @@ dependencies:
   multi_select_flutter: ^4.0.0
   # flutter_multiselect: ^0.4.0
   flutter_typeahead: ^4.0.1
-  # google_maps_webservice: ^0.0.20-nullsafety.5
-  # google_maps_flutter: ^2.1.0
+  google_maps_webservice: ^0.0.20-nullsafety.5
+  location: ^4.3.0
+  google_maps_flutter: ^2.3.1
+  google_places_flutter: ^2.0.0
   # google_maps_webservice: ^0.0.19
   # charts_flutter: ^0.12.0
   firebase_core: ^2.11.0
@@ -30,6 +32,7 @@ dependencies:
   device_info_plus: ^9.0.2
   flutter_rating_bar: ^4.0.0
   connectivity: ^3.0.6
+  numberpicker: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +44,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/resource_icons/
     - exercise_pictures/
     - muscle_group_pictures/
   

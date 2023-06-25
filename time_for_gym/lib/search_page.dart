@@ -130,7 +130,7 @@ class _SearchPageState extends State<SearchPage> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: theme.colorScheme.onBackground,
+                                color: theme.colorScheme.onBackground.withOpacity(0.65),
                               ),
                               onPressed: () {
                                 searchController
@@ -141,9 +141,9 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             labelText: 'Search for an Exercise',
                             labelStyle: TextStyle(
-                                color: theme.colorScheme.onBackground),
+                                color: theme.colorScheme.onBackground.withOpacity(0.65)),
                             floatingLabelStyle:
-                                TextStyle(color: theme.colorScheme.primary)),
+                                TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.65))),
                       ),
                       suggestionsCallback: (pattern) {
                         // setState(() {

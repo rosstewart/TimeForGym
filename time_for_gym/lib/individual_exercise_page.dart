@@ -39,6 +39,9 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
     } else if (appState.fromSearchPage) {
       backIndex = 8; // Search Page
       exercise = appState.currentExercise;
+    } else if (appState.fromGymPage){
+      backIndex = 9;
+      exercise = appState.currentExerciseFromGymPage;
     } else {
       // From exercises page or bottom icon
       exercise = appState.currentExercise;

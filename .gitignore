@@ -1,1 +1,2 @@
-ios/Runner/GoogleService-Info.plist
+time_for_gym/ios/Runner/GoogleService-Info.plist
+time_for_gym/lib/api_keys.dart

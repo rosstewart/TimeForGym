@@ -165,7 +165,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                         ),
                         child: TextFormField(
                           initialValue: trainingDays[widget.dayIndex].splitDay,
-                          style: titleStyle,
+                          style: titleStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
                           textAlign: TextAlign.center,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -548,7 +548,8 @@ class _AddButtonState extends State<AddButton> {
                     controller: searchController,
                     decoration: InputDecoration(
                       labelText: 'Search',
-                      labelStyle: whiteTextStyle,
+                      labelStyle: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
+                      floatingLabelStyle: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
                     ),
                   ),
                   suggestionsCallback: (pattern) {

@@ -28,12 +28,22 @@ PODS:
   - Flutter (1.0.0)
   - flutter_keyboard_visibility (0.0.1):
     - Flutter
+  - google_maps_flutter_ios (0.0.1):
+    - Flutter
+    - GoogleMaps (< 8.0)
+  - GoogleMaps (7.4.0):
+    - GoogleMaps/Maps (= 7.4.0)
+  - GoogleMaps/Base (7.4.0)
+  - GoogleMaps/Maps (7.4.0):
+    - GoogleMaps/Base
   - GoogleUtilities/Environment (7.11.1):
     - PromisesObjC (< 3.0, >= 1.2)
   - GoogleUtilities/Logger (7.11.1):
     - GoogleUtilities/Environment
   - "GoogleUtilities/NSData+zlib (7.11.1)"
   - leveldb-library (1.22.2)
+  - location (0.0.1):
+    - Flutter
   - PromisesObjC (2.2.0)
   - Reachability (3.2)
   - shared_preferences_foundation (0.0.1):
@@ -49,6 +59,8 @@ DEPENDENCIES:
   - firebase_database (from `.symlinks/plugins/firebase_database/ios`)
   - Flutter (from `Flutter`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
+  - location (from `.symlinks/plugins/location/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -58,6 +70,7 @@ SPEC REPOS:
     - FirebaseCore
     - FirebaseCoreInternal
     - FirebaseDatabase
+    - GoogleMaps
     - GoogleUtilities
     - leveldb-library
     - PromisesObjC
@@ -76,6 +89,10 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_keyboard_visibility:
     :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  google_maps_flutter_ios:
+    :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
+  location:
+    :path: ".symlinks/plugins/location/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   url_launcher_ios:
@@ -92,8 +109,11 @@ SPEC CHECKSUMS:
   FirebaseDatabase: 0abe52c2b687e05f76e19f94248730187f83d48a
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
+  google_maps_flutter_ios: abdac20d6ce8931f6ebc5f46616df241bfaa2cfd
+  GoogleMaps: 032f676450ba0779bd8ce16840690915f84e57ac
   GoogleUtilities: 9aa0ad5a7bc171f8bae016300bfcfa3fb8425749
   leveldb-library: f03246171cce0484482ec291f88b6d563699ee06
+  location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
   Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
   shared_preferences_foundation: e2dae3258e06f44cc55f49d42024fd8dd03c590c

@@ -14,6 +14,7 @@ class Exercise implements Comparable<Exercise> {
     this.starRating = 0,
     this.userRating,
     this.resourcesRequired,
+    this.machineAltName,
     this.userOneRepMax,
     this.isAccessoryMovement,
     required this.splitWeightAndReps,
@@ -46,6 +47,7 @@ class Exercise implements Comparable<Exercise> {
   int? userOneRepMax;
   final List<String>? resourcesRequired;
   bool? isAccessoryMovement = true;
+  final String? machineAltName;
   // Split top set weight and reps
   List<int> splitWeightAndReps = [];
   // Split weights for each set (including top set)

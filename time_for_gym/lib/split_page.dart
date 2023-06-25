@@ -205,9 +205,9 @@ class _GymGoalAndDayOfWeekSelectorState
     final theme = Theme.of(context); //.copyWith(
     //   dialogBackgroundColor: Colors.black,
     // );
-    final headingStyle = theme.textTheme.titleLarge!.copyWith(
+    final headingStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onBackground,
-      fontWeight: FontWeight.bold,
+      // fontWeight: FontWeight.bold,
     );
     final textStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.primary,
@@ -279,7 +279,7 @@ class _GymGoalAndDayOfWeekSelectorState
                 selectedGymGoalOption = newValue;
               });
             },
-            style: whiteTextStyle,
+            style: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
             underline: SizedBox(), // Remove default underline
             dropdownColor: theme.colorScheme.primaryContainer,
             items: [
@@ -288,7 +288,7 @@ class _GymGoalAndDayOfWeekSelectorState
                   value: gymGoalOption,
                   child: Text(
                     gymGoalOption,
-                    style: whiteTextStyle,
+                    style: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
                   ),
                 );
               }).toList(),
@@ -325,6 +325,7 @@ class _GymGoalAndDayOfWeekSelectorState
                         .onBackground, // Set the desired border color
                   ),
                 ),
+                fillColor: resolveColor(theme.colorScheme.primary),
                 value: selectedDayOfWeekOptions.contains(dayOfWeekOption),
                 onChanged: (value) {
                   setState(() {
@@ -364,11 +365,11 @@ class _GymGoalAndDayOfWeekSelectorState
             key: _multiSelectKey,
             buttonText: Text(
               "Select none for a balanced split",
-              style: whiteTextStyle,
+              style: whiteTextStyle.copyWith(color: whiteTextStyle.color!.withOpacity(.65)),
             ),
             buttonIcon: Icon(
               Icons.keyboard_arrow_down,
-              color: theme.colorScheme.onBackground,
+              color: theme.colorScheme.onBackground.withOpacity(0.65),
             ),
             items: muscleGroupOptions
                 .map((muscleGroupOption) => MultiSelectItem<String>(
@@ -387,7 +388,7 @@ class _GymGoalAndDayOfWeekSelectorState
             searchable: true,
             itemsTextStyle: whiteTextStyle,
             searchTextStyle: whiteTextStyle,
-            searchHintStyle: whiteTextStyle,
+            searchHintStyle: whiteTextStyle.copyWith(color: whiteTextStyle.color!.withOpacity(.65)),
             selectedItemsTextStyle: whiteTextStyle,
             selectedColor: theme.colorScheme.primary,
             unselectedColor: theme.colorScheme.onBackground,
