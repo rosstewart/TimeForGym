@@ -52,7 +52,7 @@ Face Pull|Attach a rope handle to a cable at face height, grasp the rope with an
 
 MuscleGroup: Glutes
 
-Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes, Quads, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Rack|0
+Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes, Quads, Hamstrings|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Squat Rack|0
 Dumbbell RDL|Keeping bent legs, hinge back while keeping the dumbbells close and squeezing the glutes on the way up.|Glutes, Hamstrings|https://youtu.be/6_F82F5thmE|0.4|Dumbbells|1
 Glute Bridge|Lie on your back with knees bent and feet flat on the floor, lift your hips off the ground by squeezing your glutes, and hold for a few seconds before lowering back down.|Glutes, Hamstrings|Video Link|0.0|None|1
 
