@@ -27,7 +27,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     var exercises = appState.muscleGroups[appState.currentMuscleGroup];
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.headlineSmall!.copyWith(
+    final titleStyle = theme.textTheme.titleLarge!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 

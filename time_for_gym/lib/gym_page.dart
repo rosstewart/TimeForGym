@@ -36,22 +36,78 @@ class _GymPageState extends State<GymPage> {
 
   late bool isSelectedGym;
 
-  List<String> resourceKeys = [
+  // List<String> resourceKeys = [
+  //   'Barbell',
+  //   'Dumbbells',
+  //   'Bench',
+  //   'Squat Rack',
+  //   'Cable',
+  //   'Cable Lat Pulldown',
+  //   'Cable Row',
+  //   'Machine',
+  //   'EZ-bar',
+  //   'Pull-Up Bar',
+  //   'Preacher Bench',
+  //   'Parallel Bars',
+  // ];
+
+  List<String> resourceNames = [
+    'Free Weights',
+    'Adjustable Benches',
+    'Cables / Machines',
+    'Bench Presses',
+    'Calisthenics',
+    'Cardio'
+  ];
+  List<bool> showResources = [false, false, false, false, false, false];
+
+  List<String> freeWeightsResourceKeys = [
     'Barbell',
     'Dumbbells',
-    'Bench',
-    'Rack',
-    'Cable',
-    'Machine',
+    'Squat Rack',
     'EZ-bar',
-    'Pull-Up Bar',
-    'Preacher Curl Bench',
-    'Parallel Bars',
+    'Kettlebell',
   ];
 
-  List<int> resourceLimits = [20, 200, 20, 20, 20, 50, 10, 20, 10, 10];
+  List<String> benchesResourceKeys = [
+    'Bench',
+    'Decline Bench',
+    'Preacher Bench',
+    'Hyper Extension',
+  ];
 
-  late List<TextEditingController> textEditingControllers;
+  List<String> cableResourceKeys = [
+    'Cable',
+    'Cable Lat Pulldown',
+    'Cable Row',
+    'Machine',
+    'Smith Machine',
+  ];
+
+  List<String> benchPressResourceKeys = [
+    'Bench Press',
+    'Incline Bench Press',
+    'Decline Bench Press',
+  ];
+
+  List<String> calisthenicsResourceKeys = [
+    'Parallel Bars',
+    'Pull-Up Bar',
+  ];
+
+  List<String> cardioResourceKeys = [
+    'Treadmill',
+    'Bike',
+    'Elliptical',
+    'Stair Master',
+  ];
+
+  late List<List<String>> typesOfResources;
+  late Map<String, int> resourceLimitsMap;
+
+  // List<int> resourceLimits = [20, 200, 20, 20, 20, 50, 10, 20, 10, 10];
+
+  // late List<TextEditingController> textEditingControllers;
 
   late Map<String, int> resourcesAvailable;
   late List<Exercise> machinesAvailable;
@@ -60,15 +116,60 @@ class _GymPageState extends State<GymPage> {
   void initState() {
     super.initState();
     isSelectedGym = widget.isSelectedGym;
-    textEditingControllers =
-        List.filled(resourceKeys.length, TextEditingController());
+
+
+    typesOfResources = [
+      freeWeightsResourceKeys,
+      benchesResourceKeys,
+      cableResourceKeys,
+      benchPressResourceKeys,
+      calisthenicsResourceKeys,
+      cardioResourceKeys
+    ];
+    resourceLimitsMap = {};
+    for (List<String> resourceList in typesOfResources) {
+      for (String resource in resourceList) {
+        int limit;
+        switch (resource) {
+          case 'Dumbbells':
+          case 'Kettlebell':
+            limit = 200;
+            break;
+          case 'Machine':
+          case 'Treadmill':
+            limit = 50;
+            break;
+          case 'Cable Lat Pulldown':
+          case 'Cable Row':
+          case 'EZ-bar':
+          case 'Pull-Up Bar':
+          case 'Parallel Bars':
+          case 'Decline Bench':
+          case 'Preacher Bench':
+          case 'Hyper Extension':
+          case 'Incline Bench Press':
+          case 'Decline Bench Press':
+            limit = 10;
+            break;
+          default:
+            limit = 20;
+            break;
+        }
+        resourceLimitsMap[resource] = limit;
+      }
+    }
+
+
+    // textEditingControllers =
+        // List.filled(resourceKeys.length, TextEditingController());
     if (widget.gym != null && widget.gym!.resourcesAvailable.isNotEmpty) {
       resourcesAvailable = Map.from(widget.gym!.resourcesAvailable);
     } else {
-      for (String resource in resourceKeys) {
-        resourcesAvailable = {};
-        resourcesAvailable.putIfAbsent(resource, () => 0);
-      }
+      // for (String resource in resourceKeys) {
+      //   // resourcesAvailable = {};
+      //   resourcesAvailable.putIfAbsent(resource, () => 0);
+      // }
+      resourcesAvailable = {};
       widget.gym!.resourcesAvailable = Map.from(resourcesAvailable);
     }
     if (widget.gym != null && widget.gym!.machinesAvailable.isNotEmpty) {
@@ -76,6 +177,7 @@ class _GymPageState extends State<GymPage> {
     } else {
       machinesAvailable = [];
     }
+
 
     // if (widget.gym != null) {
     //   print(widget.gym!.photos.length);
@@ -338,16 +440,17 @@ class _GymPageState extends State<GymPage> {
     Widget selectButtonLabel;
     Widget selectButtonIcon;
     if (!isSelectedGym) {
-      selectButtonLabel = Icon(Icons.check_box_outline_blank);
+      selectButtonLabel = Icon(Icons.check_box_outline_blank, size: 20,);
       selectButtonIcon = Text('Select gym',
-          style: TextStyle(color: theme.colorScheme.onBackground));
+          style: textStyle);
     } else {
-      selectButtonLabel = Icon(Icons.check_box);
+      selectButtonLabel = Icon(Icons.check_box, size: 20,);
       selectButtonIcon = Text('Selected gym',
-          style: TextStyle(color: theme.colorScheme.onBackground));
+          style: textStyle);
     }
 
     double resourceWidth = editResourcesMode ? 100 : 90;
+    double resourceHeight = editResourcesMode ? 145 : 120;
 
     // print(machinesAvailable);
 
@@ -504,9 +607,7 @@ class _GymPageState extends State<GymPage> {
                             },
                             child: Text(
                               'View on Map',
-                              style: TextStyle(
-                                color: theme.colorScheme.onBackground,
-                              ),
+                              style: labelStyle
                             ),
                           ),
                           ElevatedButton.icon(
@@ -639,186 +740,256 @@ class _GymPageState extends State<GymPage> {
                             color: theme.colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(20)),
                         padding: EdgeInsets.all(15),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (int i = 0; i < resourceKeys.length; i++)
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: resourceWidth,
-                                      child: Column(
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < resourceNames.length; i++)
+                              Column(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        showResources[i] = !showResources[i];
+                                      });
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          resourceNames[i],
+                                          style: textStyle,
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Icon(
+                                          showResources[i]
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: theme.colorScheme.primary,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: showResources[i] ? 10 : 5,
+                                  ),
+                                  if (showResources[i])
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Container(
-                                            height: 25,
-                                            width: 25,
-                                            decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(5)),
-                                            child: Image.asset(
-                                                'assets/images/resource_icons/${resourceKeys[i]}.png'),
-                                          ),
-                                          SizedBox(
-                                            height: 5,
-                                          ),
-                                          if (resourceKeys[i].endsWith('h') &&
-                                              resourceKeys[i] !=
-                                                  'Preacher Curl Bench')
-                                            Text(
-                                              '${resourceKeys[i]}es',
-                                              style: labelStyle,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                            ),
-                                          if (resourceKeys[i].endsWith('s'))
-                                            Text(
-                                              resourceKeys[i],
-                                              style: labelStyle,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                            ),
-                                          if (!resourceKeys[i].endsWith('h') &&
-                                              !resourceKeys[i].endsWith('s'))
-                                            Text(
-                                              '${resourceKeys[i]}s',
-                                              style: labelStyle,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                            ),
-                                          if (resourceKeys[i] ==
-                                              'Preacher Curl Bench')
-                                            Text(
-                                              'Preacher Bench',
-                                              style: labelStyle,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                            ),
-                                          SizedBox(
-                                            height: 5,
-                                          ),
-                                          if (!editResourcesMode)
-                                            Container(
-                                                decoration: BoxDecoration(
-                                                    color: theme.colorScheme
-                                                        .secondaryContainer,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10)),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.fromLTRB(
-                                                          12, 10, 12, 10),
-                                                  child: Text(
-                                                    '${resourcesAvailable[resourceKeys[i]] ?? 'No value'}',
-                                                    style: labelStyle,
+                                          for (int j = 0;
+                                              j < typesOfResources[i].length;
+                                              j++)
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  height: resourceHeight,
+                                                  width: resourceWidth,
+                                                  child: Column(
+                                                    children: [
+                                                      Container(
+                                                        height: 25,
+                                                        width: 25,
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        5)),
+                                                        child: Image.asset(
+                                                            'assets/images/resource_icons/${typesOfResources[i][j]}.png'),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 5,
+                                                      ),
+                                                      if (typesOfResources[i][j]
+                                                          .endsWith('h'))
+                                                        Text(
+                                                          '${typesOfResources[i][j]}es',
+                                                          style: labelStyle,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          maxLines: 2,
+                                                        ),
+                                                      if (typesOfResources[i][j]
+                                                          .endsWith('s'))
+                                                        Text(
+                                                          typesOfResources[i][j],
+                                                          style: labelStyle,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          maxLines: 2,
+                                                        ),
+                                                      if (!typesOfResources[i][j]
+                                                              .endsWith('h') &&
+                                                          !typesOfResources[i][j]
+                                                              .endsWith('s'))
+                                                        Text(
+                                                          '${typesOfResources[i][j]}s',
+                                                          style: labelStyle,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          maxLines: 2,
+                                                        ),
+                                                      Spacer(),
+                                                      if (!editResourcesMode)
+                                                        Container(
+                                                            decoration: BoxDecoration(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .secondaryContainer,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .fromLTRB(
+                                                                      12,
+                                                                      10,
+                                                                      12,
+                                                                      10),
+                                                              child: Text(
+                                                                '${resourcesAvailable[typesOfResources[i][j]] ?? 'No value'}',
+                                                                style:
+                                                                    labelStyle,
+                                                              ),
+                                                            )),
+                                                      if ((typesOfResources[i][j] ==
+                                                              'Dumbbells' || typesOfResources[i][j] == 'Kettlebell') &&
+                                                          editResourcesMode)
+                                                        Container(
+                                                          decoration: BoxDecoration(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .secondaryContainer,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10)),
+                                                          child: NumberPicker(
+                                                            textStyle: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .4)),
+                                                            selectedTextStyle:
+                                                                bodyMedium,
+                                                            value: resourcesAvailable[
+                                                                    typesOfResources[i][
+                                                                        j]] ??
+                                                                0,
+                                                            minValue: 0,
+                                                            maxValue:
+                                                                resourceLimitsMap[typesOfResources[i][j]] ?? 20,
+                                                            step: 5,
+                                                            onChanged: (value) {
+                                                              setState(() {
+                                                                resourcesAvailable[
+                                                                    typesOfResources[i][
+                                                                        j]] = value;
+                                                              });
+                                                            },
+                                                            itemHeight:
+                                                                20, // Customize the height of each item
+                                                            // itemCount: 2,
+                                                          ),
+                                                        ),
+                                                      if (typesOfResources[i][j] ==
+                                                          'Dumbbells' || typesOfResources[i][j] == 'Kettlebell')
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                      .fromLTRB(
+                                                                  0, 3, 0, 0),
+                                                          child: Text(
+                                                            'Max Weight',
+                                                            style: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .65)),
+                                                          ),
+                                                        ),
+                                                      if (typesOfResources[i][j] !=
+                                                              'Dumbbells' && typesOfResources[i][j] != 'Kettlebell' &&
+                                                          editResourcesMode)
+                                                        Container(
+                                                          decoration: BoxDecoration(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .secondaryContainer,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10)),
+                                                          child: NumberPicker(
+                                                            textStyle: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .4)),
+                                                            selectedTextStyle:
+                                                                bodyMedium,
+                                                            value: resourcesAvailable[
+                                                                    typesOfResources[i][
+                                                                        j]] ??
+                                                                0,
+                                                            minValue: 0,
+                                                            maxValue:
+                                                                resourceLimitsMap[typesOfResources[i][j]] ?? 20,
+                                                            step: 1,
+                                                            onChanged: (value) {
+                                                              setState(() {
+                                                                resourcesAvailable[
+                                                                    typesOfResources[i][
+                                                                        j]] = value;
+                                                              });
+                                                            },
+                                                            itemHeight:
+                                                                20, // Customize the height of each item
+                                                          ),
+                                                        ),
+                                                      if (typesOfResources[i][j] !=
+                                                          'Dumbbells' && typesOfResources[i][j] != 'Kettlebell')
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                      .fromLTRB(
+                                                                  0, 3, 0, 0),
+                                                          child: Text(
+                                                            'Count',
+                                                            style: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .65)),
+                                                          ),
+                                                        ),
+                                                    ],
                                                   ),
-                                                )),
-                                          if (resourceKeys[i] == 'Dumbbells' &&
-                                              editResourcesMode)
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                  color: theme.colorScheme
-                                                      .secondaryContainer,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: NumberPicker(
-                                                textStyle: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.4)),
-                                                selectedTextStyle: bodyMedium,
-                                                value: resourcesAvailable[
-                                                        resourceKeys[i]] ??
-                                                    0,
-                                                minValue: 0,
-                                                maxValue: resourceLimits[i],
-                                                step: 5,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    resourcesAvailable[
-                                                            resourceKeys[i]] =
-                                                        value;
-                                                  });
-                                                },
-                                                itemHeight:
-                                                    20, // Customize the height of each item
-                                                // itemCount: 2,
-                                              ),
-                                            ),
-                                          if (resourceKeys[i] == 'Dumbbells')
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      0, 3, 0, 0),
-                                              child: Text(
-                                                'Max Weight',
-                                                style: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.65)),
-                                              ),
-                                            ),
-                                          if (resourceKeys[i] != 'Dumbbells' &&
-                                              editResourcesMode)
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                  color: theme.colorScheme
-                                                      .secondaryContainer,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: NumberPicker(
-                                                textStyle: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.4)),
-                                                selectedTextStyle: bodyMedium,
-                                                value: resourcesAvailable[
-                                                        resourceKeys[i]] ??
-                                                    0,
-                                                minValue: 0,
-                                                maxValue: resourceLimits[i],
-                                                step: 1,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    resourcesAvailable[
-                                                            resourceKeys[i]] =
-                                                        value;
-                                                  });
-                                                },
-                                                itemHeight:
-                                                    20, // Customize the height of each item
-                                              ),
-                                            ),
-                                          if (resourceKeys[i] != 'Dumbbells')
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      0, 3, 0, 0),
-                                              child: Text(
-                                                'Count',
-                                                style: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.65)),
-                                              ),
+                                                ),
+                                                if (j < typesOfResources[i].length - 1)
+                                                  // if (editResourcesMode)
+                                                  SizedBox(
+                                                    width: 10,
+                                                  ),
+                                              ],
                                             ),
                                         ],
                                       ),
                                     ),
-                                    if (i < resourceKeys.length - 1)
-                                      // if (editResourcesMode)
-                                      SizedBox(
-                                        width: 10,
-                                      ),
-                                  ],
-                                ),
-                            ],
-                          ),
+                                  SizedBox(height: showResources[i] ? 10 : 0),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -1051,7 +1222,8 @@ class _GymPageState extends State<GymPage> {
                                                           machinesAvailable
                                                               .removeAt(i);
                                                         });
-                                                        print(machinesAvailable);
+                                                        print(
+                                                            machinesAvailable);
                                                       },
                                                       child: Icon(
                                                         Icons.delete_forever,

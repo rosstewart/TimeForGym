@@ -100,7 +100,7 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 //   labelSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
 // );
 
-    Color backgroundColor = Color.fromRGBO(20, 20, 20, 1);
+    Color backgroundColor = Color.fromRGBO(16, 16, 16, 1);
     Color container1 = Color.fromRGBO(30, 30, 30, 1);
     Color container2 = Color.fromRGBO(40, 40, 40, 1);
     Color container3 = Color.fromRGBO(50, 50, 50, 1);
@@ -129,8 +129,7 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
     // Create a new theme based on the original theme with the updated onBackground color
     theme = theme.copyWith(
       colorScheme: theme.colorScheme.copyWith(
-        onBackground:
-            Color.fromRGBO(235, 235, 235, 1), // Replace with your desired color
+        onBackground: Color.fromRGBO(230, 230, 230, 1),
         onPrimary: Color.fromRGBO(235, 235, 235, 1),
         tertiary: Color.fromRGBO(17, 75, 95, 1),
         primaryContainer: container1,
@@ -682,13 +681,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                     userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]! /
                         5.0; // Always a number 0-5 or 0
                 break resourceRequiredLoop;
-              case 'Preacher Curl Bench':
+              case 'Preacher Bench':
                 waitMultiplier += 0.3;
                 break;
               case 'Parallel Bars':
                 waitMultiplier += 0.2;
                 break;
               case 'Rack':
+                waitMultiplier += 0.5;
+                break;
+              case 'Cable Lat Pulldown':
+                waitMultiplier += 0.5;
+                break;
+              case 'Cable Row':
                 waitMultiplier += 0.5;
                 break;
               default:
@@ -1952,8 +1957,14 @@ class _SwipeBackState extends State<SwipeBack> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.index == 7) {
+      widget.appState.appPages[widget.index] =
+          SplitDayPage(widget.appState.currentDayIndex);
+    }
     if (widget.index == 9) {
-      widget.appState.appPages[widget.index] = GymPage(gym: widget.appState.currentGym, isSelectedGym: widget.appState.currentGym == widget.appState.userGym);
+      widget.appState.appPages[widget.index] = GymPage(
+          gym: widget.appState.currentGym,
+          isSelectedGym: widget.appState.currentGym == widget.appState.userGym);
     }
     final Widget swipeChild = widget.appState.appPages[widget.index];
     return _isDismissed

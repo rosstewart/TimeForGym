@@ -13,38 +13,34 @@ import 'package:multi_select_flutter/multi_select_flutter.dart';
 // import 'package:time_for_gym/exercise.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
 
-
-
 class SplitPage extends StatefulWidget {
   @override
   State<SplitPage> createState() => _SplitPageState();
 }
 
 class _SplitPageState extends State<SplitPage> {
-
   late String realTimeDayOfWeek;
 
   String getDayOfWeekString(int dayOfWeek) {
-  switch (dayOfWeek) {
-    case 1:
-      return 'Monday';
-    case 2:
-      return 'Tuesday';
-    case 3:
-      return 'Wednesday';
-    case 4:
-      return 'Thursday';
-    case 5:
-      return 'Friday';
-    case 6:
-      return 'Saturday';
-    case 7:
-      return 'Sunday';
-    default:
-      return '';
+    switch (dayOfWeek) {
+      case 1:
+        return 'Monday';
+      case 2:
+        return 'Tuesday';
+      case 3:
+        return 'Wednesday';
+      case 4:
+        return 'Thursday';
+      case 5:
+        return 'Friday';
+      case 6:
+        return 'Saturday';
+      case 7:
+        return 'Sunday';
+      default:
+        return '';
+    }
   }
-}
-
 
   @override
   void initState() {
@@ -104,8 +100,8 @@ class _GymGoalAndDayOfWeekSelectorState
 
   List<String> gymGoalOptions = [
     'Build Muscle',
-    'Build Strength',
-    'Cardio Focused'
+    // 'Build Strength',
+    // 'Cardio Focused'
   ];
 
   List<String> selectedDayOfWeekOptions = [];
@@ -279,7 +275,7 @@ class _GymGoalAndDayOfWeekSelectorState
                 selectedGymGoalOption = newValue;
               });
             },
-            style: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
+            style: whiteTextStyle,
             underline: SizedBox(), // Remove default underline
             dropdownColor: theme.colorScheme.primaryContainer,
             items: [
@@ -288,7 +284,11 @@ class _GymGoalAndDayOfWeekSelectorState
                   value: gymGoalOption,
                   child: Text(
                     gymGoalOption,
-                    style: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
+                    style: (selectedGymGoalOption == gymGoalOption)
+                        ? whiteTextStyle
+                        : whiteTextStyle.copyWith(
+                            color: theme.colorScheme.onBackground
+                                .withOpacity(.65)),
                   ),
                 );
               }).toList(),
@@ -307,7 +307,7 @@ class _GymGoalAndDayOfWeekSelectorState
           padding: EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Column(
             children: dayOfWeekOptions.map((dayOfWeekOption) {
@@ -365,7 +365,8 @@ class _GymGoalAndDayOfWeekSelectorState
             key: _multiSelectKey,
             buttonText: Text(
               "Select none for a balanced split",
-              style: whiteTextStyle.copyWith(color: whiteTextStyle.color!.withOpacity(.65)),
+              style: whiteTextStyle.copyWith(
+                  color: whiteTextStyle.color!.withOpacity(.65)),
             ),
             buttonIcon: Icon(
               Icons.keyboard_arrow_down,
@@ -388,7 +389,8 @@ class _GymGoalAndDayOfWeekSelectorState
             searchable: true,
             itemsTextStyle: whiteTextStyle,
             searchTextStyle: whiteTextStyle,
-            searchHintStyle: whiteTextStyle.copyWith(color: whiteTextStyle.color!.withOpacity(.65)),
+            searchHintStyle: whiteTextStyle.copyWith(
+                color: whiteTextStyle.color!.withOpacity(.65)),
             selectedItemsTextStyle: whiteTextStyle,
             selectedColor: theme.colorScheme.primary,
             unselectedColor: theme.colorScheme.onBackground,
@@ -445,16 +447,14 @@ class _GymGoalAndDayOfWeekSelectorState
 }
 
 class SplitCard extends StatefulWidget {
-
-  SplitCard (this.realTimeDayOfWeek);
+  SplitCard(this.realTimeDayOfWeek);
   final String realTimeDayOfWeek;
-  
+
   @override
   State<SplitCard> createState() => _SplitCardState();
 }
 
 class _SplitCardState extends State<SplitCard> {
-
   final List<String> daysOfWeek = [
     "Monday",
     "Tuesday",
@@ -710,7 +710,6 @@ class DayOfWeekButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final Color dayColor;
     if (realTimeDayOfWeek == daysOfWeek[i]) {
       dayColor = theme.colorScheme.primary;
