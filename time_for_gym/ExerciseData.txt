@@ -7,19 +7,26 @@ Incline Dumbbell Bench|Lie down on the incline bench and press dummbells, keepin
 Dumbbell Fly|Lie down on a flat bench with dumbbells, bring them out to the sides, and squeeze your chest.|Chest|https://youtu.be/eozdVDA78K0|0.7|Dumbbells,Bench|1
 Dumbbell Bench Press|Lie down on a bench, hold dumbbells at shoulder level, lower them to your chest, and press up.|Chest, Front Delts, Triceps|Video Link|0.0|Dumbbells,Bench|0
 Push-Up|Start in a plank position, lower your body by bending your elbows, and push back up.|Chest, Front Delts, Triceps|Video Link|0.0|None|1
-Pec Deck|Sit on a pec deck machine with your back against the backrest and grasp the handles, bring the handles together in front of your chest while keeping a slight bend in your elbows, then slowly release them back out to the sides.|Chest, Front Delts|Video Link|0.0|Machine|1
+Pec Deck|Sit on a pec deck machine with your back against the backrest and grasp the handles, bring the handles together in front of your chest while keeping a slight bend in your elbows, then slowly release them back out to the sides.|Chest|Video Link|0.0|Machine|1
 Seated Cable Chest Press|Sit in a bench facing away from a cable machine with the handles at chest level, grab and press the handles forward and bring them together until your arms are fully extended, then slowly release them back to the starting position.|Chest, Front Delts|Video Link|0.0|Cable,Bench|1
 Machine Chest Press|Sit on a chest press machine with your back against the backrest and grip the handles, push the handles forward until your arms are fully extended, then slowly bring them back to the starting position by bending your elbows.|Chest, Front Delts|Video Link|0.0|Machine|0
+Dumbbell Pullover|Lie down on a bench with a dumbbell in both hands, extend your arms overhead, and lower the dumbbell behind your head in a controlled manner, then bring it back to the starting position by contracting your chest muscles.|Chest, Back|Video Link|0.0|Dumbbells,Bench|1
+Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Chest|Video Link|0.0|Dumbbells,Bench|1
+Chest Dips|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|Chest, Front Delts, Triceps|Video Link|0.0|Parallel Bars|0
 
 MuscleGroup: Back
 
-Barbell Row|While standing, hinge down and pull a barbell to your stomach.|Back, Biceps, Rear Delts|https://youtu.be/FWJR5Ve8bnQ|0.5|Barbell|0
+Barbell Bent-Over Row|While standing, hinge down and pull a barbell to your stomach.|Back, Biceps, Rear Delts|https://youtu.be/FWJR5Ve8bnQ|0.5|Barbell|0
 Cable Lat Pulldown|Pull the bar down to your chin while keeping your elbows tucked.|Back, Biceps|https://youtu.be/CAwf7n6Luuc|0.5|Cable Lat Pulldown|0
 Deadlift|Stand with the barbell in front of you, bend down, grab the bar, and stand up, keeping your back straight.|Back, Glutes, Hamstrings|https://youtube.com/shorts/vfKwjT5-86k?feature=share|1.0|Barbell|0
 Pull-Up|Hang from a bar with an overhand grip, pull yourself up until your chin is above the bar, and lower back down.|Back, Biceps|https://youtu.be/eGo4IYlbE5g|0.2|Pull-Up Bar|1
 Seated Cable Row|Sit on a cable row, grab the cable handles, pull them towards your abdomen while keeping your back straight, and squeeze your shoulder blades together.|Back, Biceps|Video Link|0.7|Cable Row|0
 Machine Lat Pulldown|Sit on a lat pulldown machine with your knees secured under the pads, grab the handles with an overhand grip, pull towards your chest by squeezing your shoulder blades together, then slowly release it back up to the starting position.|Back, Biceps|Video Link|0.0|Machine|1
 Lower Back Focused Hyperextension|Adjust the machine to fit your body, position yourself face down with your upper thighs on the padding and your feet secured under the ankle pads, cross your arms over your chest or place them behind your head, lower your upper body towards the floor while keeping your back straight, then use your lower back muscles to lift your upper body back up to the starting position. Dumbbell optional.|Back, Glutes, Hamstrings|Video Link|0.0|Hyper Extension|1
+Dumbbell Bent-Over Row|Stand with a dumbbell in each hand, hinge forward at the hips, and pull the dumbbells up towards your torso, squeezing your back muscles at the top of the movement.|Back, Biceps|Video Link|0.0|Dumbbells|1
+T-Bar Row Machine|Straddle a T-bar machine, grip the handles with both hands, and pull the handles towards your torso while keeping your back straight and squeezing your shoulder blades together at the top of the movement.|Back, Biceps|Video Link|0.0|Machine|1
+Chest-Supported T-Bar Row Machine|Get on T-bar machine, grip the handles with both hands, and pull the handles towards your torso and squeezing your shoulder blades together at the top of the movement.|Back, Biceps|Video Link|0.0|Machine|1
+Single-Arm Dumbbell Row|Place one knee and hand on a bench, hold a dumbbell in the other hand, and pull the dumbbell up towards your torso, squeezing your back muscles at the top of the movement.|Back, Biceps|Video Link|0.0|Dumbbells,Bench|1
 
 MuscleGroup: Biceps
 
@@ -30,16 +37,24 @@ EZ-Bar Preacher Curl|Sit on a preacher curl bench, hold an EZ-bar with an underh
 Cable Curl|Stand facing a cable machine with a straight bar, grab it with an underhand grip, curl your hands towards your shoulders while keeping your elbows stationary, then slowly lower them back down to the starting position.|Biceps|Video Link|0.0|Cable|1
 Bicep Curl Machine|Sit on a bicep curl machine with your back against the backrest and grasp the handles, curl your hands towards your shoulders while keeping your upper arms stationary, then slowly lower them back down to the starting position.|Biceps|Video Link|0.0|Machine|1
 Cable Rope Hammer Curl|Stand facing a cable machine with a rope attached to the low pulley, grasp the rope with a neutral girp, curl your hands towards your shoulders while keeping your upper arms stationary, then slowly lower them back down to the starting position.|Biceps, Forearms|Video Link|0.0|Cable|1
+Spider Curl|Sit on an incline bench with your chest against the pad, hold a dumbbell in one hand or both, with an underhand grip, and curl the dumbbell up towards your shoulder, focusing on squeezing your biceps at the top of the movement.|Biceps|Video Link|0.0|Dumbbells,Bench|1
+Spider Hammer Curl|Sit on an incline bench with your chest against the pad, hold a dumbbell in one hand or both, with a neutral grip, and curl the dumbbell up towards your shoulder, focusing on squeezing your biceps at the top of the movement.|Biceps, Forearms|Video Link|0.0|Dumbbells,Bench|1
+Preacher Curl Machine|Sit on a preacher curl machine with your upper arms resting on the pad, hold the handles with an underhand grip, and curl the handles up towards your shoulders, focusing on contracting your biceps.|Biceps|Video Link|0.0|Machine|1
+EZ-Bar Curl|Stand with an EZ-bar in front of you, hold the bar with an underhand grip, and curl the bar up towards your shoulders, keeping your elbows close to your body and squeezing your biceps at the top of the movement.|Biceps|Video Link|0.0|EZ-bar|1
+Concentration Curl|Sit on a bench with a dumbbell in one hand, rest your elbow on the inside of your thigh, and curl the dumbbell up towards your shoulder while keeping your upper arm stationary, squeezing your biceps at the top of the movement.|Biceps|Video Link|0.0|Dumbbells,Bench|1
+Chin-Up|Hang from a bar with a shoulder-width underhand grip, pull your body up with your biceps until your chin is above the bar, and lower back down in a controlled manner.|Biceps, Back|Video Link|0.0|Pull-Up Bar|1
 
 MuscleGroup: Triceps
 
 Rope Pushdown|Attach a rope handle to a cable, grasp the rope with an overhand grip, and push it down while keeping your upper arms stationary.|Triceps|Video Link|0.3|Cable|1
 Straight Bar Pushdown|Keep your shoulders still and extend your arm fully from top down.|Triceps|https://youtu.be/QLI40pQ6O74|0.3|Cable|1
-Skull Crusher|Lie down on a bench, hold an EZ-bar with an overhand grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|Triceps|https://youtu.be/d_KZxkY_0cM|0.5|EZ-bar,Bench|1
+EZ-Bar Skull Crusher|Lie down on a bench, hold an EZ-bar or a barbell with an overhand grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|Triceps|https://youtu.be/d_KZxkY_0cM|0.5|EZ-bar,Bench|1
+Dumbbell Skull Crusher|Lie down on a bench, hold dummbells with a neutral grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|Triceps|https://youtu.be/d_KZxkY_0cM|0.5|Dumbbells,Bench|1
 Tricep Dip|Use parallel bars, lower your body by bending your elbows, and push back up.|Triceps, Chest, Front Delts|https://youtu.be/sM6XUdt1rm4|0.4|Parallel Bars|1
 Close Grip Bench Press|Lie down on a bench, grip the bar closer than shoulder-width, lower it to your chest, and press up.|Triceps, Chest|https://youtu.be/nEF0bv2FW94|0.9|Barbell, Bench|0
 Cable Single Arm Pushdown|Stand parallel to a cable machine with no handle or a rope attached to the high pulley, grab the cable and extend your arm down by straightening your elbow, then slowly bend your elbow and return to the starting position while maintaining control.|Triceps|Video Link|0.0|Cable|1
 Machine Tricep Dip|Sit on a tricep dip machine with your back against the backrest and place your hands on the handles, press down on the handles to lift your body upward until your arms are fully extended, then slowly lower yourself back down by bending your elbows.|Triceps, Chest, Front Delts|Video Link|0.0|Machine|1
+Dumbbell Overhead Extension|Stand with a dumbbell overhead, grip it with both hands, and lower it down behind your head by bending your elbows, then press it back up by extending your arms, focusing on contracting your triceps.|Triceps|Video Link|0.0|Dumbbells|1
 
 MuscleGroup: Front Delts
 
@@ -48,6 +63,7 @@ Military Press|Stand with a barbell in front of your shoulders, press it up over
 Arnold Press|Hold dumbbells at shoulder level with palms facing you, press the dumbbells overhead while rotating your palms away from you, and lower them back down with a reverse motion.|Front Delts, Triceps|Video Link|0.0|Dumbbells|0
 Dumbbell Front Raise|Hold dumbbells in front of your thighs with palms facing your body, raise the dumbbells straight out in front of you until they reach shoulder height, and lower them back down slowly.|Front Delts|Video Link|0.0|Dumbbells|1
 Shoulder Press Machine|Sit on a shoulder press machine with your back against the backrest and grasp the handles, press the handles upward until your arms are fully extended, then slowly lower them back down to the starting position.|Front Delts, Triceps|Video Link|0.0|Machine|0
+Barbell Front Raise|Stand with a barbell held in front of your thighs, palms facing your body, and raise the barbell in front of you until it reaches shoulder height, then lower it back down in a controlled manner, focusing on engaging your front delts.|Front Delts|Video Link|0.0|Barbell|1
 
 MuscleGroup: Side Delts
 
@@ -62,6 +78,7 @@ Machine Rear Delt Fly|Bring your arms back to your side while keeping them stria
 Bent-Over Dumbbell Reverse Fly|Bend forward at the hips with a dumbbell in each hand, raise the dumbbells out to the sides until they reach shoulder level, and squeeze your shoulder blades together at the top. (Optional - Rest head on bench during the movement.)|Rear Delts|Video Link|0.0|Dumbbells|1
 Face Pull|Attach a rope handle to a cable at face height, grasp the rope with an overhand grip, pull the rope towards your face while squeezing your shoulder blades together, and return to the starting position.|Rear Delts, Upper Back|Video Link|0.0|Cable|1
 Cable Rear Delt Fly|Attach a D-handle, rope, or no attachment to a cable machine at the high pulley, stand parallel to the machine and grab the handle with one hand, pull the handle out, with your elbow, to the side and slightly backward, squeezing your shoulder blade, then slowly return to the starting position and repeat on the other side. Can also be done with two cables at once.|Rear Delts|Video Link|0.0|Cable|1
+Single-Arm Dumbbell Rear Delt Row||Place one knee and hand on a bench, hold a dumbbell in the other hand, and row the dumbbells up towards your chest while keeping your elbows out to the sides, then lower them back down in a controlled manner, focusing on engaging your rear delts.|Rear Delts|Video Link|0.0|Dumbbells,Bench|1
 
 MuscleGroup: Glutes
 
@@ -89,6 +106,7 @@ MuscleGroup: Hamstrings
 Seated Leg Curl|Push into the seat, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/ELOCsoDSmrg|0.7|Machine|1|Seated Leg Curl
 Lying Leg Curl|Lay down, align the axis of rotation with your knees, and bring your feet in.|Hamstrings|https://youtu.be/1Tq3QdYUuHs|0.7|Machine|1|Lying Leg Curl
 Stiff-Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the dumbbells close. You should feel a stretch in the hamstrings.|Hamstrings, Glutes|https://youtu.be/R6KXyhU4nTY|0.4|Dumbbells|1
+Stiff-Leg Deadlift|Stand with a barbell in front of your thighs, feet hip-width apart, and bend forward at the hips while keeping your legs straight until you feel a stretch in your hamstrings, then return to the starting position by standing up straight, focusing on engaging your hamstrings.|Hamstrings, Glutes, Back|Video Link|0.0|Barbell|0
 
 MuscleGroup: Calves
 
