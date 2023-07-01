@@ -19,7 +19,7 @@ Decline Barbell Bench|Lie down on a decline bench, grip the bar, lower to your c
 
 MuscleGroup: Back
 
-Barbell Bent-Over Row|While standing, hinge down and pull a barbell to your stomach.|Mid Back:3 Lats:2, Upper Back:1, Lower Back:1, Biceps:1, Rear Delts:1|https://youtu.be/FWJR5Ve8bnQ|0.5|Barbell|0
+Barbell Bent-Over Row|While standing, hinge down and pull a barbell to your stomach.|Mid Back:3, Lats:2, Upper Back:1, Lower Back:1, Biceps:1, Rear Delts:1|https://youtu.be/FWJR5Ve8bnQ|0.5|Barbell|0
 Cable Lat Pulldown|Pull the bar down to your chin while keeping your elbows tucked.|latPulldown|https://youtu.be/CAwf7n6Luuc|0.5|Cable Lat Pulldown|0
 Deadlift|Stand with the barbell in front of you, bend down, grab the bar, and stand up, keeping your back straight.|Lower Back:3, Upper Back:2, Mid Back:2, Glutes:2, Quads:2, Hamstrings:2, Lats:1|https://youtube.com/shorts/vfKwjT5-86k?feature=share|1.0|Barbell|0
 Pull-Up|Hang from a bar with an overhand grip, pull yourself up until your chin is above the bar, and lower back down.|latPulldown|https://youtu.be/eGo4IYlbE5g|0.2|Pull-Up Bar|1
