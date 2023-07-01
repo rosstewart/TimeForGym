@@ -1,2 +1,5 @@
 time_for_gym/ios/Runner/GoogleService-Info.plist
 time_for_gym/lib/api_keys.dart
+time_for_gym/assets/
+time_for_gym/exercise_pictures/
+time_for_gym/muscle_group_pictures
