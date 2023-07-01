@@ -72,9 +72,9 @@ Barbell Front Raise|Stand with a barbell held in front of your thighs, palms fac
 MuscleGroup: Side Delts
 
 Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until they reach shoulder level, 30° in front of you.|Side Delts:3, Traps:1|https://youtu.be/3VcKaXpzqRo|0.2|Dumbbells|1
-Cable Lateral Raise|Attach a D-handle to a cable at hip height, stand sideways to the cable, raise the handle out to the side until it reaches shoulder height, and return to the starting position with control.|Side Delts:3, Traps:1||Video Link|0.0|Cable|1
-Incline Dumbbell Y-Raise|Lie face down on an incline bench, holding light dumbbells with your arms straight and palms facing in. Lift your arms up and out to form a "Y" shape with your body, pause briefly, then lower the weights back down.|Side Delts:3, Traps:1||Video Link|0.0|Dumbbells,Bench|1
-Machine Lateral Raise|Sit on a lateral raise machine with your back against the backrest and place your forearms on the pads, lift your forearms out to the sides until they are parallel to the ground, then slowly lower them back down to the starting position.|Side Delts:3, Traps:1||Video Link|0.0|Machine|1
+Cable Lateral Raise|Attach a D-handle to a cable at hip height, stand sideways to the cable, raise the handle out to the side until it reaches shoulder height, and return to the starting position with control.|Side Delts:3, Traps:1|Video Link|0.0|Cable|1
+Incline Dumbbell Y-Raise|Lie face down on an incline bench, holding light dumbbells with your arms straight and palms facing in. Lift your arms up and out to form a "Y" shape with your body, pause briefly, then lower the weights back down.|Side Delts:3, Traps:1|Video Link|0.0|Dumbbells,Bench|1
+Machine Lateral Raise|Sit on a lateral raise machine with your back against the backrest and place your forearms on the pads, lift your forearms out to the sides until they are parallel to the ground, then slowly lower them back down to the starting position.|Side Delts:3, Traps:1|Video Link|0.0|Machine|1
 
 MuscleGroup: Rear Delts
 
@@ -82,7 +82,7 @@ Machine Rear Delt Fly|Bring your arms back to your side while keeping them stria
 Bent-Over Dumbbell Reverse Fly|Bend forward at the hips with a dumbbell in each hand, raise the dumbbells out to the sides until they reach shoulder level, and squeeze your shoulder blades together at the top. (Optional - Rest head on bench during the movement.)|Rear Delts:3|Video Link|0.0|Dumbbells|1
 Face Pull|Attach a rope handle to a cable at face height, grasp the rope with an overhand grip, pull the rope towards your face while squeezing your shoulder blades together, and return to the starting position.|Rear Delts:3, Upper Back:2|Video Link|0.0|Cable|1
 Cable Rear Delt Fly|Attach a D-handle, rope, or no attachment to a cable machine at the high pulley, stand parallel to the machine and grab the handle with one hand, pull the handle out, with your elbow, to the side and slightly backward, squeezing your shoulder blade, then slowly return to the starting position and repeat on the other side. Can also be done with two cables at once.|Rear Delts:3|Video Link|0.0|Cable|1
-Single-Arm Dumbbell Rear Delt Row||Place one knee and hand on a bench, hold a dumbbell in the other hand, and row the dumbbells up towards your chest while keeping your elbows out to the sides, then lower them back down in a controlled manner, focusing on engaging your rear delts.|Rear Delts:3|Video Link|0.0|Dumbbells,Bench|1
+Single-Arm Dumbbell Rear Delt Row|Place one knee and hand on a bench, hold a dumbbell in the other hand, and row the dumbbells up towards your chest while keeping your elbows out to the sides, then lower them back down in a controlled manner, focusing on engaging your rear delts.|Rear Delts:3|Video Link|0.0|Dumbbells,Bench|1
 
 MuscleGroup: Glutes
 
