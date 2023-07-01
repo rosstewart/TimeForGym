@@ -15,6 +15,7 @@ Machine Chest Press|Sit on a chest press machine with your back against the back
 Dumbbell Pullover|Lie down on a bench with a dumbbell in both hands, extend your arms overhead, and lower the dumbbell behind your head in a controlled manner, then bring it back to the starting position by contracting your chest muscles.|Mid Chest:3, Lower Chest:3, Lats:2|Video Link|0.0|Dumbbells,Bench|1
 Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Upper Chest:3, Mid Chest:2|Video Link|0.0|Dumbbells,Bench|1
 Chest Dips|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|lowerPress|Video Link|0.0|Parallel Bars|0
+Decline Barbell Bench|Lie down on a decline bench, grip the bar, lower to your chest, and press up.|lowerPress|Video Link|0.0|Decline Bench Press|0
 
 MuscleGroup: Back
 
