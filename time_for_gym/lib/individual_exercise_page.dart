@@ -21,6 +21,22 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
     FocusScope.of(context).unfocus();
   }
 
+  List<Exercise> findSimilarExercises(Exercise exercise, MyAppState appState) {
+    List<Exercise> allExercises = [];
+    allExercises.addAll(appState.muscleGroups[exercise.mainMuscleGroup] ?? []);
+    List<Exercise> similarExercises = allExercises
+        .where((other) =>
+            exercise.musclesWorked.isNotEmpty &&
+            exercise.musclesWorkedActivation.isNotEmpty &&
+            other.musclesWorked.isNotEmpty &&
+            other.musclesWorkedActivation.isNotEmpty &&
+            exercise.musclesWorked[0] == other.musclesWorked[0] &&
+            exercise.musclesWorkedActivation[0] ==
+                other.musclesWorkedActivation[0])
+        .toList();
+    return similarExercises;
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = Provider.of<MyAppState>(context); // Listening to MyAppState
@@ -39,7 +55,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
     } else if (appState.fromSearchPage) {
       backIndex = 8; // Search Page
       exercise = appState.currentExercise;
-    } else if (appState.fromGymPage){
+    } else if (appState.fromGymPage) {
       backIndex = 9;
       exercise = appState.currentExerciseFromGymPage;
     } else {
@@ -49,6 +65,8 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
 
     print(
         "From search page: ${appState.fromSearchPage} ${appState.currentExercise}, From split day page: ${appState.fromSplitDayPage} ${appState.currentExerciseFromSplitDayPage}");
+
+    List<Exercise> similarExercises = findSimilarExercises(exercise, appState);
 
     // print("${appState.fromFavorites}")
 
@@ -143,15 +161,18 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-
-                SizedBox(height: 5,),
+                SizedBox(
+                  height: 5,
+                ),
                 Container(
                   color: theme.colorScheme.onBackground,
                   height: 200,
                   width: 200,
                   child: ImageContainer(exercise: exercise),
                 ),
-                SizedBox(height: 20,),
+                SizedBox(
+                  height: 20,
+                ),
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -213,6 +234,9 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                             .toStringAsFixed(0),
                       ),
                       StrengthLevelForm(exercise: exercise),
+                      
+                      SimilarExercisesRow(similarExercises: similarExercises, appState: appState)
+
                       // SizedBox(
                       //     height:
                       //         200), // Add some empty space at the bottom for scrolling
@@ -225,7 +249,85 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
         ),
       ),
     );
+  }
+}
 
+class SimilarExercisesRow extends StatelessWidget {
+  const SimilarExercisesRow({
+    super.key,
+    required this.similarExercises,
+    required this.appState,
+  });
+
+  final List<Exercise> similarExercises;
+  final MyAppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+              width:
+                  10), // Buffer space before the first button
+          ...List.generate(
+            similarExercises.length,
+            (index) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: GestureDetector(
+                onTap: () {
+                  if (appState.fromGymPage) {
+                    appState.currentExerciseFromGymPage =
+                        similarExercises[index];
+                  } else if (appState.fromSplitDayPage) {
+                    appState.currentExerciseFromSplitDayPage =
+                        similarExercises[index];
+                  } else {
+                    appState.currentExercise =
+                        similarExercises[index];
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius:
+                            BorderRadius.circular(8),
+                      ),
+                      // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
+                      child: ImageContainer(
+                          exercise: similarExercises[index]),
+                      // child: ,
+                    ),
+                    SizedBox(height: 8),
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        similarExercises[index].name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge!
+                            .copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onBackground),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ).toList(),
+          SizedBox(width: 10), // Buffer
+        ],
+      ),
+    );
   }
 }
 

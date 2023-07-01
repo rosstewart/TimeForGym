@@ -40,7 +40,9 @@ class _ExercisesPageState extends State<ExercisesPage> {
           }
         } else if (selectedFilterOption == 'No Equipment') {
           if (exercise.resourcesRequired != null) {
-            return exercise.resourcesRequired!.contains('None');
+            return exercise.resourcesRequired!.contains('None') ||
+                exercise.resourcesRequired!.contains('Pull-Up Bar') ||
+                exercise.resourcesRequired!.contains('Parallel Bars');
           }
         } else if (selectedFilterOption == 'Machine-Only') {
           if (exercise.resourcesRequired != null) {
@@ -52,19 +54,19 @@ class _ExercisesPageState extends State<ExercisesPage> {
     }
 
     return SwipeBack(
-        appState: appState,
-        index: 8,
-        child: Scaffold(
-      appBar: AppBar(
-        leading: Back(appState: appState, index: 8),
-        leadingWidth: 70,
-        title: Text(
-          "${appState.currentMuscleGroup} Exercises",
-          style: titleStyle,
+      appState: appState,
+      index: 8,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: Back(appState: appState, index: 8),
+          leadingWidth: 70,
+          title: Text(
+            "${appState.currentMuscleGroup} Exercises",
+            style: titleStyle,
+          ),
+          backgroundColor: theme.scaffoldBackgroundColor,
         ),
-        backgroundColor: theme.scaffoldBackgroundColor,
-      ),
-      body: ListView(
+        body: ListView(
           children: [
             SizedBox(height: 20),
             SingleChildScrollView(
@@ -96,8 +98,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
                                   resolveColor(theme.colorScheme.primary)),
                           label: Text(
                             option,
-                            style:
-                                TextStyle(color: theme.colorScheme.onBackground),
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
                           ),
                           icon: Icon(
                             Icons.cancel,
@@ -121,8 +123,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
                                   theme.colorScheme.primaryContainer)),
                           child: Text(
                             option,
-                            style:
-                                TextStyle(color: theme.colorScheme.onBackground),
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
                           ),
                         ),
                       );

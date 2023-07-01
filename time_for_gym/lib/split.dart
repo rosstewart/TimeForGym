@@ -6,6 +6,8 @@ import 'dart:math';
 
 class TrainingDay {
   List<String> muscleGroups = [];
+  List<String> exerciseIdentifiers = [];
+  List<String> setNames = [];
   bool isNotRestDay = false;
   int dayOfWeek = -1;
   String splitDay = "Rest Day";
@@ -16,45 +18,233 @@ class TrainingDay {
   // TrainingDay.fromPref(this.muscleGroups,this.isNotRestDay,this.dayOfWeek);
 
   void addMuscleGroups(
-      List<String> muscleGroupsToAdd, List<String> focusedMuscleGroups) {
+      List<String> muscleGroupsToAdd,
+      List<String> exerciseIdentifiersToAdd,
+      List<String> setNamesToAdd,
+      List<String> focusedMuscleGroups) {
     for (String focusedMuscleGroup in focusedMuscleGroups) {
-      if (muscleGroupsToAdd.contains(focusedMuscleGroup)) {
-        if (!muscleGroups.contains(focusedMuscleGroup)) {
-          muscleGroups.add(focusedMuscleGroup);
-        }
-        muscleGroupsToAdd.remove(focusedMuscleGroup);
+      int focusedIndex = muscleGroupsToAdd.indexOf(focusedMuscleGroup);
+      if (focusedIndex != -1) {
+        muscleGroupsToAdd
+            .removeAt(focusedIndex); // Move focused muscle groups to first
+        String focusedIdentifier =
+            exerciseIdentifiersToAdd.removeAt(focusedIndex);
+        String focusedSetName = setNamesToAdd.removeAt(focusedIndex);
+        muscleGroups.add(focusedMuscleGroup);
+        exerciseIdentifiers.add(focusedIdentifier);
+        setNames.add(focusedSetName);
       }
+      // if (muscleGroupsToAdd.contains(focusedMuscleGroup)) {
+      //   if (!muscleGroups.contains(focusedMuscleGroup)) {
+      //     muscleGroups.add(focusedMuscleGroup);
+      //   }
+      //   muscleGroupsToAdd.remove(focusedMuscleGroup);
+      // }
     }
     muscleGroups.addAll(muscleGroupsToAdd);
+    exerciseIdentifiers.addAll(exerciseIdentifiersToAdd);
+    setNames.addAll(setNamesToAdd);
   }
 
-  void addPush(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Chest", "Front Delts", "Side Delts", "Triceps"], focusedMuscleGroups);
-    splitDay = "Chest, Shoulders, & Triceps";
+  void addPushA(List<String> focusedMuscleGroups) {
+    // addMuscleGroups(
+    //     ["Chest", "Chest", "Front Delts", "Side Delts", "Triceps"], focusedMuscleGroups);
+    // splitDay = "Chest, Shoulders, & Triceps";
+    addMuscleGroups([
+      "Chest",
+      "Chest",
+      "Front Delts",
+      "Side Delts",
+      "Triceps"
+    ], [
+      "chestPress", // Mid
+      "cableUpperChest", // Full
+      "shoulderPressMachine", // Lengthened
+      "dumbbellLateralRaise", // Shortened
+      "cableTricepPushdown" // Shortened
+    ], [
+      "Mid/Lower Chest",
+      "Upper Chest",
+      "",
+      "",
+      ""
+    ], focusedMuscleGroups);
+    splitDay = "Push A";
   }
 
-  void addPull(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Back", "Biceps", "Rear Delts", "Abs"], focusedMuscleGroups);
-    splitDay = "Back & Biceps";
+  void addPushB(List<String> focusedMuscleGroups) {
+    addMuscleGroups([
+      "Chest",
+      "Chest",
+      "Front Delts",
+      "Side Delts",
+      "Triceps"
+    ], [
+      "upperChestPress", // Mid
+      "cableLowerChest", // Full
+      "cableFrontRaise", // Shortened
+      "cableLateralRaise", // Lengthened
+      "overheadTricep" // Lengthened
+    ], [
+      "Upper Chest",
+      "Mid/Lower Chest",
+      "",
+      "",
+      ""
+    ], focusedMuscleGroups);
+    splitDay = "Push B";
   }
 
-  void addLegs(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Glutes", "Quads", "Hamstrings", "Calves"], focusedMuscleGroups);
-    splitDay = "Legs";
+  void addPullA(List<String> focusedMuscleGroups) {
+    // addMuscleGroups(
+    //     ["Back", "Biceps", "Rear Delts", "Abs"], focusedMuscleGroups);
+    // splitDay = "Back & Biceps";
+    addMuscleGroups([
+      "Back",
+      "Back",
+      "Biceps",
+      "Biceps",
+      "Rear Delts",
+      "Abs"
+    ], [
+      "latPulldown", // Shortened
+      "chestSupportedUpperBackRow", // Full
+      "hammerCurl", // Mid
+      "longHeadCurl", // Lengthened
+      "rearDelt", // Any
+      "upperAbs"
+    ], [
+      "Lats",
+      "Mid/Upper Back",
+      "Brachialis, Forearms",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
+    splitDay = "Pull A";
+  }
+
+  void addPullB(List<String> focusedMuscleGroups) {
+    addMuscleGroups([
+      "Back",
+      "Back",
+      "Biceps",
+      "Biceps",
+      "Rear Delts",
+      "Abs"
+    ], [
+      "latPulldown", // Shortened
+      "chestSupportedUpperBackRow", // Full
+      "regularCurl", // Mid
+      "shortHeadCurl", // Lengthened
+      "rearDelt", // Any
+      "lowerAbs"
+    ], [
+      "Lats",
+      "Mid/Upper Back",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
+    splitDay = "Pull B";
+  }
+
+  void addLegsA(List<String> focusedMuscleGroups) {
+    // addMuscleGroups(
+    //     ["Glutes", "Quads", "Hamstrings", "Calves"], focusedMuscleGroups);
+    // splitDay = "Legs";
+    addMuscleGroups([
+      "Glutes",
+      "Glutes",
+      "Hamstrings",
+      "Quads",
+      "Calves",
+    ], [
+      "gluteSquat", // Lengthened
+      "gluteRDL", // Lengthened
+      "seatedLegCurl", // Full
+      "legExtension", // Full
+      "calf", // Full
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
+    splitDay = "Legs A";
+  }
+
+  void addLegsB(List<String> focusedMuscleGroups) {
+    addMuscleGroups([
+      "Quads",
+      "Quads",
+      "Glutes",
+      "Hamstrings",
+      "Calves",
+    ], [
+      "quadSquat", // Lengthened
+      "legExtension", // Lengthened
+      "gluteRDL", // Full
+      "seatedLegCurl", // Full
+      "calf", // Full
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
+    splitDay = "Legs B";
   }
 
   void addShoulders(List<String> focusedMuscleGroups) {
-    addMuscleGroups(["Front Delts", "Side Delts", "Rear Delts", "Abs"],
-        focusedMuscleGroups);
+    addMuscleGroups([
+      "Front Delts",
+      "Side Delts",
+      "Rear Delts",
+      "Abs"
+    ], [
+      "",
+      "",
+      "",
+      "",
+    ], [
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
     splitDay = "Shoulders";
   }
 
   void addUpper(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Chest", "Front Delts", "Side Delts", "Triceps", "Back", "Biceps", "Rear Delts"], focusedMuscleGroups);
+    addMuscleGroups([
+      "Chest",
+      "Front Delts",
+      "Side Delts",
+      "Triceps",
+      "Back",
+      "Biceps",
+      "Rear Delts"
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
     // addPush(focusedMuscleGroups);
     // addPull(focusedMuscleGroups);
     // muscleGroups.remove("Abs");
@@ -62,16 +252,53 @@ class TrainingDay {
   }
 
   void addLower(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Glutes", "Quads", "Hamstrings", "Calves", "Abs"], focusedMuscleGroups);
+    addMuscleGroups([
+      "Glutes",
+      "Quads",
+      "Hamstrings",
+      "Calves",
+      "Abs"
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
     // addLegs(focusedMuscleGroups);
     // muscleGroups.add("Abs");
     splitDay = "Lower Body";
   }
 
   void addFullBody1(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Chest", "Side Delts", "Back", "Biceps", "Glutes", "Quads"], focusedMuscleGroups);
+    addMuscleGroups([
+      "Chest",
+      "Side Delts",
+      "Back",
+      "Biceps",
+      "Glutes",
+      "Quads"
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
     // addMuscleGroups(
     //     ["Chest", "Front Delts", "Side Delts", "Triceps", "Back", "Biceps", "Rear Delts", "Glutes", "Quads", "Hamstrings", "Calves", "Abs"], focusedMuscleGroups);
     // addUpper(focusedMuscleGroups);
@@ -80,8 +307,28 @@ class TrainingDay {
   }
 
   void addFullBody2(List<String> focusedMuscleGroups) {
-    addMuscleGroups(
-        ["Front Delts", "Triceps", "Rear Delts", "Hamstrings", "Calves", "Abs"], focusedMuscleGroups);
+    addMuscleGroups([
+      "Front Delts",
+      "Triceps",
+      "Rear Delts",
+      "Hamstrings",
+      "Calves",
+      "Abs"
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ], focusedMuscleGroups);
     // addUpper(focusedMuscleGroups);
     // addLower(focusedMuscleGroups);
     splitDay = "Full Body B"; // After the add calls to update splitDay
@@ -91,21 +338,39 @@ class TrainingDay {
     for (String focusedMuscleGroup in focusedMuscleGroups) {
       if (!muscleGroups.contains(focusedMuscleGroup)) {
         muscleGroups.add(focusedMuscleGroup);
+        exerciseIdentifiers.add("");
+        setNames.add("");
       }
     }
-    if (muscleGroups.contains("Abs")) {
-      muscleGroups.remove("Abs"); // Move abs to end
+    int absIndex = muscleGroups.indexOf("Abs");
+    if (absIndex != -1) {
+      muscleGroups.removeAt(absIndex); // Move abs to end
+      String absIdentifier = exerciseIdentifiers.removeAt(absIndex);
+      String absSetName = setNames.removeAt(absIndex);
       muscleGroups.add("Abs");
+      exerciseIdentifiers.add(absIdentifier);
+      setNames.add(absSetName);
     }
   }
 
   // PLG - Push Pull Legs
   void addPLG(String char, List<String> focusedMuscleGroups) {
     switch (char) {
+      // Push A
       case 'p':
       case 'P':
-        addPush(focusedMuscleGroups);
+        addPushA(focusedMuscleGroups);
         if (char == "P") {
+          // Also focused
+          additionallyAddFocused(focusedMuscleGroups);
+          splitDay += " with Focused Muscle Groups";
+        }
+        break;
+      // Push B (Ran out of chars)
+      case 'o':
+      case 'O':
+        addPushB(focusedMuscleGroups);
+        if (char == "O") {
           // Also focused
           additionallyAddFocused(focusedMuscleGroups);
           splitDay += " with Focused Muscle Groups";
@@ -113,8 +378,17 @@ class TrainingDay {
         break;
       case 'l':
       case 'L':
-        addPull(focusedMuscleGroups);
+        addPullA(focusedMuscleGroups);
         if (char == "L") {
+          // Also focused
+          additionallyAddFocused(focusedMuscleGroups);
+          splitDay += " with Focused Muscle Groups";
+        }
+        break;
+      case 'k':
+      case 'K':
+        addPullB(focusedMuscleGroups);
+        if (char == "K") {
           // Also focused
           additionallyAddFocused(focusedMuscleGroups);
           splitDay += " with Focused Muscle Groups";
@@ -122,8 +396,17 @@ class TrainingDay {
         break;
       case 'g':
       case 'G':
-        addLegs(focusedMuscleGroups);
+        addLegsA(focusedMuscleGroups);
         if (char == "G") {
+          // Also focused
+          additionallyAddFocused(focusedMuscleGroups);
+          splitDay += " with Focused Muscle Groups";
+        }
+        break;
+      case 'h':
+      case 'H':
+        addLegsB(focusedMuscleGroups);
+        if (char == "H") {
           // Also focused
           additionallyAddFocused(focusedMuscleGroups);
           splitDay += " with Focused Muscle Groups";
@@ -164,12 +447,12 @@ class TrainingDay {
       case 'B':
         addFullBody2(focusedMuscleGroups);
         break;
-        // Remove focused muscle groups addition from upper and lower as it's too much volume
-        // if (char == "B") {
-        //   // Also focused
-        //   additionallyAddFocused(focusedMuscleGroups);
-        //   splitDay += " with Focused Muscle Groups";
-        // }
+      // Remove focused muscle groups addition from upper and lower as it's too much volume
+      // if (char == "B") {
+      //   // Also focused
+      //   additionallyAddFocused(focusedMuscleGroups);
+      //   splitDay += " with Focused Muscle Groups";
+      // }
       case 'f':
       case 'F':
         muscleGroups.addAll(focusedMuscleGroups);
@@ -197,6 +480,8 @@ class TrainingDay {
       'dayOfWeek': dayOfWeek,
       'splitDay': splitDay,
       'setsPerMuscleGroup': setsPerMuscleGroup,
+      'exerciseIdentifiers': exerciseIdentifiers,
+      'setNames': setNames,
     };
   }
 
@@ -206,10 +491,15 @@ class TrainingDay {
     dayOfWeek = json['dayOfWeek'] ?? 0;
     splitDay = json['splitDay'] ?? "none";
     setsPerMuscleGroup = List<int>.from(json['setsPerMuscleGroup'] ?? []);
+    exerciseIdentifiers = List<String>.from(json['exerciseIdentifiers'] ?? []);
+    setNames = List<String>.from(json['setNames'] ?? []);
   }
 
-  void insertMuscleGroup(int index, String muscleGroup, int numSets) {
+  void insertMuscleGroup(int index, String muscleGroup, int numSets,
+      String identifier, String setName) {
     muscleGroups.insert(index, muscleGroup);
+    exerciseIdentifiers.insert(index, identifier);
+    setNames.insert(index, setName);
     setsPerMuscleGroup.insert(index, numSets);
   }
 
@@ -217,6 +507,8 @@ class TrainingDay {
     List<dynamic> toReturn = [];
     toReturn.add(muscleGroups.removeAt(index));
     toReturn.add(setsPerMuscleGroup.removeAt(index));
+    toReturn.add(exerciseIdentifiers.removeAt(index));
+    toReturn.add(setNames.removeAt(index));
     return toReturn;
   }
 
@@ -226,6 +518,8 @@ class TrainingDay {
     this.dayOfWeek,
     this.splitDay,
     this.setsPerMuscleGroup,
+    this.exerciseIdentifiers,
+    this.setNames,
   );
 
   TrainingDay.deepCopy(TrainingDay original)
@@ -235,6 +529,8 @@ class TrainingDay {
           original.dayOfWeek,
           original.splitDay,
           List<int>.from(original.setsPerMuscleGroup),
+          List<String>.from(original.exerciseIdentifiers),
+          List<String>.from(original.setNames),
         );
 }
 
@@ -245,6 +541,7 @@ class Split {
   int trainingMinutesPerSession = -1;
   List<String> focusedMuscleGroups = [];
   List<TrainingDay> trainingDays = [];
+  int equipmentLevel = 2; // 2 for gym, 1 for dumbbell-only (& bodyweight), 0 for bodyweight-only
 
   List<String> pushMuscleGroups = [
     "Chest",
@@ -263,7 +560,7 @@ class Split {
   // 15 sets: 2 hours 30 minutes
   // 20 sets: 3 hours 20 minutes
 
-  // Future:
+  // TODO:
   //    Import gym data, generate split for them based off free-weight exercises and machines available in gym & their popularity
   // Current:
   //    Generate split based off entire exercise library
@@ -292,7 +589,7 @@ class Split {
 
   // Check for valid inputs before calling constructor
   Split(this.gymGoal, this.trainingDaysInput, this.trainingMinutesPerSession,
-      this.focusedMuscleGroups) {
+      this.focusedMuscleGroups, this.equipmentLevel) {
     // trainingDaysPerWeek = trainingDaysInput.length;
 
     String focusedFlag;
@@ -616,6 +913,7 @@ class Split {
       'trainingMinutesPerSession': trainingMinutesPerSession,
       'focusedMuscleGroups': focusedMuscleGroups,
       'trainingDays': trainingDays.map((day) => day.toJson()).toList(),
+      'equipmentLevel': equipmentLevel,
     };
   }
 
@@ -629,6 +927,7 @@ class Split {
             ?.map((day) => TrainingDay.fromJson(day))
             .toList() ??
         [];
+    equipmentLevel = json['equipmentLevel'] ?? 2;
   }
 
   // void shift(int numDays){
@@ -673,6 +972,7 @@ class Split {
     focusedMuscleGroups = List.from(other.focusedMuscleGroups);
     trainingDays =
         other.trainingDays.map((day) => TrainingDay.deepCopy(day)).toList();
+    equipmentLevel = other.equipmentLevel;
   }
 }
 

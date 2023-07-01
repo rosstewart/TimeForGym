@@ -97,6 +97,7 @@ class _GymGoalAndDayOfWeekSelectorState
       GlobalKey<FormFieldState<List<String>>>();
 
   String? selectedGymGoalOption = "Build Muscle";
+  int equipmentLevel = 2;
 
   List<String> gymGoalOptions = [
     'Build Muscle',
@@ -132,7 +133,7 @@ class _GymGoalAndDayOfWeekSelectorState
     // Set at 60 training minutes per session temporarily
     if (selectedGymGoalOption != null) {
       appState.setSplit(Split(
-          selectedGymGoalOption!, trainingDaysInput, 60, selectedMuscleGroups));
+          selectedGymGoalOption!, trainingDaysInput, 60, selectedMuscleGroups, equipmentLevel));
     }
 
     for (int i = 0; i < appState.currentSplit.trainingDays.length; i++) {

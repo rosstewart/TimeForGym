@@ -6,8 +6,10 @@ class Exercise implements Comparable<Exercise> {
   Exercise({
     this.name = "",
     this.description = "",
-    this.musclesWorked = "",
+    required this.musclesWorked,
+    required this.musclesWorkedActivation,
     this.videoLink = "",
+    this.identifier = "",
     this.waitMultiplier = -1,
     this.mainMuscleGroup = "",
     this.imageUrl = "",
@@ -37,10 +39,12 @@ class Exercise implements Comparable<Exercise> {
 
   final String name,
       description,
-      musclesWorked,
       videoLink,
       mainMuscleGroup,
-      imageUrl;
+      imageUrl,
+      identifier;
+  final List<String> musclesWorked;
+  final List<int> musclesWorkedActivation;
   final double waitMultiplier;
   final double starRating;
   double? userRating;

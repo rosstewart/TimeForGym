@@ -83,6 +83,33 @@ class Gym implements Comparable<Gym> {
     }
   }
 
+  bool canSupportExercise(Exercise element) {
+    for (String resource in element.resourcesRequired ?? []) {
+      if (resource == 'None' || resource == 'Bodyweight') {
+        return true;
+      }
+      if (resource == 'Machine') {
+        // Check if gym has the machine
+        if (machinesAvailable.isEmpty) {
+          // Assume true if no machines initialized
+          return true;
+        }
+        if (!machinesAvailable.contains(element)) {
+          // If gym doesn't have machine, remove it
+          return false;
+        }
+      } else if (resourcesAvailable[resource] == null ||
+          resourcesAvailable[resource]! < 1) {
+        if (resourcesAvailable.isEmpty) {
+          // Assume true if no resources initialized
+          return true;
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
   String name;
   String placeId;
   String formattedAddress;

@@ -12,6 +12,8 @@ import 'dart:async';
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/split.dart';
+
+import 'gym.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
 
 // ignore: must_be_immutable
@@ -165,7 +167,9 @@ class _SplitDayPageState extends State<SplitDayPage> {
                         ),
                         child: TextFormField(
                           initialValue: trainingDays[widget.dayIndex].splitDay,
-                          style: titleStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
+                          style: titleStyle.copyWith(
+                              color: theme.colorScheme.onBackground
+                                  .withOpacity(0.65)),
                           textAlign: TextAlign.center,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -317,19 +321,23 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                     final card =
                                         muscleGroupCards.removeAt(oldIndex);
                                     final List<dynamic>
-                                        muscleGroupAndExerciseIndexAndNumSets =
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier =
                                         appState.removeTempMuscleGroupFromSplit(
                                             widget.dayIndex, oldIndex);
                                     muscleGroupCards.insert(newIndex, card);
                                     appState.addTempMuscleGroupToSplit(
                                         widget.dayIndex,
                                         newIndex,
-                                        muscleGroupAndExerciseIndexAndNumSets[
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
                                             0],
-                                        muscleGroupAndExerciseIndexAndNumSets[
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
                                             1],
-                                        muscleGroupAndExerciseIndexAndNumSets[
-                                            2]);
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            2],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            3],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            4]);
 
                                     print(
                                         "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
@@ -405,8 +413,9 @@ class _AddButtonState extends State<AddButton> {
     if (muscleGroups.contains(name)) {
       // Muscle Group - Add first exercise in muscle group
       // 3 sets default
+      // Identifier and set name default
       appState.addTempMuscleGroupToSplit(
-          widget.dayIndex, widget.cardIndex, name, 0, 3);
+          widget.dayIndex, widget.cardIndex, name, 0, 3, "", "");
     } else {
       // Exercise - Find exercise index of the main muscle group
       int index = exerciseNames.indexOf(name);
@@ -423,12 +432,15 @@ class _AddButtonState extends State<AddButton> {
         return;
       } else {
         // 3 sets default
+        // Identifier and set name default
         appState.addTempMuscleGroupToSplit(
             widget.dayIndex,
             widget.cardIndex,
             mainMuscleGroupName,
             exercises.indexWhere((element) => element.name == name),
-            3);
+            3,
+            "",
+            "");
       }
     }
   }
@@ -548,8 +560,12 @@ class _AddButtonState extends State<AddButton> {
                     controller: searchController,
                     decoration: InputDecoration(
                       labelText: 'Search',
-                      labelStyle: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
-                      floatingLabelStyle: whiteTextStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(0.65)),
+                      labelStyle: whiteTextStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(0.65)),
+                      floatingLabelStyle: whiteTextStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(0.65)),
                     ),
                   ),
                   suggestionsCallback: (pattern) {
@@ -683,6 +699,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
   Widget suffixIcon =
       Text('*', style: TextStyle(color: Colors.red, fontSize: 20));
 
+  List<Exercise> similarExercises = [];
+
   @override
   void initState() {
     super.initState();
@@ -710,44 +728,125 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     super.dispose();
   }
 
-  void changeExercise(var appState, bool next) {
+  void changeExercise(
+      MyAppState appState, Exercise previousExercise, bool next) {
     widget.exerciseIndex =
         widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
-    if (next) {
-      if (widget.exerciseIndex >=
-          appState.muscleGroups[widget.muscleGroup].length - 1) {
-        // if will be out of bounds
+    // Change exercise to next similar exercise
+    similarExercises = appState.muscleGroups[previousExercise.mainMuscleGroup]!
+        .where((element) =>
+            element.musclesWorked.isNotEmpty &&
+            element.musclesWorkedActivation.isNotEmpty &&
+            previousExercise.musclesWorked.isNotEmpty &&
+            previousExercise.musclesWorkedActivation.isNotEmpty &&
+            element.musclesWorked[0] == previousExercise.musclesWorked[0]) // &&
+        // element.musclesWorkedActivation[0] ==
+        // previousExercise.musclesWorkedActivation[0])
+        .toList();
+    switch (widget.split.equipmentLevel) {
+      case 0:
+        // Bodyweight exercises only
+        for (Exercise element in similarExercises) {
+          if (element.resourcesRequired != null &&
+              element.resourcesRequired!.isNotEmpty &&
+              element.resourcesRequired![0] != 'None' &&
+              element.resourcesRequired![0] != 'Bodyweight') {
+            similarExercises.remove(element);
+          }
+        }
+        break;
+      case 1:
+        // Dumbbell and bodyweight only
+        for (Exercise element in similarExercises) {
+          if (element.resourcesRequired != null &&
+              element.resourcesRequired!.isNotEmpty &&
+              element.resourcesRequired![0] != 'None' &&
+              element.resourcesRequired![0] != 'Bodyweight' &&
+              !element.resourcesRequired!.contains('Dumbbells')) {
+            similarExercises.remove(element);
+          }
+        }
+        break;
+      case 2:
+        // Only select exercises that are available at the gym
+        if (appState.userGym != null &&
+            appState.userGym!.resourcesAvailable.isNotEmpty) {
+          for (Exercise element in similarExercises) {
+            if (!appState.userGym!.canSupportExercise(element)) {
+              similarExercises.remove(element);
+            }
+          }
+        }
+        break;
+      default:
+        print('ERROR - Equipment Level');
         return;
-      }
-      setState(() {
-        widget.exerciseIndex++;
-      });
-    } else {
-      // previous
-      if (widget.exerciseIndex == 0) {
-        // if will be out of bounds
-        return;
-      }
-      setState(() {
-        widget.exerciseIndex--;
-      });
     }
 
-    // print("before next");
-    // print("local split ${widget.exerciseIndices.hashCode}");
-    // print("current split ${appState.splitDayExerciseIndices.hashCode}");
-    // print("temp split ${appState.editModeTempExerciseIndices.hashCode}");
+    int similarExerciseIndex = similarExercises.indexOf(previousExercise);
+    if (similarExercises.isNotEmpty && similarExerciseIndex == -1) {
+      // User gym has changed, previous exercise not in resources of current gym
+      // Set to most popular exercise that satisfies the resource requirements
+      Exercise nextExercise = similarExercises[0];
+      setState(() {
+        widget.exerciseIndex = appState
+            .muscleGroups[previousExercise.mainMuscleGroup]!
+            .indexOf(nextExercise);
+      });
+    }
+    // If index can change
+    if (similarExerciseIndex != -1 && similarExercises.length > 1) {
+      if (next) {
+        // If last item
+        if (similarExerciseIndex >= similarExercises.length - 1) {
+          return;
+        }
+        Exercise nextExercise = similarExercises[similarExerciseIndex + 1];
+        setState(() {
+          // Next similar exercise
+          widget.exerciseIndex = appState
+              .muscleGroups[previousExercise.mainMuscleGroup]!
+              .indexOf(nextExercise);
+        });
+      } else {
+        if (similarExerciseIndex == 0) {
+          return;
+        }
+        Exercise previousExercise = similarExercises[similarExerciseIndex - 1];
+        setState(() {
+          // Next similar exercise
+          widget.exerciseIndex = appState
+              .muscleGroups[previousExercise.mainMuscleGroup]!
+              .indexOf(previousExercise);
+        });
+      }
+    }
+
+    // widget.exerciseIndex =
+    //     widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
+    // if (next) {
+    //   if (widget.exerciseIndex >=
+    //       appState.muscleGroups[widget.muscleGroup]!.length - 1) {
+    //     // if will be out of bounds
+    //     return;
+    //   }
+    //   setState(() {
+    //     widget.exerciseIndex++;
+    //   });
+    // } else {
+    //   // previous
+    //   if (widget.exerciseIndex == 0) {
+    //     // if will be out of bounds
+    //     return;
+    //   }
+    //   setState(() {
+    //     widget.exerciseIndex--;
+    //   });
+    // }
 
     // Set the "default" exercise to view in that muscle group of the split
     widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] =
         widget.exerciseIndex;
-
-    // print("after next");
-    // print("local split ${widget.exerciseIndices}");
-    // print("current split ${appState.splitDayExerciseIndices}");
-    // print("temp split ${appState.editModeTempExerciseIndices}");
-
-    // appState.saveSplitDayExerciseIndicesData();
   }
 
   void toExercise(MyAppState appState, Exercise exercise) {
@@ -759,18 +858,18 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     appState.changePageToExercise(exercise);
   }
 
-  String? validateWeightInput(String? value) {
-    if (value == null || value.isEmpty) {
-      return '*';
-    }
-    if (double.tryParse(value) == null) {
-      return '*';
-    }
-    if (double.parse(value) < 1) {
-      return '*';
-    }
-    return null;
-  }
+  // String? validateWeightInput(String? value) {
+  //   if (value == null || value.isEmpty) {
+  //     return '*';
+  //   }
+  //   if (double.tryParse(value) == null) {
+  //     return '*';
+  //   }
+  //   if (double.parse(value) < 1) {
+  //     return '*';
+  //   }
+  //   return null;
+  // }
 
   String? validateRepsInput(String? value) {
     if (value == null || value.isEmpty) {
@@ -973,6 +1072,73 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     }
   }
 
+  bool exerciseSatisfiesMusclesWorked(
+    List<String> musclesWorked,
+    List<int> musclesWorkedActivation,
+    List<String> musclesWorkedCheck,
+    List<int> targetActivation,
+    List<String> resourcesNeeded,
+    // Map<String, int> resourcesAvailable,
+    Exercise exercise,
+    Gym? gym,
+  ) {
+    if (musclesWorked.length != musclesWorkedCheck.length) {
+      return false;
+    }
+    int count = 0;
+    for (int i = 0; i < musclesWorked.length; i++) {
+      if (i >= musclesWorkedCheck.length || i >= targetActivation.length) {
+        break;
+      }
+      String muscle = musclesWorked[i];
+      int activation = musclesWorkedActivation[i];
+      if (musclesWorked[i] == musclesWorkedCheck[i] &&
+          musclesWorkedActivation[i] == targetActivation[i]) {
+        count++;
+        continue;
+      }
+      // If target activation is greater than the muscles activation
+      int muscleIndex = musclesWorkedCheck.indexOf(muscle);
+      if (muscleIndex == -1) {
+        if (targetActivation[i] != 0) {
+          return false;
+        } else {
+          // Target activation is 0, indicating that there is no muscle target, which is good
+          continue;
+        }
+      }
+      if (activation != targetActivation[muscleIndex]) {
+        return false;
+      }
+      count++;
+      // if (musclesWorked[i] != musclesWorkedCheck[i] ||
+      //     musclesWorkedActivation[i] != musclesWorkedActivationCheck[i]) {
+      //   return false;
+      // }
+    }
+    // Didn't go through all of the checks
+    if (count < musclesWorkedCheck.length) {
+      return false;
+    }
+    if (gym == null) {
+      // Assume user gym supports exercise if not initialized yet
+      return true;
+    }
+    return gym.canSupportExercise(exercise);
+  }
+
+  bool exerciseIsPreferredResource(
+      Exercise theExercise, String? preferredResource) {
+    if (preferredResource == null) {
+      return true;
+    }
+    if (theExercise.resourcesRequired != null &&
+        theExercise.resourcesRequired!.contains(preferredResource)) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -1010,7 +1176,123 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     // If exercise isn't in exercise indices
     if (widget.splitDayCardIndex >=
         widget.exerciseIndices[widget.dayIndex].length) {
-      widget.exerciseIndices[widget.dayIndex].add(0);
+      String identifier = widget.split.trainingDays[widget.dayIndex]
+          .exerciseIdentifiers[widget.splitDayCardIndex];
+      Gym? gym = appState.userGym;
+      // Map<String, int> resourcesAvailable;
+
+      // if (widget.split.equipmentLevel == 2) {
+      //   resourcesAvailable = appState.userGym != null
+      //       ? appState.userGym!.resourcesAvailable
+      //       : {};
+      // } else {
+      //   resourcesAvailable = {};
+      //   resourcesAvailable['Dumbbells'] = 1;
+      // }
+
+      switch (identifier) {
+        case 'chestPress':
+          // Add most popular chest press
+          findValidExercise(appState, gym, 'Chest',
+              ['Mid Chest', 'Lower Chest', 'Front Delts'], [3, 2, 1], null);
+          break;
+        case 'upperChestPress':
+          findValidExercise(appState, gym, 'Chest',
+              ['Upper Chest', 'Front Delts'], [3, 2], null);
+          break;
+        case 'cableUpperChest':
+          findValidExercise(appState, gym, 'Chest',
+              ['Upper Chest', 'Front Delts'], [3, 0], 'Cable');
+          break;
+        case 'cableLowerChest':
+          findValidExercise(
+              appState, gym, 'Chest', ['Lower Chest'], [3], 'Cable');
+          break;
+        case 'shoulderPressMachine':
+          findValidExercise(appState, gym, 'Front Delts',
+              ['Front Delts', 'Triceps'], [3, 1], 'Machine');
+          break;
+        case 'cableFrontRaise':
+          findValidExercise(appState, gym, 'Front Delts',
+              ['Front Delts', 'Biceps'], [3, 1], 'Cable');
+          break;
+        case 'dumbbellLateralRaise':
+          findValidExercise(
+              appState, gym, 'Side Delts', ['Side Delts'], [3], 'Dumbbells');
+          break;
+        case 'cableLateralRaise':
+          findValidExercise(
+              appState, gym, 'Side Delts', ['Side Delts'], [3], 'Cable');
+          break;
+        case 'cableTricepPushdown':
+          findValidExercise(
+              appState, gym, 'Triceps', ['Tricep Lateral Head'], [3], 'Cable');
+          break;
+        case 'overheadTricep':
+          findValidExercise(
+              appState, gym, 'Triceps', ['Tricep Long Head'], [3], 'Cable');
+          break;
+        case 'latPulldown':
+          findValidExercise(appState, gym, 'Back', ['Lats'], [3], null);
+          break;
+        case 'chestSupportedUpperBackRow':
+          findValidExercise(
+              appState, gym, 'Back', ['Upper Back'], [3], 'Machine');
+          break;
+        case 'hammerCurl':
+          findValidExercise(appState, gym, 'Biceps', ['Brachialis'], [3], null);
+          break;
+        case 'regularCurl':
+          findValidExercise(appState, gym, 'Biceps',
+              ['Bicep Long Head', 'Bicep Short Head'], [3, 3], null);
+          break;
+        case 'longHeadCurl':
+          findValidExercise(appState, gym, 'Biceps',
+              ['Bicep Long Head', 'Bicep Short Head'], [3, 2], null);
+          break;
+        case 'shortHeadCurl':
+          findValidExercise(appState, gym, 'Biceps',
+              ['Bicep Short Head', 'Bicep Long Head'], [3, 2], null);
+          break;
+        case 'rearDelt':
+          findValidExercise(
+              appState, gym, 'Rear Delts', ['Rear Delts'], [3], null);
+          break;
+        case 'upperAbs':
+          findValidExercise(appState, gym, 'Abs', ['Upper Abs'], [3], null);
+          break;
+        case 'lowerAbs':
+          findValidExercise(appState, gym, 'Abs', ['Lower Abs'], [3], null);
+          break;
+        case 'gluteSquat':
+          findValidExercise(
+              appState, gym, 'Glutes', ['Glutes', 'Quads'], [3, 3], null);
+          break;
+        case 'gluteRDL':
+          findValidExercise(
+              appState, gym, 'Glutes', ['Glutes', 'Hamstrings'], [3, 2], null);
+          break;
+        case 'quadSquat':
+          findValidExercise(
+              appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 2], null);
+          break;
+        case 'legExtension':
+          findValidExercise(
+              appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 0], null);
+          break;
+        case 'seatedLegCurl':
+          findValidExercise(appState, gym, 'Hamstrings',
+              ['Hamstrings', 'Glutes'], [3, 0], 'Machine');
+          break;
+        case 'calf':
+          findValidExercise(
+              appState, gym, 'Calves', ['Calves'], [3], 'Machine');
+          break;
+        // Case "" or any other case
+        default:
+          widget.exerciseIndices[widget.dayIndex].add(0);
+          break;
+      }
     }
 
     // Reset exercise index if out of bounds
@@ -1049,17 +1331,19 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           }
         }
       } else {
-        previousWeights = currentExercise.splitWeightPerSet.map((e) => e.toString()).toList();
-        previousReps = currentExercise.splitRepsPerSet.map((e) => e.toString()).toList();
+        previousWeights =
+            currentExercise.splitWeightPerSet.map((e) => e.toString()).toList();
+        previousReps =
+            currentExercise.splitRepsPerSet.map((e) => e.toString()).toList();
         // Fill arrays if numSets was incremented
         if (previousWeights.length < numSets) {
           for (int i = previousWeights.length; i < numSets; i++) {
-            previousWeights.add(previousWeights[previousWeights.length-1]);
+            previousWeights.add(previousWeights[previousWeights.length - 1]);
           }
         }
         if (previousReps.length < numSets) {
           for (int i = previousReps.length; i < numSets; i++) {
-            previousReps.add(previousReps[previousReps.length-1]);
+            previousReps.add(previousReps[previousReps.length - 1]);
           }
         }
       }
@@ -1210,9 +1494,20 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                       const EdgeInsets.fromLTRB(0, 0, 10, 0),
                                   child: IconButton(
                                     onPressed: () {
-                                      changeExercise(appState, false);
+                                      changeExercise(
+                                          appState, currentExercise, false);
                                     },
-                                    icon: Icon(Icons.navigate_before),
+                                    icon: Column(
+                                      children: [
+                                        Icon(Icons.navigate_before),
+                                        Text('Similar Exercise',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: theme
+                                                    .colorScheme.onBackground
+                                                    .withOpacity(.65)))
+                                      ],
+                                    ),
                                     color: theme.colorScheme.onBackground,
                                   ),
                                 ),
@@ -1307,9 +1602,20 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                       const EdgeInsets.fromLTRB(10, 0, 0, 0),
                                   child: IconButton(
                                     onPressed: () {
-                                      changeExercise(appState, true);
+                                      changeExercise(
+                                          appState, currentExercise, true);
                                     },
-                                    icon: Icon(Icons.navigate_next),
+                                    icon: Column(
+                                      children: [
+                                        Icon(Icons.navigate_next),
+                                        Text('Similar Exercise',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: theme
+                                                    .colorScheme.onBackground
+                                                    .withOpacity(.65)))
+                                      ],
+                                    ),
                                     color: theme.colorScheme.onBackground,
                                   ),
                                 ),
@@ -1892,6 +2198,87 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           SizedBox(width: 20),
         ]),
       );
+    }
+  }
+
+  void findValidExercise(
+    MyAppState appState,
+    Gym? gym,
+    String muscleGroupToCheck,
+    List<String> musclesWorkedCheck,
+    List<int> targetActivation,
+    String? preferredResource,
+  ) {
+    // At-home exercises only, simply compare first major muscle group (muscleGroupToCheck)
+    if (widget.split.equipmentLevel != 2) {
+      if (widget.split.equipmentLevel == 0) {
+        // Bodyweight-only
+        for (int i = 0;
+            i < appState.muscleGroups[muscleGroupToCheck]!.length;
+            i++) {
+          Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+          if (element.resourcesRequired != null &&
+              element.resourcesRequired!.isNotEmpty &&
+              (element.resourcesRequired![0] == 'None' ||
+                  element.resourcesRequired![0] == 'Bodyweight')) {
+            widget.exerciseIndices[widget.dayIndex].add(i);
+            return;
+          }
+        }
+        // Add 0 if no index was found
+        widget.exerciseIndices[widget.dayIndex].add(0);
+      } else {
+        // == 1, Dumbbells & Bodyweight exercises
+        int? savedIndex;
+        for (int i = 0;
+            i < appState.muscleGroups[muscleGroupToCheck]!.length;
+            i++) {
+          Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+          // Just check if the first target muscle groups are the same for dumbbell or bodyweight exercises
+          if (element.resourcesRequired != null &&
+              element.resourcesRequired!.isNotEmpty &&
+              element.musclesWorked.isNotEmpty &&
+              musclesWorkedCheck.isNotEmpty &&
+              element.musclesWorked[0] == musclesWorkedCheck[0]) {
+            // Prefer dumbbells over bodyweight exercises
+            if (element.resourcesRequired!.contains('Dumbbells')) {
+              widget.exerciseIndices[widget.dayIndex].add(i);
+              return;
+            } else if (element.resourcesRequired![0] == 'None' ||
+                element.resourcesRequired![0] == 'Bodyweight') {
+              savedIndex ??= i;
+            }
+          }
+        }
+        // Add 0 if no index was found
+        widget.exerciseIndices[widget.dayIndex].add(savedIndex ?? 0);
+      }
+      return;
+    } else {
+      int? savedIndex;
+      for (int i = 0;
+          i < appState.muscleGroups[muscleGroupToCheck]!.length;
+          i++) {
+        Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+        if (exerciseSatisfiesMusclesWorked(
+          element.musclesWorked,
+          element.musclesWorkedActivation,
+          musclesWorkedCheck,
+          targetActivation,
+          element.resourcesRequired ?? [],
+          element,
+          gym,
+        )) {
+          if (exerciseIsPreferredResource(element, preferredResource)) {
+            widget.exerciseIndices[widget.dayIndex].add(i);
+            return;
+          } else {
+            savedIndex ??= i; // If null, save first satisfied index
+          }
+        }
+      }
+      // Add 0 if no index was found
+      widget.exerciseIndices[widget.dayIndex].add(savedIndex ?? 0);
     }
   }
 }

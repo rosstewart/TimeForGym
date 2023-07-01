@@ -23,6 +23,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:connectivity/connectivity.dart';
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
 // import 'package:google_maps_webservice/places.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/gym.dart';
@@ -155,6 +156,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // String _currentSplitString = '';
   String _splitDayExerciseIndicesString = '';
 
+  // Google AdMob
+  late BannerAd _bannerAd;
+
   // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
   bool noInternetInitialization = false;
@@ -182,6 +186,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     noInternetInitialization = false;
+    initAds();
     notifyListeners();
     await initializeUserID(); // Need user id for muscle group exercise user popularity data
     await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
@@ -192,6 +197,25 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
     // initializeOldFavorites();
     // initializeFirebase(); // For storing user-reported occupancy data
+  }
+
+  void initAds() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/2934735716',
+      size: AdSize.banner,
+      request: AdRequest(),
+      listener: BannerAdListener(),
+    );
+    _bannerAd.load();
+  }
+
+  Widget buildBannerAd() {
+    return Container(
+      alignment: Alignment.center,
+      width: _bannerAd.size.width.toDouble(),
+      height: _bannerAd.size.height.toDouble(),
+      child: AdWidget(ad: _bannerAd),
+    );
   }
 
   Future<void> initGyms() async {
@@ -272,11 +296,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   //   WidgetsBinding.instance.addObserver(this);
   // }
 
-  // @override
-  // void dispose() {
-  //   WidgetsBinding.instance.removeObserver(this);
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _bannerAd.dispose();
+    super.dispose();
+  }
 
   // @override
   // void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -323,11 +347,23 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   var currentMuscleGroup = ""; // String
   var currentExercise = Exercise(
-      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+      splitWeightAndReps: [],
+      splitWeightPerSet: [],
+      splitRepsPerSet: [],
+      musclesWorked: [],
+      musclesWorkedActivation: []);
   var currentExerciseFromSplitDayPage = Exercise(
-      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+      splitWeightAndReps: [],
+      splitWeightPerSet: [],
+      splitRepsPerSet: [],
+      musclesWorked: [],
+      musclesWorkedActivation: []);
   var currentExerciseFromGymPage = Exercise(
-      splitWeightAndReps: [], splitWeightPerSet: [], splitRepsPerSet: []);
+      splitWeightAndReps: [],
+      splitWeightPerSet: [],
+      splitRepsPerSet: [],
+      musclesWorked: [],
+      musclesWorkedActivation: []);
 
   // var fromFavorites = false;
   bool fromSplitDayPage = false;
@@ -386,6 +422,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void setSplit(Split split) {
     currentSplit = split;
+    // Reset exercise indices
+    splitDayExerciseIndices = [[], [], [], [], [], [], []];
     makeNewSplit = false;
     notifyListeners();
   }
@@ -500,23 +538,35 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     toSplitDayReorderMode(false);
   }
 
-  void addTempMuscleGroupToSplit(int dayIndex, int cardIndex,
-      String muscleGroup, int muscleGroupExerciseIndex, int numSets) {
-    editModeTempSplit.trainingDays[dayIndex]
-        .insertMuscleGroup(cardIndex, muscleGroup, numSets);
+  void addTempMuscleGroupToSplit(
+      int dayIndex,
+      int cardIndex,
+      String muscleGroup,
+      int muscleGroupExerciseIndex,
+      int numSets,
+      String identifier,
+      String setName) {
+    editModeTempSplit.trainingDays[dayIndex].insertMuscleGroup(
+        cardIndex, muscleGroup, numSets, identifier, setName);
     editModeTempExerciseIndices[dayIndex]
         .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
   }
 
   List<dynamic> removeTempMuscleGroupFromSplit(int dayIndex, int cardIndex) {
-    final muscleGroupAndNumSets =
+    final muscleGroupAndNumSetsAndIdentifierAndSetName =
         editModeTempSplit.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
     final exerciseIndex =
         editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     notifyListeners();
     // muscle group, exercise index, number of sets
-    return [muscleGroupAndNumSets[0], exerciseIndex, muscleGroupAndNumSets[1]];
+    return [
+      muscleGroupAndNumSetsAndIdentifierAndSetName[0],
+      exerciseIndex,
+      muscleGroupAndNumSetsAndIdentifierAndSetName[1],
+      muscleGroupAndNumSetsAndIdentifierAndSetName[2],
+      muscleGroupAndNumSetsAndIdentifierAndSetName[3]
+    ];
   }
 
   Future<void> initializeMuscleGroups() async {
@@ -557,6 +607,37 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     Map<String, List<dynamic>> exerciseDataMap = await fetchExerciseData();
     // String => [List<double?>, List<int>, List<int>]
+
+    String overallChest = 'Mid Chest:3, Upper Chest:2, Lower Chest:2';
+    String chestPress =
+        'Mid Chest:3, Lower Chest:2, Upper Chest:1, Front Delts:1, Triceps:1';
+    String inclinePress =
+        'Upper Chest:3, Mid Chest:2, Front Delts:2, Triceps:1';
+    String lowerPress = 'Lower Chest:3, Mid Chest:2, Front Delts:2, Triceps:1';
+    String latPulldown = 'Lats:3, Mid Back:1, Biceps:1, Rear Delts:1';
+    String upperBackRow =
+        'Upper Back:3, Mid Back:2, Lats:1, Lower Back:1, Biceps:1, Rear Delts:1';
+    String lowRow =
+        'Mid Back:3, Lats:2, Upper Back:1, Lower Back:1, Biceps:1, Rear Delts:1';
+    String upperBackChestSupportedRow =
+        'Upper Back:3, Mid Back:2, Lats:1, Biceps:1, Rear Delts:1';
+    String lowChestSupportedRow =
+        'Mid Back:3, Lats:2, Upper Back:1, Biceps:1, Rear Delts:1';
+    String overallBicep = 'Bicep Long Head:3, Bicep Short Head:3';
+    String bicepLongHead = 'Bicep Long Head:3, Bicep Short Head:2';
+    String bicepShortHead = 'Bicep Short Head:3, Bicep Short Head:2';
+    String bicepBrachialis =
+        'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Brachioradialis:2';
+    String overallTricep =
+        'Tricep Long Head:3, Tricep Lateral Head:3, Tricep Medial Head:3';
+    String tricepLongHead =
+        'Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2';
+    String tricepLateralHead =
+        'Tricep Lateral Head:3, Tricep Long Head:2, Tricep Medial Head:2';
+    String tricepMedialHead =
+        'Tricep Medial Head:3, Tricep Long Head:2, Tricep Lateral Head:2';
+    String seatedShoulderPress = 'Front Delts:3, Triceps:1';
+    String standingShoulderPress = 'Front Delts:3, Triceps:1, Lower Back:1';
 
     for (final line in lines) {
       if (line.isEmpty) {
@@ -696,6 +777,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
               case 'Cable Row':
                 waitMultiplier += 0.5;
                 break;
+              case 'Incline Bench Press':
+                waitMultiplier += 0.5;
+                break;
+              case 'Decline Bench Press':
+                waitMultiplier += 0.5;
+                break;
               default:
                 print('Unsupported: $resourceRequired');
                 break;
@@ -708,14 +795,131 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
         String? machineAltName;
         if (resourcesRequired.contains('Machine')) {
-          machineAltName = attributes[7];
+          if (attributes.length == 9) {
+            machineAltName = attributes[8];
+          }
+        }
+
+        String musclesWorkedString = attributes[2];
+        String exerciseIdentifer = "";
+        switch (musclesWorkedString) {
+          case "overallChest":
+            // Code for overallChest
+            musclesWorkedString = overallChest;
+            exerciseIdentifer = "overallChest";
+            break;
+          case "chestPress":
+            // Code for chestPress
+            musclesWorkedString = chestPress;
+            exerciseIdentifer = "chestPress";
+            break;
+          case "inclinePress":
+            // Code for inclinePress
+            musclesWorkedString = inclinePress;
+            exerciseIdentifer = "inclinePress";
+            break;
+          case "lowerPress":
+            // Code for lowerPress
+            musclesWorkedString = lowerPress;
+            exerciseIdentifer = "lowerPress";
+            break;
+          case "latPulldown":
+            // Code for latPulldown
+            musclesWorkedString = latPulldown;
+            exerciseIdentifer = "latPulldown";
+            break;
+          case "upperBackRow":
+            // Code for upperBackRow
+            musclesWorkedString = upperBackRow;
+            exerciseIdentifer = "upperBackRow";
+            break;
+          case "lowRow":
+            // Code for lowRow
+            musclesWorkedString = lowRow;
+            exerciseIdentifer = "lowRow";
+            break;
+          case "upperBackChestSupportedRow":
+            // Code for upperBackChestSupportedRow
+            musclesWorkedString = upperBackChestSupportedRow;
+            exerciseIdentifer = "upperBackChestSupportedRow";
+            break;
+          case "lowChestSupportedRow":
+            // Code for lowChestSupportedRow
+            musclesWorkedString = lowChestSupportedRow;
+            exerciseIdentifer = "lowChestSupportedRow";
+            break;
+          case "overallBicep":
+            // Code for overallBicep
+            musclesWorkedString = overallBicep;
+            exerciseIdentifer = "overallBicep";
+            break;
+          case "bicepLongHead":
+            // Code for bicepLongHead
+            musclesWorkedString = bicepLongHead;
+            exerciseIdentifer = "bicepLongHead";
+            break;
+          case "bicepShortHead":
+            // Code for bicepShortHead
+            musclesWorkedString = bicepShortHead;
+            exerciseIdentifer = "bicepShortHead";
+            break;
+          case "bicepBrachialis":
+            // Code for bicepBrachialis
+            musclesWorkedString = bicepBrachialis;
+            exerciseIdentifer = "bicepBrachialis";
+            break;
+          case "overallTricep":
+            // Code for overallTricep
+            musclesWorkedString = overallTricep;
+            exerciseIdentifer = "overallTricep";
+            break;
+          case "tricepLongHead":
+            // Code for tricepLongHead
+            musclesWorkedString = tricepLongHead;
+            exerciseIdentifer = "tricepLongHead";
+            break;
+          case "tricepLateralHead":
+            // Code for tricepLateralHead
+            musclesWorkedString = tricepLateralHead;
+            exerciseIdentifer = "tricepLateralHead";
+            break;
+          case "tricepMedialHead":
+            // Code for tricepMedialHead
+            musclesWorkedString = tricepMedialHead;
+            exerciseIdentifer = "tricepMedialHead";
+            break;
+          case "seatedShoulderPress":
+            // Code for seatedShoulderPress
+            musclesWorkedString = seatedShoulderPress;
+            exerciseIdentifer = "seatedShoulderPress";
+            break;
+          case "standingShoulderPress":
+            // Code for standingShoulderPress
+            musclesWorkedString = standingShoulderPress;
+            exerciseIdentifer = "standingShoulderPress";
+            break;
+          default:
+            break;
+        }
+
+        List<String> musclesWorkedList =
+            musclesWorkedString.split(',').map((e) => e.trim()).toList();
+        List<String> musclesWorked = [];
+        List<int> musclesWorkedActivation = [];
+        for (String muscleAndActivationString in musclesWorkedList) {
+          List<String> muscleAndActivation =
+              muscleAndActivationString.split(':');
+          musclesWorked.add(muscleAndActivation[0]);
+          musclesWorkedActivation.add(int.parse(muscleAndActivation[1]));
         }
 
         // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
         exercise = Exercise(
           name: attributes[0],
           description: attributes[1],
-          musclesWorked: attributes[2],
+          musclesWorked: musclesWorked,
+          musclesWorkedActivation: musclesWorkedActivation,
+          identifier: exerciseIdentifer,
           // videoLink: attributes[3],
           videoLink: videoLink,
           // waitMultiplier: double.parse(attributes[4]),
@@ -1755,88 +1959,94 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          unselectedItemColor: theme.colorScheme.onBackground,
-          selectedItemColor: theme.colorScheme.primary,
-          currentIndex: _bottomNavigationIndex,
-          onTap: (int index) {
-            setState(() {
-              if (appState.currentSplit != null && appState.makeNewSplit) {
-                // On the regenerate split page, if they already have a split put them back to view split option
-                appState.makeNewSplit = false;
-              }
-              if (index == 0) {
-                appState.fromSearchPage = false;
-                appState.fromSplitDayPage = false;
-                // Home
-                if (appState.presetHomePage == 0 || appState.pageIndex == 9) {
-                  appState.changePage(0);
-                } else {
-                  // presetHomePage == 1
-                  // Current gym will stay the same
-                  appState.changePage(9);
-                }
-                appState.splitDayEditMode =
-                    false; // Cancel changes when changing to different screen
-                appState.splitDayReorderMode = false;
-                appState.splitWeekEditMode = false;
-              } else if (index == 1) {
-                // Search Page
-                if (appState.pageIndex == 4 ||
-                    (appState.pageIndex == 5 &&
-                        !appState.fromSplitDayPage &&
-                        !appState.fromGymPage) ||
-                    appState.presetSearchPage == 0) {
-                  // Exercises page or individual exercise page or other tab, or if search page is preset
-                  appState.changePage(8);
-                  appState.splitDayEditMode =
-                      false; // Cancel changes when changing to different screen
-                  appState.splitDayReorderMode = false;
-                  appState.splitWeekEditMode = false;
-                  appState.fromSplitDayPage = false;
-                  appState.fromGymPage = false;
-                } else {
-                  appState.fromSplitDayPage = false;
-                  appState.fromGymPage = false;
-                  if (appState.presetSearchPage == 1) {
-                    appState.changePage(4);
-                  } else {
-                    // Preset search page == 2
-                    appState.changePage(5);
+        bottomNavigationBar: Column(
+          children: [
+            BottomNavigationBar(
+              unselectedItemColor: theme.colorScheme.onBackground,
+              selectedItemColor: theme.colorScheme.primary,
+              currentIndex: _bottomNavigationIndex,
+              onTap: (int index) {
+                setState(() {
+                  if (appState.currentSplit != null && appState.makeNewSplit) {
+                    // On the regenerate split page, if they already have a split put them back to view split option
+                    appState.makeNewSplit = false;
                   }
-                }
-              } else if (index == 2) {
-                appState.fromSearchPage = false;
-                appState.fromGymPage = false;
-                print(
-                    "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
-                // Split Page
-                if (appState.pageIndex == 7 ||
-                    !appState.goStraightToSplitDayPage) {
-                  // No current day or get out of split page
-                  appState.changePage(6);
-                  // appState.currentDayIndex = -1; // Reset current day index
-                } else {
-                  // Changes page to split day with the current day index
-                  appState.changePage(7);
-                }
-              }
-              _bottomNavigationIndex = index;
-            });
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+                  if (index == 0) {
+                    appState.fromSearchPage = false;
+                    appState.fromSplitDayPage = false;
+                    // Home
+                    if (appState.presetHomePage == 0 ||
+                        appState.pageIndex == 9) {
+                      appState.changePage(0);
+                    } else {
+                      // presetHomePage == 1
+                      // Current gym will stay the same
+                      appState.changePage(9);
+                    }
+                    appState.splitDayEditMode =
+                        false; // Cancel changes when changing to different screen
+                    appState.splitDayReorderMode = false;
+                    appState.splitWeekEditMode = false;
+                  } else if (index == 1) {
+                    // Search Page
+                    if (appState.pageIndex == 4 ||
+                        (appState.pageIndex == 5 &&
+                            !appState.fromSplitDayPage &&
+                            !appState.fromGymPage) ||
+                        appState.presetSearchPage == 0) {
+                      // Exercises page or individual exercise page or other tab, or if search page is preset
+                      appState.changePage(8);
+                      appState.splitDayEditMode =
+                          false; // Cancel changes when changing to different screen
+                      appState.splitDayReorderMode = false;
+                      appState.splitWeekEditMode = false;
+                      appState.fromSplitDayPage = false;
+                      appState.fromGymPage = false;
+                    } else {
+                      appState.fromSplitDayPage = false;
+                      appState.fromGymPage = false;
+                      if (appState.presetSearchPage == 1) {
+                        appState.changePage(4);
+                      } else {
+                        // Preset search page == 2
+                        appState.changePage(5);
+                      }
+                    }
+                  } else if (index == 2) {
+                    appState.fromSearchPage = false;
+                    appState.fromGymPage = false;
+                    print(
+                        "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
+                    // Split Page
+                    if (appState.pageIndex == 7 ||
+                        !appState.goStraightToSplitDayPage) {
+                      // No current day or get out of split page
+                      appState.changePage(6);
+                      // appState.currentDayIndex = -1; // Reset current day index
+                    } else {
+                      // Changes page to split day with the current day index
+                      appState.changePage(7);
+                    }
+                  }
+                  _bottomNavigationIndex = index;
+                });
+              },
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.search),
+                  label: 'Search',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.list_alt),
+                  label: 'Your Split',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search),
-              label: 'Search',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt),
-              label: 'Your Split',
-            ),
+            appState.buildBannerAd(),
           ],
         ),
       );
@@ -2371,10 +2581,11 @@ class _ExerciseCardState extends State<ExerciseCard> {
               style: headingStyle,
             ),
             SizedBox(height: 5),
-            Text(
-              widget.exercise.musclesWorked,
-              style: textStyle,
-            ),
+            for (int i = 0; i < widget.exercise.musclesWorked.length; i++)
+              Text(
+                '${widget.exercise.musclesWorked[i]} : ${widget.exercise.musclesWorkedActivation}',
+                style: textStyle,
+              ),
             SizedBox(
               height: 30,
             ),
