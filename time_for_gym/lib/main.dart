@@ -899,6 +899,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             exerciseIdentifer = "standingShoulderPress";
             break;
           default:
+          print(musclesWorkedString);
             break;
         }
 
@@ -1959,95 +1960,99 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        bottomNavigationBar: Column(
-          children: [
-            BottomNavigationBar(
-              unselectedItemColor: theme.colorScheme.onBackground,
-              selectedItemColor: theme.colorScheme.primary,
-              currentIndex: _bottomNavigationIndex,
-              onTap: (int index) {
-                setState(() {
-                  if (appState.currentSplit != null && appState.makeNewSplit) {
-                    // On the regenerate split page, if they already have a split put them back to view split option
-                    appState.makeNewSplit = false;
-                  }
-                  if (index == 0) {
-                    appState.fromSearchPage = false;
-                    appState.fromSplitDayPage = false;
-                    // Home
-                    if (appState.presetHomePage == 0 ||
-                        appState.pageIndex == 9) {
-                      appState.changePage(0);
-                    } else {
-                      // presetHomePage == 1
-                      // Current gym will stay the same
-                      appState.changePage(9);
+        bottomNavigationBar: SizedBox(
+          height: 142,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              BottomNavigationBar(
+                unselectedItemColor: theme.colorScheme.onBackground,
+                selectedItemColor: theme.colorScheme.primary,
+                currentIndex: _bottomNavigationIndex,
+                onTap: (int index) {
+                  setState(() {
+                    if (appState.currentSplit != null && appState.makeNewSplit) {
+                      // On the regenerate split page, if they already have a split put them back to view split option
+                      appState.makeNewSplit = false;
                     }
-                    appState.splitDayEditMode =
-                        false; // Cancel changes when changing to different screen
-                    appState.splitDayReorderMode = false;
-                    appState.splitWeekEditMode = false;
-                  } else if (index == 1) {
-                    // Search Page
-                    if (appState.pageIndex == 4 ||
-                        (appState.pageIndex == 5 &&
-                            !appState.fromSplitDayPage &&
-                            !appState.fromGymPage) ||
-                        appState.presetSearchPage == 0) {
-                      // Exercises page or individual exercise page or other tab, or if search page is preset
-                      appState.changePage(8);
+                    if (index == 0) {
+                      appState.fromSearchPage = false;
+                      appState.fromSplitDayPage = false;
+                      // Home
+                      if (appState.presetHomePage == 0 ||
+                          appState.pageIndex == 9) {
+                        appState.changePage(0);
+                      } else {
+                        // presetHomePage == 1
+                        // Current gym will stay the same
+                        appState.changePage(9);
+                      }
                       appState.splitDayEditMode =
                           false; // Cancel changes when changing to different screen
                       appState.splitDayReorderMode = false;
                       appState.splitWeekEditMode = false;
-                      appState.fromSplitDayPage = false;
-                      appState.fromGymPage = false;
-                    } else {
-                      appState.fromSplitDayPage = false;
-                      appState.fromGymPage = false;
-                      if (appState.presetSearchPage == 1) {
-                        appState.changePage(4);
+                    } else if (index == 1) {
+                      // Search Page
+                      if (appState.pageIndex == 4 ||
+                          (appState.pageIndex == 5 &&
+                              !appState.fromSplitDayPage &&
+                              !appState.fromGymPage) ||
+                          appState.presetSearchPage == 0) {
+                        // Exercises page or individual exercise page or other tab, or if search page is preset
+                        appState.changePage(8);
+                        appState.splitDayEditMode =
+                            false; // Cancel changes when changing to different screen
+                        appState.splitDayReorderMode = false;
+                        appState.splitWeekEditMode = false;
+                        appState.fromSplitDayPage = false;
+                        appState.fromGymPage = false;
                       } else {
-                        // Preset search page == 2
-                        appState.changePage(5);
+                        appState.fromSplitDayPage = false;
+                        appState.fromGymPage = false;
+                        if (appState.presetSearchPage == 1) {
+                          appState.changePage(4);
+                        } else {
+                          // Preset search page == 2
+                          appState.changePage(5);
+                        }
+                      }
+                    } else if (index == 2) {
+                      appState.fromSearchPage = false;
+                      appState.fromGymPage = false;
+                      print(
+                          "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
+                      // Split Page
+                      if (appState.pageIndex == 7 ||
+                          !appState.goStraightToSplitDayPage) {
+                        // No current day or get out of split page
+                        appState.changePage(6);
+                        // appState.currentDayIndex = -1; // Reset current day index
+                      } else {
+                        // Changes page to split day with the current day index
+                        appState.changePage(7);
                       }
                     }
-                  } else if (index == 2) {
-                    appState.fromSearchPage = false;
-                    appState.fromGymPage = false;
-                    print(
-                        "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
-                    // Split Page
-                    if (appState.pageIndex == 7 ||
-                        !appState.goStraightToSplitDayPage) {
-                      // No current day or get out of split page
-                      appState.changePage(6);
-                      // appState.currentDayIndex = -1; // Reset current day index
-                    } else {
-                      // Changes page to split day with the current day index
-                      appState.changePage(7);
-                    }
-                  }
-                  _bottomNavigationIndex = index;
-                });
-              },
-              items: [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search),
-                  label: 'Search',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.list_alt),
-                  label: 'Your Split',
-                ),
-              ],
-            ),
-            appState.buildBannerAd(),
-          ],
+                    _bottomNavigationIndex = index;
+                  });
+                },
+                items: [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+                    label: 'Home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.search),
+                    label: 'Search',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.list_alt),
+                    label: 'Your Split',
+                  ),
+                ],
+              ),
+              appState.buildBannerAd(),
+            ],
+          ),
         ),
       );
     });

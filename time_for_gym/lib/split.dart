@@ -809,27 +809,28 @@ class Split {
             }
             break;
           case 6:
+          // o,k,h: push B, pull B, legs B
             switch (focusedFlag) {
               case "none":
-                addMuscleGroupsToTrainingDays("plgplg", splitStartDay);
+                addMuscleGroupsToTrainingDays("plgokh", splitStartDay);
                 break;
               case "push":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("plgplG", splitStartDay);
+                  addMuscleGroupsToTrainingDays("plgokH", splitStartDay);
                 } else {
                   addMuscleGroupsToTrainingDays("plguwf", splitStartDay);
                 }
                 break;
               case "pull":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("lpglpG", splitStartDay);
+                  addMuscleGroupsToTrainingDays("lpgkoH", splitStartDay);
                 } else {
                   addMuscleGroupsToTrainingDays("lpguwf", splitStartDay);
                 }
                 break;
               case "legs":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("gplgpL", splitStartDay);
+                  addMuscleGroupsToTrainingDays("gplhoK", splitStartDay);
                 } else {
                   addMuscleGroupsToTrainingDays("gplfuw", splitStartDay);
                 }
@@ -842,27 +843,27 @@ class Split {
           case 7:
             switch (focusedFlag) {
               case "none":
-                addMuscleGroupsToTrainingDays("plgplsg", splitStartDay);
+                addMuscleGroupsToTrainingDays("plgoksh", splitStartDay);
                 break;
               case "push":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("plgplSg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("plgokSh", splitStartDay);
                 } else {
-                  addMuscleGroupsToTrainingDays("plgplfg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("plgokfh", splitStartDay);
                 }
                 break;
               case "pull":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("lpglpSg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("lpgkoSh", splitStartDay);
                 } else {
-                  addMuscleGroupsToTrainingDays("lpglpfg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("lpgkofh", splitStartDay);
                 }
                 break;
               case "legs":
                 if (!focusedDay) {
-                  addMuscleGroupsToTrainingDays("plgpSlg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("plgoSkh", splitStartDay);
                 } else {
-                  addMuscleGroupsToTrainingDays("plgpflg", splitStartDay);
+                  addMuscleGroupsToTrainingDays("plgofkh", splitStartDay);
                 }
                 break;
               default:
