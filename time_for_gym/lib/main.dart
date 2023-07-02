@@ -3,9 +3,11 @@ import 'dart:io';
 //import 'dart:js_util';
 // import 'dart:ui';
 import 'dart:convert';
+import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 // import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -158,6 +160,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   // Google AdMob
   late BannerAd _bannerAd;
+  late Widget bannerAdWidget;
 
   // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
@@ -207,6 +210,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       listener: BannerAdListener(),
     );
     _bannerAd.load();
+    bannerAdWidget = buildBannerAd();
   }
 
   Widget buildBannerAd() {
@@ -419,6 +423,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   List<Widget> currentGymPhotos = [];
 
   String userGymId = '';
+  int showAdBeforeExerciseCounter = 1; // Number of exercises before ad pops up
 
   void setSplit(Split split) {
     currentSplit = split;
@@ -899,7 +904,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             exerciseIdentifer = "standingShoulderPress";
             break;
           default:
-          print(musclesWorkedString);
+            print(musclesWorkedString);
             break;
         }
 
@@ -1593,6 +1598,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void changePage(int index) {
     pageIndex = index;
+
     notifyListeners();
   }
 
@@ -1607,6 +1613,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   void changePageToExercise(Exercise exercise) {
     // Exercise page from muscleGroup
     pageIndex = 5;
+    showAdBeforeExerciseCounter--;
+    print('decrementer ad counter to $showAdBeforeExerciseCounter');
+
     // currentMuscleGroup should match the correct muscleGroup for the exercise
     // Need a different approach for viewing exercises from favorites because of back button
     if (fromSplitDayPage) {
@@ -1670,6 +1679,18 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     notifyListeners();
   }
+
+  void changeExerciseFromExercisePage(Exercise newExercise) {
+    print('changing exercise to $newExercise');
+    if (fromGymPage) {
+      currentExerciseFromGymPage = newExercise;
+    } else if (fromSplitDayPage) {
+      currentExerciseFromSplitDayPage = newExercise;
+    } else {
+      currentExercise = newExercise;
+    }
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -1682,10 +1703,45 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isReloadingInternet = false;
   Timer? _timer;
+  InterstitialAd? _interstitialAd;
+
+  // ScrollController _scrollController = ScrollController();
+  // bool _isAdVisible = true;
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // Visible ads give fps drops, remove when scrolling
+  //   // _scrollController.addListener(() {
+  //   //   print('listening');
+  //   //   if (_scrollController.position.isScrollingNotifier.value) {
+  //   //     print('moving');
+  //   //   }
+  //   //   if (!_scrollController.position.isScrollingNotifier.value) {
+  //   //     print('idle');
+  //   //   }
+  //   //   if (_scrollController.position.userScrollDirection ==
+  //   //       ScrollDirection.idle) {
+  //   //   print('idle');
+  //   //     setState(() {
+  //   //       _isAdVisible = true;
+  //   //     });
+  //   //   } else if (_scrollController.position.userScrollDirection ==
+  //   //           ScrollDirection.forward ||
+  //   //       _scrollController.position.userScrollDirection ==
+  //   //           ScrollDirection.reverse) {
+  //   //   print('scrolling');
+  //   //     setState(() {
+  //   //       _isAdVisible = false;
+  //   //     });
+  //   //   }
+  //   // });
+  // }
 
   @override
   void dispose() {
     _timer?.cancel();
+    // _scrollController.dispose();
     super.dispose();
   }
 
@@ -1862,9 +1918,21 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSearchPage = false;
         appState.fromGymPage = false;
         appState.presetSearchPage = 1;
-        page = ExercisesPage();
+        // if (!isExercisePopUpAdClosed) {
+        //   page = YourWidget4(
+        //     onClose: () {
+        //       // Called when the widget is closed
+        //       setState(() {
+        //         isExercisePopUpAdClosed = true;
+        //       });
+        //     },
+        //   );
+        // } else {
+        page = ExercisesPage(); // Switch to another widget
+        // }
         break;
       case 5:
+        print('pageindex is 5');
         // appState.splitDayEditMode = false;
         // Only remembers exercise from search page if an exercise is not looked at from another page
         // if (appState.fromSearchPage) {
@@ -1875,6 +1943,32 @@ class _MyHomePageState extends State<MyHomePage> {
         // } else if (appState.fromFavorites || appState.fromSplitDayPage) {
         //   appState.presetSearchPage = 0;
         // }
+        if (appState.showAdBeforeExerciseCounter <= 0) {
+          InterstitialAd.load(
+            adLoadCallback: InterstitialAdLoadCallback(
+              onAdLoaded: (InterstitialAd ad) {
+                print(ad);
+                setState(() {
+                  _interstitialAd = ad;
+                });
+              },
+              onAdFailedToLoad: (LoadAdError error) {
+                print(error);
+              },
+            ),
+            adUnitId: 'ca-app-pub-3940256099942544/4411468910',
+            request: AdRequest(),
+          );
+          if (_interstitialAd != null) {
+            _interstitialAd!.show();
+            // User can view 1, 2, or 3 more exercises without seeing another ad
+            appState.showAdBeforeExerciseCounter = Random().nextInt(3) + 2;
+            print(
+                'loaded ad, new counter: ${appState.showAdBeforeExerciseCounter}');
+          } else {
+            print('interstitial ad is null');
+          }
+        }
         page = IndividualExercisePage(); // Exercise page
         break;
       case 6:
@@ -1929,8 +2023,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
         // body: _bottomScreens[_currentIndex],
-        body: Row(
-          children: [
+        body:
+            // body: Column(
+            // children: [
             // SafeArea(
             //   child: NavigationRail(
             //     extended: constraints.maxWidth >= 600,
@@ -1952,105 +2047,113 @@ class _MyHomePageState extends State<MyHomePage> {
             //     },
             //   ),
             // ),
-            Expanded(
-              child: Container(
-                // color: Theme.of(context).colorScheme.primaryContainer,
-                child: page,
-              ),
-            ),
-          ],
-        ),
+            // Expanded(
+            // child: SingleChildScrollView(
+
+            // controller: _scrollController,
+            // child: Container(
+            //   height: 826, // Set a specific height value
+            page,
+        // ),
+        // ),
+        // ),
+        // if (appState.pageIndex == 0) appState.bannerAdWidget,
+        //   ],
+        // ),
         bottomNavigationBar: SizedBox(
           height: 142,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              BottomNavigationBar(
-                unselectedItemColor: theme.colorScheme.onBackground,
-                selectedItemColor: theme.colorScheme.primary,
-                currentIndex: _bottomNavigationIndex,
-                onTap: (int index) {
-                  setState(() {
-                    if (appState.currentSplit != null && appState.makeNewSplit) {
-                      // On the regenerate split page, if they already have a split put them back to view split option
-                      appState.makeNewSplit = false;
-                    }
-                    if (index == 0) {
-                      appState.fromSearchPage = false;
-                      appState.fromSplitDayPage = false;
-                      // Home
-                      if (appState.presetHomePage == 0 ||
-                          appState.pageIndex == 9) {
-                        appState.changePage(0);
-                      } else {
-                        // presetHomePage == 1
-                        // Current gym will stay the same
-                        appState.changePage(9);
+              SizedBox(
+                height: 92,
+                child: BottomNavigationBar(
+                  unselectedItemColor: theme.colorScheme.onBackground,
+                  selectedItemColor: theme.colorScheme.primary,
+                  currentIndex: _bottomNavigationIndex,
+                  onTap: (int index) {
+                    setState(() {
+                      if (appState.currentSplit != null &&
+                          appState.makeNewSplit) {
+                        // On the regenerate split page, if they already have a split put them back to view split option
+                        appState.makeNewSplit = false;
                       }
-                      appState.splitDayEditMode =
-                          false; // Cancel changes when changing to different screen
-                      appState.splitDayReorderMode = false;
-                      appState.splitWeekEditMode = false;
-                    } else if (index == 1) {
-                      // Search Page
-                      if (appState.pageIndex == 4 ||
-                          (appState.pageIndex == 5 &&
-                              !appState.fromSplitDayPage &&
-                              !appState.fromGymPage) ||
-                          appState.presetSearchPage == 0) {
-                        // Exercises page or individual exercise page or other tab, or if search page is preset
-                        appState.changePage(8);
+                      if (index == 0) {
+                        appState.fromSearchPage = false;
+                        appState.fromSplitDayPage = false;
+                        // Home
+                        if (appState.presetHomePage == 0 ||
+                            appState.pageIndex == 9) {
+                          appState.changePage(0);
+                        } else {
+                          // presetHomePage == 1
+                          // Current gym will stay the same
+                          appState.changePage(9);
+                        }
                         appState.splitDayEditMode =
                             false; // Cancel changes when changing to different screen
                         appState.splitDayReorderMode = false;
                         appState.splitWeekEditMode = false;
-                        appState.fromSplitDayPage = false;
-                        appState.fromGymPage = false;
-                      } else {
-                        appState.fromSplitDayPage = false;
-                        appState.fromGymPage = false;
-                        if (appState.presetSearchPage == 1) {
-                          appState.changePage(4);
+                      } else if (index == 1) {
+                        // Search Page
+                        if (appState.pageIndex == 4 ||
+                            (appState.pageIndex == 5 &&
+                                !appState.fromSplitDayPage &&
+                                !appState.fromGymPage) ||
+                            appState.presetSearchPage == 0) {
+                          // Exercises page or individual exercise page or other tab, or if search page is preset
+                          appState.changePage(8);
+                          appState.splitDayEditMode =
+                              false; // Cancel changes when changing to different screen
+                          appState.splitDayReorderMode = false;
+                          appState.splitWeekEditMode = false;
+                          appState.fromSplitDayPage = false;
+                          appState.fromGymPage = false;
                         } else {
-                          // Preset search page == 2
-                          appState.changePage(5);
+                          appState.fromSplitDayPage = false;
+                          appState.fromGymPage = false;
+                          if (appState.presetSearchPage == 1) {
+                            appState.changePage(4);
+                          } else {
+                            // Preset search page == 2
+                            appState.changePage(5);
+                          }
+                        }
+                      } else if (index == 2) {
+                        appState.fromSearchPage = false;
+                        appState.fromGymPage = false;
+                        print(
+                            "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
+                        // Split Page
+                        if (appState.pageIndex == 7 ||
+                            !appState.goStraightToSplitDayPage) {
+                          // No current day or get out of split page
+                          appState.changePage(6);
+                          // appState.currentDayIndex = -1; // Reset current day index
+                        } else {
+                          // Changes page to split day with the current day index
+                          appState.changePage(7);
                         }
                       }
-                    } else if (index == 2) {
-                      appState.fromSearchPage = false;
-                      appState.fromGymPage = false;
-                      print(
-                          "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
-                      // Split Page
-                      if (appState.pageIndex == 7 ||
-                          !appState.goStraightToSplitDayPage) {
-                        // No current day or get out of split page
-                        appState.changePage(6);
-                        // appState.currentDayIndex = -1; // Reset current day index
-                      } else {
-                        // Changes page to split day with the current day index
-                        appState.changePage(7);
-                      }
-                    }
-                    _bottomNavigationIndex = index;
-                  });
-                },
-                items: [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search),
-                    label: 'Search',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.list_alt),
-                    label: 'Your Split',
-                  ),
-                ],
+                      _bottomNavigationIndex = index;
+                    });
+                  },
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.search),
+                      label: 'Search',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.list_alt),
+                      label: 'Your Split',
+                    ),
+                  ],
+                ),
               ),
-              appState.buildBannerAd(),
             ],
           ),
         ),
@@ -2333,7 +2436,7 @@ class ExerciseSelectorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final style = theme.textTheme.titleMedium!.copyWith(
+    final style = theme.textTheme.bodyMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
 
@@ -2362,12 +2465,17 @@ class ExerciseSelectorButton extends StatelessWidget {
             ),
           ),
           SizedBox(width: 25),
-          Text(
-            exercise.name,
-            style: style,
+          SizedBox(
+            width: 260,
+            child: Text(
+              exercise.name,
+              style: style,
+              maxLines: 2,
+            ),
           ),
         ]),
       ),
+
       //  ElevatedButton(
       //   style: ButtonStyle(
       //     backgroundColor:

@@ -1293,12 +1293,14 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           widget.exerciseIndices[widget.dayIndex].add(0);
           break;
       }
+      print("added exercise index for card ${widget.splitDayCardIndex}");
     }
 
     // Reset exercise index if out of bounds
     if (widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] >=
         appState.muscleGroups[widget.muscleGroup]!.length) {
       widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] = 0;
+      print('Resetting exercise index');
     }
 
     CrossAxisAlignment startOrEnd = appState.splitDayEditMode
@@ -1505,7 +1507,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                 fontSize: 10,
                                                 color: theme
                                                     .colorScheme.onBackground
-                                                    .withOpacity(.65)))
+                                                    .withOpacity(.65)), maxLines: 2,)
                                       ],
                                     ),
                                     color: theme.colorScheme.onBackground,

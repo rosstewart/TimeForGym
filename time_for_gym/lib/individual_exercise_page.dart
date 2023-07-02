@@ -16,6 +16,15 @@ class IndividualExercisePage extends StatefulWidget {
 }
 
 class _IndividualExercisePageState extends State<IndividualExercisePage> {
+  
+  ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _dismissKeyboard() {
     // Unfocus the text fields when tapped outside
     FocusScope.of(context).unfocus();
@@ -32,7 +41,8 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
             other.musclesWorkedActivation.isNotEmpty &&
             exercise.musclesWorked[0] == other.musclesWorked[0] &&
             exercise.musclesWorkedActivation[0] ==
-                other.musclesWorkedActivation[0])
+                other.musclesWorkedActivation[0] &&
+            exercise.name != other.name)
         .toList();
     return similarExercises;
   }
@@ -159,6 +169,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
             backgroundColor: theme.scaffoldBackgroundColor,
           ),
           body: SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               children: [
                 SizedBox(
@@ -234,8 +245,24 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                             .toStringAsFixed(0),
                       ),
                       StrengthLevelForm(exercise: exercise),
-                      
-                      SimilarExercisesRow(similarExercises: similarExercises, appState: appState)
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(25, 0, 0, 10),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Similar Exercises',
+                            style: theme.textTheme.titleMedium!.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SimilarExercisesRow(
+                        similarExercises: similarExercises,
+                        appState: appState,
+                        scrollController: _scrollController,
+                      )
 
                       // SizedBox(
                       //     height:
@@ -257,10 +284,12 @@ class SimilarExercisesRow extends StatelessWidget {
     super.key,
     required this.similarExercises,
     required this.appState,
+    required this.scrollController,
   });
 
   final List<Exercise> similarExercises;
   final MyAppState appState;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
@@ -269,25 +298,21 @@ class SimilarExercisesRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-              width:
-                  10), // Buffer space before the first button
+          SizedBox(width: 20), // Buffer space before the first button
           ...List.generate(
             similarExercises.length,
             (index) => Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: GestureDetector(
                 onTap: () {
-                  if (appState.fromGymPage) {
-                    appState.currentExerciseFromGymPage =
-                        similarExercises[index];
-                  } else if (appState.fromSplitDayPage) {
-                    appState.currentExerciseFromSplitDayPage =
-                        similarExercises[index];
-                  } else {
-                    appState.currentExercise =
-                        similarExercises[index];
-                  }
+                  appState
+                      .changeExerciseFromExercisePage(similarExercises[index]);
+                  scrollController.animateTo(
+                    0,
+                    duration: Duration(
+                        milliseconds: 500), // Adjust the duration as desired
+                    curve: Curves.easeInOut, // Adjust the curve as desired
+                  );
                 },
                 child: Column(
                   children: [
@@ -296,12 +321,10 @@ class SimilarExercisesRow extends StatelessWidget {
                       height: 120,
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
-                        borderRadius:
-                            BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-                      child: ImageContainer(
-                          exercise: similarExercises[index]),
+                      child: ImageContainer(exercise: similarExercises[index]),
                       // child: ,
                     ),
                     SizedBox(height: 8),
@@ -309,13 +332,8 @@ class SimilarExercisesRow extends StatelessWidget {
                       width: 120,
                       child: Text(
                         similarExercises[index].name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onBackground),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground),
                         textAlign: TextAlign.center,
                       ),
                     ),
