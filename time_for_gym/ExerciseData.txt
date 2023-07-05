@@ -30,6 +30,7 @@ Dumbbell Bent-Over Row|Stand with a dumbbell in each hand, hinge forward at the 
 T-Bar Row Machine|Straddle a T-bar machine, grip the handles with both hands, and pull the handles towards your torso while keeping your back straight and squeezing your shoulder blades together at the top of the movement.|upperBackRow|Video Link|0.0|Machine|1
 Chest-Supported T-Bar Row Machine|Get on T-bar machine, grip the handles with both hands, and pull the handles towards your torso and squeezing your shoulder blades together at the top of the movement.|upperBackChestSupportedRow|Video Link|0.0|Machine|1
 Single-Arm Dumbbell Row|Place one knee and hand on a bench, hold a dumbbell in the other hand, and pull the dumbbell up towards your torso, squeezing your back muscles at the top of the movement.|lowRow|Video Link|0.0|Dumbbells,Bench|1
+Incline Dumbbell Row|Lie face-down on an incline bench at 45° and row the dumbbells up, squeezing your shoulder blades together.|upperBackChestSupportedRow|Video Link|0.0|Dumbbells,Bench|1
 
 MuscleGroup: Biceps
 
