@@ -124,7 +124,7 @@ Leg Press Calf Raise|Sit on a leg press machine with your feet on the platform, 
 MuscleGroup: Abs
 
 Hanging Leg Raise|Hang on a bar and bring your legs up while keeping them straight|Lower Abs:3, Upper Abs:2|https://youtu.be/hdng3Nm1x_E|0.2|Pull-Up Bar|1
-Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Upper Abs:3, Lower Abs:3|https://youtu.be/pvz7k5gO-DE|0.4|Bench|1
+Dragon Flag|Brace your core and raise your legs until they point towards the ceiling. Keep your head, upper back, and toes in contact with the bench, forming a straight line. Pause briefly, then slowly lower your extended legs without arching your back.|Lower Abs:3, Upper Abs:3|https://youtu.be/pvz7k5gO-DE|0.4|Bench|1
 Plank|Start in a push-up position, but with your forearms on the ground, engage your core and hold your body in a straight line from head to heels for a set amount of time.|Upper Abs:3, Lower Abs:3|Video Link|0.0|None|1
 Russian Twist|Sit on the ground with your knees bent, lean back slightly, lift your feet off the ground, and twist your torso from side to side, touching the ground on each side.|Obliques:3, Lower Abs:2, Upper Abs:1|Video Link|0.0|None|1
 Side Plank|Lie on your side with your forearm on the ground and elbow directly below your shoulder, lift your hips off the ground and align your body in a straight line, hold this position for the desired duration, then repeat on the other side.|Obliques:3, Upper Abs:2, Lower Abs:2|Video Link|0.0|None|1
