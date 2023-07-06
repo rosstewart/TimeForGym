@@ -117,7 +117,6 @@ class _GymPageState extends State<GymPage> {
     super.initState();
     isSelectedGym = widget.isSelectedGym;
 
-
     typesOfResources = [
       freeWeightsResourceKeys,
       benchesResourceKeys,
@@ -159,9 +158,8 @@ class _GymPageState extends State<GymPage> {
       }
     }
 
-
     // textEditingControllers =
-        // List.filled(resourceKeys.length, TextEditingController());
+    // List.filled(resourceKeys.length, TextEditingController());
     if (widget.gym != null && widget.gym!.resourcesAvailable.isNotEmpty) {
       resourcesAvailable = Map.from(widget.gym!.resourcesAvailable);
     } else {
@@ -177,7 +175,6 @@ class _GymPageState extends State<GymPage> {
     } else {
       machinesAvailable = [];
     }
-
 
     // if (widget.gym != null) {
     //   print(widget.gym!.photos.length);
@@ -207,6 +204,18 @@ class _GymPageState extends State<GymPage> {
     // Remove exercises already in gym list
     allMachineExercises
         .removeWhere((exercise) => gymMachines.contains(exercise));
+    List<Exercise> displayExercises = allMachineExercises.toList();
+    for (int i = 0; i < displayExercises.length; i++) {
+      if (displayExercises.indexWhere((element) =>
+              (element.machineAltName ?? element.name) ==
+              (displayExercises[i].machineAltName ??
+                  displayExercises[i].name)) !=
+          i) {
+        // Duplicate machine, don't display
+        displayExercises.removeAt(i);
+        i--;
+      }
+    }
     List<Exercise> selectedMachines = [];
     showDialog(
       context: context,
@@ -277,7 +286,7 @@ class _GymPageState extends State<GymPage> {
                 ],
               ),
             ),
-            content: Container(
+            content: SizedBox(
               width: MediaQuery.of(context)
                   .size
                   .width, // Adjust the width as needed
@@ -286,9 +295,15 @@ class _GymPageState extends State<GymPage> {
               child: GridView.count(
                 childAspectRatio: 0.9,
                 crossAxisCount: 3, // Adjust the number of columns as needed
-                children: List.generate(
-                  allMachineExercises.length,
-                  (index) => SizedBox(
+                children: List.generate(displayExercises.length, (index) {
+                  // Don't display duplicate machines, e.g. Leg Press & Leg Press Calf Raise
+                  // if (allMachineExercises.indexWhere((element) => (element.machineAltName ?? element.name) == (allMachineExercises[index].machineAltName ?? allMachineExercises[index].name)) != index) {
+                  //   return SizedBox.shrink();
+                  // }
+                  // if (allMachineExercises[index].machineAltName == 'Preacher Curl') {
+                  //   return SizedBox.shrink();
+                  // }
+                  return SizedBox(
                     // height: 120,
                     // width: 90,
                     child: Column(
@@ -297,12 +312,26 @@ class _GymPageState extends State<GymPage> {
                           onTap: () {
                             setState(() {
                               if (selectedMachines
-                                  .contains(allMachineExercises[index])) {
-                                selectedMachines
-                                    .remove(allMachineExercises[index]);
+                                  .contains(displayExercises[index])) {
+                                // selectedMachines
+                                //     .remove(allMachineExercises[index]);
+                                selectedMachines.removeWhere((element) =>
+                                    (element.machineAltName ?? element.name) ==
+                                    (displayExercises[index].machineAltName ??
+                                        displayExercises[index].name));
+                                print(selectedMachines);
                               } else {
-                                selectedMachines
-                                    .add(allMachineExercises[index]);
+                                // selectedMachines
+                                //     .add(allMachineExercises[index]);
+                                print(allMachineExercises);
+                                selectedMachines.addAll(
+                                    allMachineExercises.where((element) =>
+                                        (element.machineAltName ??
+                                            element.name) ==
+                                        (displayExercises[index]
+                                                .machineAltName ??
+                                            displayExercises[index].name)));
+                                print(selectedMachines);
                               }
                             });
                           },
@@ -311,12 +340,12 @@ class _GymPageState extends State<GymPage> {
                               width: 70,
                               child: Stack(children: [
                                 ImageContainer(
-                                    exercise: allMachineExercises[index]),
+                                    exerciseName: displayExercises[index].name),
                                 Align(
                                     alignment: Alignment.topRight,
                                     child: Icon(
-                                      selectedMachines.contains(
-                                              allMachineExercises[index])
+                                      selectedMachines
+                                              .contains(displayExercises[index])
                                           ? Icons.check_box
                                           : Icons.check_box_outline_blank,
                                       color: theme.colorScheme.primary,
@@ -328,8 +357,8 @@ class _GymPageState extends State<GymPage> {
                           height: 3,
                         ),
                         Text(
-                          allMachineExercises[index].machineAltName ??
-                              allMachineExercises[index].name,
+                          displayExercises[index].machineAltName ??
+                              displayExercises[index].name,
                           maxLines: 2,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.labelSmall!
@@ -337,26 +366,8 @@ class _GymPageState extends State<GymPage> {
                         ),
                       ],
                     ),
-                  ),
-                ),
-                // children: [
-                // // Add your widgets for selection here
-                // // Each widget should be wrapped in a GestureDetector to handle tap events
-                // GestureDetector(
-                //   onTap: () {
-                //     // Add the selected value to the list and close the pop-up
-                //     setState(() {
-                //       machinesAvailable
-                //           .add(); // Replace 'Value 1' with the actual value
-                //       Navigator.of(context).pop();
-                //     });
-                //   },
-                //   child: Container(
-                //       // Widget design for selection
-                //       ),
-                // ),
-                // // Add more widgets for selection here
-                // ],
+                  );
+                }),
               ),
             ),
           );
@@ -440,13 +451,17 @@ class _GymPageState extends State<GymPage> {
     Widget selectButtonLabel;
     Widget selectButtonIcon;
     if (!isSelectedGym) {
-      selectButtonLabel = Icon(Icons.check_box_outline_blank, size: 20,);
-      selectButtonIcon = Text('Select gym',
-          style: textStyle);
+      selectButtonLabel = Icon(
+        Icons.check_box_outline_blank,
+        size: 20,
+      );
+      selectButtonIcon = Text('Select gym', style: textStyle);
     } else {
-      selectButtonLabel = Icon(Icons.check_box, size: 20,);
-      selectButtonIcon = Text('Selected gym',
-          style: textStyle);
+      selectButtonLabel = Icon(
+        Icons.check_box,
+        size: 20,
+      );
+      selectButtonIcon = Text('Selected gym', style: textStyle);
     }
 
     double resourceWidth = editResourcesMode ? 100 : 90;
@@ -605,10 +620,7 @@ class _GymPageState extends State<GymPage> {
                             onPressed: () {
                               launchUrl(Uri.parse(widget.gym!.url));
                             },
-                            child: Text(
-                              'View on Map',
-                              style: labelStyle
-                            ),
+                            child: Text('View on Map', style: labelStyle),
                           ),
                           ElevatedButton.icon(
                             style: ButtonStyle(
@@ -816,15 +828,18 @@ class _GymPageState extends State<GymPage> {
                                                       if (typesOfResources[i][j]
                                                           .endsWith('s'))
                                                         Text(
-                                                          typesOfResources[i][j],
+                                                          typesOfResources[i]
+                                                              [j],
                                                           style: labelStyle,
                                                           textAlign:
                                                               TextAlign.center,
                                                           maxLines: 2,
                                                         ),
-                                                      if (!typesOfResources[i][j]
+                                                      if (!typesOfResources[i]
+                                                                  [j]
                                                               .endsWith('h') &&
-                                                          !typesOfResources[i][j]
+                                                          !typesOfResources[i]
+                                                                  [j]
                                                               .endsWith('s'))
                                                         Text(
                                                           '${typesOfResources[i][j]}s',
@@ -858,8 +873,12 @@ class _GymPageState extends State<GymPage> {
                                                                     labelStyle,
                                                               ),
                                                             )),
-                                                      if ((typesOfResources[i][j] ==
-                                                              'Dumbbells' || typesOfResources[i][j] == 'Kettlebell') &&
+                                                      if ((typesOfResources[i]
+                                                                      [j] ==
+                                                                  'Dumbbells' ||
+                                                              typesOfResources[
+                                                                      i][j] ==
+                                                                  'Kettlebell') &&
                                                           editResourcesMode)
                                                         Container(
                                                           decoration: BoxDecoration(
@@ -880,17 +899,22 @@ class _GymPageState extends State<GymPage> {
                                                             selectedTextStyle:
                                                                 bodyMedium,
                                                             value: resourcesAvailable[
-                                                                    typesOfResources[i][
-                                                                        j]] ??
+                                                                    typesOfResources[
+                                                                            i]
+                                                                        [j]] ??
                                                                 0,
                                                             minValue: 0,
-                                                            maxValue:
-                                                                resourceLimitsMap[typesOfResources[i][j]] ?? 20,
+                                                            maxValue: resourceLimitsMap[
+                                                                    typesOfResources[
+                                                                            i]
+                                                                        [j]] ??
+                                                                20,
                                                             step: 5,
                                                             onChanged: (value) {
                                                               setState(() {
                                                                 resourcesAvailable[
-                                                                    typesOfResources[i][
+                                                                    typesOfResources[
+                                                                            i][
                                                                         j]] = value;
                                                               });
                                                             },
@@ -899,8 +923,12 @@ class _GymPageState extends State<GymPage> {
                                                             // itemCount: 2,
                                                           ),
                                                         ),
-                                                      if (typesOfResources[i][j] ==
-                                                          'Dumbbells' || typesOfResources[i][j] == 'Kettlebell')
+                                                      if (typesOfResources[i]
+                                                                  [j] ==
+                                                              'Dumbbells' ||
+                                                          typesOfResources[i]
+                                                                  [j] ==
+                                                              'Kettlebell')
                                                         Padding(
                                                           padding:
                                                               const EdgeInsets
@@ -916,8 +944,12 @@ class _GymPageState extends State<GymPage> {
                                                                         .65)),
                                                           ),
                                                         ),
-                                                      if (typesOfResources[i][j] !=
-                                                              'Dumbbells' && typesOfResources[i][j] != 'Kettlebell' &&
+                                                      if (typesOfResources[i]
+                                                                  [j] !=
+                                                              'Dumbbells' &&
+                                                          typesOfResources[i]
+                                                                  [j] !=
+                                                              'Kettlebell' &&
                                                           editResourcesMode)
                                                         Container(
                                                           decoration: BoxDecoration(
@@ -938,17 +970,22 @@ class _GymPageState extends State<GymPage> {
                                                             selectedTextStyle:
                                                                 bodyMedium,
                                                             value: resourcesAvailable[
-                                                                    typesOfResources[i][
-                                                                        j]] ??
+                                                                    typesOfResources[
+                                                                            i]
+                                                                        [j]] ??
                                                                 0,
                                                             minValue: 0,
-                                                            maxValue:
-                                                                resourceLimitsMap[typesOfResources[i][j]] ?? 20,
+                                                            maxValue: resourceLimitsMap[
+                                                                    typesOfResources[
+                                                                            i]
+                                                                        [j]] ??
+                                                                20,
                                                             step: 1,
                                                             onChanged: (value) {
                                                               setState(() {
                                                                 resourcesAvailable[
-                                                                    typesOfResources[i][
+                                                                    typesOfResources[
+                                                                            i][
                                                                         j]] = value;
                                                               });
                                                             },
@@ -956,8 +993,12 @@ class _GymPageState extends State<GymPage> {
                                                                 20, // Customize the height of each item
                                                           ),
                                                         ),
-                                                      if (typesOfResources[i][j] !=
-                                                          'Dumbbells' && typesOfResources[i][j] != 'Kettlebell')
+                                                      if (typesOfResources[i]
+                                                                  [j] !=
+                                                              'Dumbbells' &&
+                                                          typesOfResources[i]
+                                                                  [j] !=
+                                                              'Kettlebell')
                                                         Padding(
                                                           padding:
                                                               const EdgeInsets
@@ -976,7 +1017,9 @@ class _GymPageState extends State<GymPage> {
                                                     ],
                                                   ),
                                                 ),
-                                                if (j < typesOfResources[i].length - 1)
+                                                if (j <
+                                                    typesOfResources[i].length -
+                                                        1)
                                                   // if (editResourcesMode)
                                                   SizedBox(
                                                     width: 10,
@@ -1167,81 +1210,106 @@ class _GymPageState extends State<GymPage> {
                                       for (int i = 0;
                                           i < machinesAvailable.length;
                                           i++)
-                                        Row(
-                                          children: [
-                                            SizedBox(
-                                              height:
-                                                  editMachinesMode ? 192 : 168,
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      appState
-                                                          .changePageToExercise(
-                                                              machinesAvailable[
-                                                                  i]);
-                                                    },
-                                                    child: Container(
-                                                      width: 120,
-                                                      height: 120,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.grey[200],
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                      ),
-                                                      // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-                                                      child: ImageContainer(
-                                                          exercise:
-                                                              machinesAvailable[
-                                                                  i]),
-                                                      // child: ,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  SizedBox(
-                                                    width: 120,
-                                                    child: Text(
-                                                      machinesAvailable[i]
-                                                              .machineAltName ??
-                                                          machinesAvailable[i]
-                                                              .name,
-                                                      style: bodyMedium,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                  ),
-                                                  Spacer(),
-                                                  if (editMachinesMode)
+                                        // Don't display duplicate machines, e.g. Leg Press & Leg Press Calf Raise
+                                        if (machinesAvailable.indexWhere(
+                                                (element) =>
+                                                    (element.machineAltName ??
+                                                        element.name) ==
+                                                    (machinesAvailable[i]
+                                                            .machineAltName ??
+                                                        machinesAvailable[i]
+                                                            .name)) ==
+                                            i)
+                                          Row(
+                                            children: [
+                                              SizedBox(
+                                                height: editMachinesMode
+                                                    ? 192
+                                                    : 168,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
                                                     GestureDetector(
                                                       onTap: () {
-                                                        setState(() {
-                                                          machinesAvailable
-                                                              .removeAt(i);
-                                                        });
-                                                        print(
-                                                            machinesAvailable);
+                                                        appState
+                                                            .changePageToExercise(
+                                                                machinesAvailable[
+                                                                    i]);
                                                       },
-                                                      child: Icon(
-                                                        Icons.delete_forever,
-                                                        size: 20,
-                                                        color: theme.colorScheme
-                                                            .primary,
+                                                      child: Container(
+                                                        width: 120,
+                                                        height: 120,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              Colors.grey[200],
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                        ),
+                                                        // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
+                                                        child: ImageContainer(
+                                                            exerciseName:
+                                                                machinesAvailable[
+                                                                        i]
+                                                                    .name),
+                                                        // child: ,
                                                       ),
-                                                    )
-                                                ],
+                                                    ),
+                                                    SizedBox(height: 8),
+                                                    SizedBox(
+                                                      width: 120,
+                                                      child: Text(
+                                                        machinesAvailable[i]
+                                                                .machineAltName ??
+                                                            machinesAvailable[i]
+                                                                .name,
+                                                        style: bodyMedium,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                    Spacer(),
+                                                    if (editMachinesMode)
+                                                      GestureDetector(
+                                                        onTap: () {
+                                                          setState(() {
+                                                            // machinesAvailable
+                                                            //     .removeAt(i);
+                                                            machinesAvailable.removeWhere((element) =>
+                                                                (element.machineAltName ??
+                                                                    element
+                                                                        .name) ==
+                                                                (machinesAvailable[
+                                                                            i]
+                                                                        .machineAltName ??
+                                                                    machinesAvailable[
+                                                                            i]
+                                                                        .name));
+                                                          });
+                                                          print(
+                                                              machinesAvailable);
+                                                        },
+                                                        child: Icon(
+                                                          Icons.delete_forever,
+                                                          size: 20,
+                                                          color: theme
+                                                              .colorScheme
+                                                              .primary,
+                                                        ),
+                                                      )
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            if (i <
-                                                machinesAvailable.length - 1)
-                                              SizedBox(
-                                                width: 10,
-                                              ),
-                                          ],
-                                        ),
+                                              if (i <
+                                                  machinesAvailable.length - 1)
+                                                SizedBox(
+                                                  width: 10,
+                                                ),
+                                            ],
+                                          ),
                                     ],
                                   ),
                                 ),

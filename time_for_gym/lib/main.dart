@@ -523,15 +523,15 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void saveEditChanges() {
-    // Variables now point to the new objects
-    currentSplit = editModeTempSplit;
-    splitDayExerciseIndices = editModeTempExerciseIndices;
+  // void saveEditChanges() {
+  //   // Variables now point to the new objects
+  //   currentSplit = editModeTempSplit;
+  //   splitDayExerciseIndices = editModeTempExerciseIndices;
 
-    storeSplitInSharedPreferences();
-    saveSplitDayExerciseIndicesData();
-    toSplitDayEditMode(false);
-  }
+  //   storeSplitInSharedPreferences();
+  //   saveSplitDayExerciseIndicesData();
+  //   toSplitDayEditMode(false);
+  // }
 
   void saveReorderChanges() {
     // Variables now point to the new objects
@@ -630,7 +630,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         'Mid Back:3, Lats:2, Upper Back:1, Biceps:1, Rear Delts:1';
     String overallBicep = 'Bicep Long Head:3, Bicep Short Head:3';
     String bicepLongHead = 'Bicep Long Head:3, Bicep Short Head:2';
-    String bicepShortHead = 'Bicep Short Head:3, Bicep Short Head:2';
+    String bicepShortHead = 'Bicep Short Head:3, Bicep Long Head:2';
     String bicepBrachialis =
         'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Brachioradialis:2';
     String overallTricep =
@@ -800,8 +800,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
         String? machineAltName;
         if (resourcesRequired.contains('Machine')) {
-          if (attributes.length == 9) {
-            machineAltName = attributes[8];
+          if (attributes.length == 8) {
+            machineAltName = attributes[7];
           }
         }
 
@@ -2011,13 +2011,14 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSearchPage = false;
         appState.fromGymPage = true;
         appState.presetHomePage = 1;
+        _bottomNavigationIndex = 0; // Update navigation bar
         page = GymPage(
           gym: appState.currentGym,
           isSelectedGym: appState.userGym == appState.currentGym,
         );
         break;
       default:
-        throw UnimplementedError('no widget for ${appState.pageIndex}');
+        throw UnimplementedError('No widget for ${appState.pageIndex}');
     }
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -2061,12 +2062,12 @@ class _MyHomePageState extends State<MyHomePage> {
         //   ],
         // ),
         bottomNavigationBar: SizedBox(
-          height: 142,
+          height: 100,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               SizedBox(
-                height: 92,
+                height: 100,
                 child: BottomNavigationBar(
                   unselectedItemColor: theme.colorScheme.onBackground,
                   selectedItemColor: theme.colorScheme.primary,
@@ -2461,7 +2462,7 @@ class ExerciseSelectorButton extends StatelessWidget {
                 color: theme.colorScheme.onBackground),
             child: Padding(
               padding: const EdgeInsets.all(1.0),
-              child: ImageContainer(exercise: exercise),
+              child: ImageContainer(exerciseName: exercise.name),
             ),
           ),
           SizedBox(width: 25),
@@ -3066,23 +3067,23 @@ int binarySearchExerciseList(List<Exercise> array, String targetName) {
 class ImageContainer extends StatelessWidget {
   ImageContainer({
     super.key,
-    required this.exercise,
+    required this.exerciseName,
   });
 
-  final Exercise exercise;
+  final String exerciseName;
   // bool isImageInitialized = false;
 
   @override
   Widget build(BuildContext context) {
     try {
       return FutureBuilder(
-        future: checkAssetExists("exercise_pictures/${exercise.name}.gif"),
+        future: checkAssetExists("exercise_pictures/$exerciseName.gif"),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData && snapshot.data == true) {
-              return Image.asset('exercise_pictures/${exercise.name}.gif');
+              return Image.asset('exercise_pictures/$exerciseName.gif');
             } else {
-              print(('Failed to load $exercise image'));
+              print(('Failed to load $exerciseName image'));
               return Container();
               // return Text('Failed to load image');
             }
@@ -3352,4 +3353,13 @@ int binarySearchBackwardsClosestIndex(List<double> numbers, double target) {
   }
 
   return closestIndex;
+}
+
+MaterialStateProperty<EdgeInsetsGeometry?> resolveButtonPaddingProperty(double padding) {
+  return MaterialStateProperty.resolveWith<EdgeInsetsGeometry?>(
+    (Set<MaterialState> states) {
+      // Return the desired EdgeInsets value based on the states
+      return EdgeInsets.all(padding);
+    },
+  );
 }

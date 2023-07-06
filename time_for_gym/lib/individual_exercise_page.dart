@@ -128,6 +128,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
 
     if (exercise.waitMultiplier == -1) {
       print("ERROR - Exercise is null");
+      print(exercise);
       return Placeholder();
     }
 
@@ -179,7 +180,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                   color: theme.colorScheme.onBackground,
                   height: 200,
                   width: 200,
-                  child: ImageContainer(exercise: exercise),
+                  child: ImageContainer(exerciseName: exercise.name),
                 ),
                 SizedBox(
                   height: 20,
@@ -324,7 +325,7 @@ class SimilarExercisesRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-                      child: ImageContainer(exercise: similarExercises[index]),
+                      child: ImageContainer(exerciseName: similarExercises[index].name),
                       // child: ,
                     ),
                     SizedBox(height: 8),

@@ -71,6 +71,8 @@ class _SearchPageState extends State<SearchPage> {
         .copyWith(color: theme.colorScheme.onBackground);
     final suggestionMuscleGroupStyle =
         theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.primary);
+    final titleStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
 
     muscleGroups = appState.muscleGroups.keys.toList();
 
@@ -130,7 +132,8 @@ class _SearchPageState extends State<SearchPage> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: theme.colorScheme.onBackground.withOpacity(0.65),
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(0.65),
                               ),
                               onPressed: () {
                                 searchController
@@ -141,9 +144,11 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             labelText: 'Search for an Exercise',
                             labelStyle: TextStyle(
-                                color: theme.colorScheme.onBackground.withOpacity(0.65)),
-                            floatingLabelStyle:
-                                TextStyle(color: theme.colorScheme.onBackground.withOpacity(0.65))),
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(0.65)),
+                            floatingLabelStyle: TextStyle(
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(0.65))),
                       ),
                       suggestionsCallback: (pattern) {
                         // setState(() {
@@ -220,8 +225,7 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
               child: Text(
                 "Upper Body Muscle Groups",
-                style: theme.textTheme.titleLarge!
-                    .copyWith(color: theme.colorScheme.onBackground),
+                style: titleStyle,
                 textAlign: TextAlign.left,
               ),
             ),
@@ -233,8 +237,7 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
               child: Text(
                 "Lower Body Muscle Groups",
-                style: theme.textTheme.titleLarge!
-                    .copyWith(color: theme.colorScheme.onBackground),
+                style: titleStyle,
                 textAlign: TextAlign.left,
               ),
             ),
@@ -246,8 +249,7 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
               child: Text(
                 "Favorite Exercises",
-                style: theme.textTheme.titleLarge!
-                    .copyWith(color: theme.colorScheme.onBackground),
+                style: titleStyle,
                 textAlign: TextAlign.left,
               ),
             ),
@@ -276,14 +278,10 @@ class SquareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>(); // Listening to MyAppState
-
     if (!isExercise) {
       image = MuscleGroupImageContainer(muscleGroup: name);
     } else {
-      image = ImageContainer(
-          exercise: appState.favoriteExercises
-              .firstWhere((exercise) => exercise.name == name));
+      image = ImageContainer(exerciseName: name);
     }
     return GestureDetector(
       onTap: onPressed,
@@ -305,10 +303,11 @@ class SquareButton extends StatelessWidget {
             width: 120,
             child: Text(
               name,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge!
-                  .copyWith(color: Theme.of(context).colorScheme.onBackground),
+              style: isExercise
+                  ? Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground)
+                  : Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground),
               textAlign: TextAlign.center,
             ),
           ),

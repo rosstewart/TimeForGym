@@ -67,7 +67,7 @@ class TrainingDay {
       "Upper Chest",
       "",
       "",
-      ""
+      "Triceps (Lateral Head)"
     ], focusedMuscleGroups);
     splitDay = "Push A";
   }
@@ -90,7 +90,7 @@ class TrainingDay {
       "Mid/Lower Chest",
       "",
       "",
-      ""
+      "Triceps (Long Head)"
     ], focusedMuscleGroups);
     splitDay = "Push B";
   }
@@ -116,10 +116,10 @@ class TrainingDay {
     ], [
       "Lats",
       "Mid/Upper Back",
-      "Brachialis, Forearms",
+      "Biceps (Brachialis), Forearms",
+      "Biceps (Long Head)",
       "",
-      "",
-      "",
+      "Upper Abs",
     ], focusedMuscleGroups);
     splitDay = "Pull A";
   }
@@ -142,10 +142,10 @@ class TrainingDay {
     ], [
       "Lats",
       "Mid/Upper Back",
+      "Overall Biceps",
+      "Biceps (Short Head)",
       "",
-      "",
-      "",
-      "",
+      "Lower Abs",
     ], focusedMuscleGroups);
     splitDay = "Pull B";
   }

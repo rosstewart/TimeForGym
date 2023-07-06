@@ -57,7 +57,7 @@ class _SplitPageState extends State<SplitPage> {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.headlineSmall!.copyWith(
+    final titleStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -74,7 +74,7 @@ class _SplitPageState extends State<SplitPage> {
         scrollMode: appState.splitWeekEditMode,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: appState.makeNewSplit
                 ? GymGoalAndDayOfWeekSelector()
                 : SplitCard(realTimeDayOfWeek),
@@ -97,6 +97,7 @@ class _GymGoalAndDayOfWeekSelectorState
       GlobalKey<FormFieldState<List<String>>>();
 
   String? selectedGymGoalOption = "Build Muscle";
+  String? equipmentChoice = "Full Gym";
   int equipmentLevel = 2;
 
   List<String> gymGoalOptions = [
@@ -104,6 +105,8 @@ class _GymGoalAndDayOfWeekSelectorState
     // 'Build Strength',
     // 'Cardio Focused'
   ];
+
+  List<String> equipmentOptions = ['Full Gym', 'Dumbbell-Only', 'Bodyweight'];
 
   List<String> selectedDayOfWeekOptions = [];
 
@@ -120,7 +123,9 @@ class _GymGoalAndDayOfWeekSelectorState
   List<String> selectedMuscleGroups = [];
   List<MultiSelectItem<String>> chipItems = [];
 
-  void submitSplitOnPressed(var appState) {
+  bool isValidated = true;
+
+  void submitSplitOnPressed(MyAppState appState) {
     // Since selectedDayOfWeekOptions is unsorted:
     String trainingDaysInput = "";
     for (String dayOfWeek in dayOfWeekOptions) {
@@ -132,37 +137,42 @@ class _GymGoalAndDayOfWeekSelectorState
     }
     // Set at 60 training minutes per session temporarily
     if (selectedGymGoalOption != null) {
-      appState.setSplit(Split(
-          selectedGymGoalOption!, trainingDaysInput, 60, selectedMuscleGroups, equipmentLevel));
+      appState.setSplit(Split(selectedGymGoalOption!, trainingDaysInput, 60,
+          selectedMuscleGroups, equipmentLevel));
     }
 
-    for (int i = 0; i < appState.currentSplit.trainingDays.length; i++) {
-      // First split or previous rest day
-      if (appState.splitDayExerciseIndices[i].isEmpty) {
-        for (int j = 0;
-            j < appState.currentSplit.trainingDays[i].muscleGroups.length;
-            j++) {
-          appState.splitDayExerciseIndices[i]
-              .add(0); // Initialize current exercise in split to index 0
-          // String muscleGroup = appState.currentSplit.trainingDays[i].muscleGroups[j];
-        }
-      } else {
-        // set all to 0
-        for (int j = 0;
-            j < appState.currentSplit.trainingDays[i].muscleGroups.length;
-            j++) {
-          if (j >= appState.splitDayExerciseIndices[i].length) {
-            // New split day goes over more muscle groups than previous split day
-            appState.splitDayExerciseIndices[i].add(0);
-          }
-          appState.splitDayExerciseIndices[i][j] =
-              0; // Initialize current exercise in split to index 0
-        }
-      }
-    }
+    // appState.splitDayExerciseIndices = [[], [], [], [], [], [], []];
+    // for (int i = 0; i < appState.currentSplit.trainingDays.length; i++) {
+    //   // First split or previous rest day
+    //   if (appState.splitDayExerciseIndices[i].isEmpty) {
+    //     for (int j = 0;
+    //         j < appState.currentSplit.trainingDays[i].muscleGroups.length;
+    //         j++) {
+    //       appState.splitDayExerciseIndices[i]
+    //           .add(0); // Initialize current exercise in split to index 0
+    //       // String muscleGroup = appState.currentSplit.trainingDays[i].muscleGroups[j];
+    //     }
+    //   } else {
+    //     print('ERROR - split day exercise indices[$i] is not empty');
+    //     // set all to 0
+    //     for (int j = 0;
+    //         j < appState.currentSplit.trainingDays[i].muscleGroups.length;
+    //         j++) {
+    //       if (j >= appState.splitDayExerciseIndices[i].length) {
+    //         // New split day goes over more muscle groups than previous split day
+    //         appState.splitDayExerciseIndices[i].add(0);
+    //       }
+    //       appState.splitDayExerciseIndices[i][j] =
+    //           0; // Initialize current exercise in split to index 0
+    //     }
+    //   }
+    // }
 
     appState.storeSplitInSharedPreferences();
     appState.saveSplitDayExerciseIndicesData(); // Initialize as 0s to be saved
+
+    print(appState.currentSplit);
+    print(appState.splitDayExerciseIndices);
   }
 
   void restorePreviousSplit(var appState) {
@@ -202,14 +212,17 @@ class _GymGoalAndDayOfWeekSelectorState
     final theme = Theme.of(context); //.copyWith(
     //   dialogBackgroundColor: Colors.black,
     // );
-    final headingStyle = theme.textTheme.titleMedium!.copyWith(
+    final headingStyle = theme.textTheme.bodyMedium!.copyWith(
       color: theme.colorScheme.onBackground,
       // fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.bodyLarge!.copyWith(
+    final textStyle = theme.textTheme.labelSmall!.copyWith(
       color: theme.colorScheme.primary,
     );
-    final whiteTextStyle = theme.textTheme.bodyLarge!.copyWith(
+    final whiteTextStyle = theme.textTheme.labelSmall!.copyWith(
+      color: theme.colorScheme.onBackground,
+    );
+    final labelStyle = theme.textTheme.labelSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -234,9 +247,7 @@ class _GymGoalAndDayOfWeekSelectorState
                         Icons.restore,
                         color: theme.colorScheme.primary,
                       ),
-                      label: Text("Restore Previous Split",
-                          style: textStyle.copyWith(
-                              color: theme.colorScheme.onBackground)))
+                      label: Text("Restore Previous Split", style: labelStyle))
                 ],
               ),
               SizedBox(
@@ -244,108 +255,178 @@ class _GymGoalAndDayOfWeekSelectorState
               ),
             ],
           ),
-        Text(
-          "Select Gym Goal:",
-          style: headingStyle,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 190,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 50,
+                  ),
+                  Text(
+                    "Select Gym Goal",
+                    style: headingStyle,
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButton<String>(
+                      value: selectedGymGoalOption,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedGymGoalOption = newValue;
+                        });
+                      },
+                      style: whiteTextStyle,
+                      underline: SizedBox(), // Remove default underline
+                      dropdownColor: theme.colorScheme.primaryContainer,
+                      items: [
+                        ...gymGoalOptions.map((gymGoalOption) {
+                          return DropdownMenuItem<String>(
+                            value: gymGoalOption,
+                            child: Text(
+                              gymGoalOption,
+                              style: (selectedGymGoalOption == gymGoalOption)
+                                  ? whiteTextStyle
+                                  : whiteTextStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(.65)),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 40,
+                  ),
+                  Text(
+                    "Select Equipment Level",
+                    style: headingStyle,
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButton<String>(
+                      value: equipmentChoice,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          equipmentChoice = newValue;
+                          switch (equipmentChoice) {
+                            case 'Full Gym':
+                              equipmentLevel = 2;
+                              break;
+                            case 'Dumbbell-Only':
+                              equipmentLevel = 1;
+                              break;
+                            case 'Bodyweight':
+                              equipmentLevel = 0;
+                              break;
+                            default:
+                              break;
+                          }
+                        });
+                      },
+                      style: whiteTextStyle,
+                      underline: SizedBox(), // Remove default underline
+                      dropdownColor: theme.colorScheme.primaryContainer,
+                      items: [
+                        ...equipmentOptions.map((equipmentOption) {
+                          return DropdownMenuItem<String>(
+                            value: equipmentOption,
+                            child: Text(
+                              equipmentOption,
+                              style: (equipmentChoice == equipmentOption)
+                                  ? whiteTextStyle
+                                  : whiteTextStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(.65)),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 190,
+              child: Column(
+                children: [
+                  Text(
+                    "Select Days to Train",
+                    style: headingStyle,
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    width: 200,
+                    // padding: EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: dayOfWeekOptions.map((dayOfWeekOption) {
+                        return CheckboxListTile(
+                          title: Text(
+                            dayOfWeekOption,
+                            style: labelStyle,
+                          ),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          checkColor: theme.colorScheme.onBackground,
+                          activeColor: theme.colorScheme.primary,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          // shape: RoundedRectangleBorder(
+                          //   borderRadius: BorderRadius.circular(8.0),
+                          //   side: BorderSide(
+                          //     color: theme.colorScheme
+                          //         .onBackground, // Set the desired border color
+                          //   ),
+                          // ),
+                          fillColor: resolveColor(theme.colorScheme.primary),
+                          value: selectedDayOfWeekOptions
+                              .contains(dayOfWeekOption),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value!) {
+                                selectedDayOfWeekOptions.add(dayOfWeekOption);
+                              } else {
+                                selectedDayOfWeekOptions
+                                    .remove(dayOfWeekOption);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: 20),
-        // Column(
-        //   children: gymGoalOptions.map((gymGoalOption) {
-        //     return RadioListTile<String>(
-        //       title: Text(gymGoalOption),
-        //       value: gymGoalOption,
-        //       groupValue: selectedGymGoalOption,
-        //       onChanged: (value) {
-        //         setState(() {
-        //           selectedGymGoalOption = value;
-        //         });
-        //       },
-        //     );
-        //   }).toList(),
+        // SizedBox(
+        //   height: 30,
         // ),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: DropdownButton<String>(
-            value: selectedGymGoalOption,
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedGymGoalOption = newValue;
-              });
-            },
-            style: whiteTextStyle,
-            underline: SizedBox(), // Remove default underline
-            dropdownColor: theme.colorScheme.primaryContainer,
-            items: [
-              ...gymGoalOptions.map((gymGoalOption) {
-                return DropdownMenuItem<String>(
-                  value: gymGoalOption,
-                  child: Text(
-                    gymGoalOption,
-                    style: (selectedGymGoalOption == gymGoalOption)
-                        ? whiteTextStyle
-                        : whiteTextStyle.copyWith(
-                            color: theme.colorScheme.onBackground
-                                .withOpacity(.65)),
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        ),
+
         SizedBox(
           height: 30,
         ),
         Text(
-          "Select Days to Train:",
-          style: headingStyle,
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
-            children: dayOfWeekOptions.map((dayOfWeekOption) {
-              return CheckboxListTile(
-                title: Text(
-                  dayOfWeekOption,
-                  style: whiteTextStyle,
-                ),
-                checkColor: theme.colorScheme.onBackground,
-                activeColor: theme.colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                  side: BorderSide(
-                    color: theme.colorScheme
-                        .onBackground, // Set the desired border color
-                  ),
-                ),
-                fillColor: resolveColor(theme.colorScheme.primary),
-                value: selectedDayOfWeekOptions.contains(dayOfWeekOption),
-                onChanged: (value) {
-                  setState(() {
-                    if (value!) {
-                      selectedDayOfWeekOptions.add(dayOfWeekOption);
-                    } else {
-                      selectedDayOfWeekOptions.remove(dayOfWeekOption);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-        ),
-        SizedBox(
-          height: 30,
-        ),
-        Text(
-          "Select Muscle Groups to Focus:",
+          "Select Muscle Groups to Focus",
           style: headingStyle,
           textAlign: TextAlign.center,
         ),
@@ -381,20 +462,21 @@ class _GymGoalAndDayOfWeekSelectorState
                 .toList(),
             title: Text(
               "Muscle Groups",
-              style: TextStyle(color: theme.colorScheme.onBackground),
+              style: headingStyle,
             ), //, style: theme.textTheme.bodyLarge),
             initialValue: selectedMuscleGroups,
             backgroundColor: theme.colorScheme.background,
             // barrierColor: Colors.orange[50],
             barrierColor: Color.fromRGBO(10, 10, 10, 0.8),
             searchable: true,
-            itemsTextStyle: whiteTextStyle,
+            itemsTextStyle: whiteTextStyle.copyWith(
+                color: whiteTextStyle.color!.withOpacity(.65)),
             searchTextStyle: whiteTextStyle,
             searchHintStyle: whiteTextStyle.copyWith(
                 color: whiteTextStyle.color!.withOpacity(.65)),
             selectedItemsTextStyle: whiteTextStyle,
             selectedColor: theme.colorScheme.primary,
-            unselectedColor: theme.colorScheme.onBackground,
+            unselectedColor: theme.colorScheme.primary,
             checkColor: theme.colorScheme.onBackground,
             searchIcon: Icon(
               Icons.search,
@@ -414,7 +496,7 @@ class _GymGoalAndDayOfWeekSelectorState
               });
             },
             chipDisplay: MultiSelectChipDisplay<String>(
-              textStyle: TextStyle(color: theme.colorScheme.onBackground),
+              // textStyle: TextStyle(color: theme.colorScheme.onBackground.withOpacity(.65)),
               items: chipItems,
               onTap: (value) {
                 toggleChipSelection(value);
@@ -432,7 +514,18 @@ class _GymGoalAndDayOfWeekSelectorState
                 surfaceTintColor:
                     resolveColor(theme.colorScheme.primaryContainer)),
             onPressed: () {
-              submitSplitOnPressed(appState);
+              if (selectedDayOfWeekOptions.isEmpty) {
+                setState(() {
+                  isValidated = false;
+                });
+              } else {
+                if (!isValidated) {
+                  setState(() {
+                    isValidated = true;
+                  });
+                }
+                submitSplitOnPressed(appState);
+              }
             },
             icon: Icon(
               Icons.add,
@@ -441,7 +534,13 @@ class _GymGoalAndDayOfWeekSelectorState
             label: Text(
               "Generate Split",
               style: textStyle.copyWith(color: theme.colorScheme.onBackground),
-            ))
+            )),
+        if (!isValidated) SizedBox(height: 5),
+        if (!isValidated)
+          Text(
+            'Select Days to Train',
+            style: labelStyle.copyWith(color: theme.colorScheme.secondary),
+          )
       ],
     );
   }
@@ -486,7 +585,7 @@ class _SplitCardState extends State<SplitCard> {
       color: theme.colorScheme.onBackground,
       // fontWeight: FontWeight.bold,
     );
-    final textStyle = theme.textTheme.bodySmall!.copyWith(
+    final labelStyle = theme.textTheme.labelSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -509,7 +608,7 @@ class _SplitCardState extends State<SplitCard> {
           i: i,
           headingStyle: headingStyle,
           split: split,
-          textStyle: textStyle.copyWith(),
+          textStyle: labelStyle,
           appState: appState,
           realTimeDayOfWeek: widget.realTimeDayOfWeek),
     );
@@ -536,8 +635,7 @@ class _SplitCardState extends State<SplitCard> {
                         Icons.close,
                         color: theme.colorScheme.primary,
                       ),
-                      label: Text("Cancel", style: headingStyle)),
-                  Spacer(),
+                      label: Text("Cancel", style: labelStyle)),
                   ElevatedButton.icon(
                       style: ButtonStyle(
                           backgroundColor:
@@ -551,44 +649,50 @@ class _SplitCardState extends State<SplitCard> {
                         Icons.save_alt,
                         color: theme.colorScheme.primary,
                       ),
-                      label: Text("Save", style: headingStyle))
+                      label: Text("Save", style: labelStyle))
                 ],
               ),
-              ElevatedButton.icon(
-                style: ButtonStyle(
-                    backgroundColor:
-                        resolveColor(theme.colorScheme.primaryContainer),
-                    surfaceTintColor:
-                        resolveColor(theme.colorScheme.primaryContainer)),
-                icon: Icon(
-                  Icons.keyboard_arrow_up,
-                  color: theme.colorScheme.primary,
-                ),
-                onPressed: () {
-                  appState.shiftSplit(split, exerciseIndices, -1);
-                },
-                label: Text(
-                  "Shift Up",
-                  style: headingStyle,
-                ),
-              ),
-              ElevatedButton.icon(
-                style: ButtonStyle(
-                    backgroundColor:
-                        resolveColor(theme.colorScheme.primaryContainer),
-                    surfaceTintColor:
-                        resolveColor(theme.colorScheme.primaryContainer)),
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  color: theme.colorScheme.primary,
-                ),
-                onPressed: () {
-                  appState.shiftSplit(split, exerciseIndices, 1);
-                },
-                label: Text(
-                  "Shift Down",
-                  style: headingStyle,
-                ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    style: ButtonStyle(
+                        backgroundColor:
+                            resolveColor(theme.colorScheme.primaryContainer),
+                        surfaceTintColor:
+                            resolveColor(theme.colorScheme.primaryContainer)),
+                    icon: Icon(
+                      Icons.keyboard_arrow_up,
+                      color: theme.colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      appState.shiftSplit(split, exerciseIndices, -1);
+                    },
+                    label: Text(
+                      "Shift Up",
+                      style: labelStyle,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    style: ButtonStyle(
+                        backgroundColor:
+                            resolveColor(theme.colorScheme.primaryContainer),
+                        surfaceTintColor:
+                            resolveColor(theme.colorScheme.primaryContainer)),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: theme.colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      appState.shiftSplit(split, exerciseIndices, 1);
+                    },
+                    label: Text(
+                      "Shift Down",
+                      style: labelStyle,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -610,11 +714,10 @@ class _SplitCardState extends State<SplitCard> {
                   appState.toSplitWeekEditMode(true);
                 },
                 label: Text(
-                  "Edit Split",
-                  style: headingStyle,
+                  "Edit",
+                  style: labelStyle,
                 ),
               ),
-              Spacer(),
               ElevatedButton.icon(
                 style: ButtonStyle(
                     backgroundColor:
@@ -629,8 +732,8 @@ class _SplitCardState extends State<SplitCard> {
                   color: theme.colorScheme.primary,
                 ),
                 label: Text(
-                  "New Split",
-                  style: headingStyle,
+                  "New",
+                  style: labelStyle,
                 ),
               ),
             ],
@@ -641,8 +744,9 @@ class _SplitCardState extends State<SplitCard> {
         if (!appState.splitWeekEditMode)
           for (Widget dayOfWeekButton in dayOfWeekButtons) dayOfWeekButton,
         if (appState.splitWeekEditMode)
-          SizedBox(
-            height: 521,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 556),
+            // height: ,
             child: ReorderableListView(
               children: dayOfWeekButtons,
               onReorder: (oldIndex, newIndex) {
@@ -720,7 +824,7 @@ class DayOfWeekButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
-        height: 70,
+        height: 60,
         child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: resolveColor(theme.colorScheme.primaryContainer),

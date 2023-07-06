@@ -85,7 +85,9 @@ class Gym implements Comparable<Gym> {
 
   bool canSupportExercise(Exercise element) {
     for (String resource in element.resourcesRequired ?? []) {
-      if (resource == 'None' || resource == 'Bodyweight') {
+      if (resource == 'None' ||
+          resource == 'Bodyweight' ||
+          resource == 'Dumbbells') {
         return true;
       }
       if (resource == 'Machine') {
@@ -95,16 +97,21 @@ class Gym implements Comparable<Gym> {
           return true;
         }
         if (!machinesAvailable.contains(element)) {
-          // If gym doesn't have machine, remove it
+          // If gym doesn't have machine, return false
           return false;
         }
       } else if (resourcesAvailable[resource] == null ||
           resourcesAvailable[resource]! < 1) {
         if (resourcesAvailable.isEmpty) {
-          // Assume true if no resources initialized
+          // Assume true if no resources at all initialized
           return true;
         }
-        return false;
+        if (resourcesAvailable[resource] != null &&
+            resourcesAvailable[resource]! < 1) {
+          // Resource is initialized to 0
+          return false;
+        }
+        // If null for just that specific resource, continue
       }
     }
     return true;
