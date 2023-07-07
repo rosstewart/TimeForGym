@@ -52,6 +52,7 @@ Concentration Curl|Sit on a bench with a dumbbell in one hand, rest your elbow o
 Chin-Up|Hang from a bar with a shoulder-width underhand grip, pull your body up with your biceps until your chin is above the bar, and lower back down in a controlled manner.|Bicep Long Head:3, Bicep Short Head:3, Lats:2|Video Link|0.0|Pull-Up Bar|1
 Incline Curl|Sit on an incline bench with your back supported against the incline, hold dumbbells with an underhand grip, and let your arms hang down straight. Curl the dumbbells up towards your shoulders while keeping your upper arms stationary and elbows tucked in, then slowly lower them back down to the starting position.|bicepLongHead|Video Link|0.0|Dumbbells,Bench|1
 Zottman Curl|Stand with a dumbbell in each hand, palms facing up. Curl the dumbbells up towards your shoulders, then rotate your palms to face downwards as you lower the weights back down. Rotate your palms back up to the starting position for the next repetition.|Bicep Long Head:3, Bicep Short Head:3, Forearms:2|Video Link|0.0|Dumbbells|1
+Bicep Leg Curl|Sit down or stand up and hold your hand under your opposite thigh. Curl your leg up using only your biceps, in a movement similar to a concentration curl.|overallBicep|Video Link|0.0|None|1
 
 MuscleGroup: Triceps
 
@@ -130,6 +131,7 @@ Lying Leg Curl|Lay down, align the axis of rotation with your knees, and bring y
 Stiff-Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the dumbbells close. You should feel a stretch in the hamstrings.|Hamstrings:3, Glutes:2, Lower Back:1|https://youtu.be/R6KXyhU4nTY|0.4|Dumbbells|1
 Stiff-Leg Deadlift|Stand with a barbell in front of your thighs, feet hip-width apart, and bend forward at the hips while keeping your legs straight until you feel a stretch in your hamstrings, then return to the starting position by standing up straight, focusing on engaging your hamstrings.|Hamstrings:3, Glutes:2, Lower Back:1|Video Link|0.0|Barbell|0
 Nordic Hamstring Curl|Kneel down with your feet secured under a stable object. Slowly lower your upper body forward, hinging at the knees, until you can no longer control the movement. Use your hamstrings to push back up to the starting position.|Hamstrings:3|Video Link|0.0|None|1
+Towel Leg Curl|Lay on the ground and lift into a glute bridge position. While maintaining the bridge, slowly extend your legs out until they are straight. Then, flex your knees to bring your heels back towards your glutes, engaging your hamstrings.|Hamstrings:3, Glutes:2|Video Link|0.0|None|1
 
 MuscleGroup: Calves
 
