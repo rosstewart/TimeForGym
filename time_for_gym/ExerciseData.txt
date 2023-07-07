@@ -14,7 +14,7 @@ Seated Cable Chest Press|Sit in a bench facing away from a cable machine with th
 Machine Chest Press|Sit on a chest press machine with your back against the backrest and grip the handles, push the handles forward until your arms are fully extended, then slowly bring them back to the starting position by bending your elbows.|chestPress|Video Link|0.0|Machine|0|Chest Press
 Dumbbell Pullover|Lie down on a bench with a dumbbell in both hands, extend your arms overhead, and lower the dumbbell behind your head in a controlled manner, then bring it back to the starting position by contracting your chest muscles.|Mid Chest:3, Lower Chest:3, Lats:2|Video Link|0.0|Dumbbells,Bench|1
 Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Upper Chest:3, Mid Chest:2|Video Link|0.0|Dumbbells,Bench|1
-Chest Dips|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|lowerPress|Video Link|0.0|Parallel Bars|0
+Chest Dip|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|lowerPress|Video Link|0.0|Parallel Bars|0
 Decline Barbell Bench|Lie down on a decline bench, grip the bar, lower to your chest, and press up.|lowerPress|Video Link|0.0|Decline Bench Press|0
 Decline Push-Up|Place your feet on an elevated surface and perform push-ups with your body in a decline position.|inclinePress|Video Link|0.0|None|1
 
@@ -66,7 +66,7 @@ Machine Tricep Dip|Sit on a tricep dip machine with your back against the backre
 Dumbbell Overhead Extension|Stand with a dumbbell overhead, grip it with both hands, and lower it down behind your head by bending your elbows, then press it back up by extending your arms, focusing on contracting your triceps.|tricepLateralHead|Video Link|0.0|Dumbbells|1
 Diamond Push-Up|Get into a push-up position, but bring your hands close together under your chest, forming a diamond shape with your thumbs and index fingers. Perform push-ups while keeping your elbows close to your body.|Tricep Medial Head:3, Tricep Lateral Head:3, Tricep Long Head:1, Chest:1, Front Delts:1|Video Link|0.0|None|1
 Bench Dip|Sit on the edge of a sturdy chair or bench with your hands gripping the edge. Slide your bottom off the edge and lower your body by bending your arms. Push back up to the starting position using your triceps.|Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2, Lower Chest:2, Front Delts:1|Video Link|0.0|None|1
-Tricep Push-Ups|Assume a push-up position, but position your hands closer to your waistline, with your fingers pointing towards your feet. Lower your body towards the ground by bending your elbows, keeping them close to your sides. Push back up to the starting position.|Triceps|Video Link|0.0|None|1
+Tricep Push-Up|Assume a push-up position, but position your hands closer to your waistline, with your fingers pointing towards your feet. Lower your body towards the ground by bending your elbows, keeping them close to your sides. Push back up to the starting position.|tricepLongHead|Video Link|0.0|None|1
 
 MuscleGroup: Front Delts
 
