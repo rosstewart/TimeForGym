@@ -16,6 +16,7 @@ Dumbbell Pullover|Lie down on a bench with a dumbbell in both hands, extend your
 Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Upper Chest:3, Mid Chest:2|Video Link|0.0|Dumbbells,Bench|1
 Chest Dips|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|lowerPress|Video Link|0.0|Parallel Bars|0
 Decline Barbell Bench|Lie down on a decline bench, grip the bar, lower to your chest, and press up.|lowerPress|Video Link|0.0|Decline Bench Press|0
+Decline Push-Up|Place your feet on an elevated surface and perform push-ups with your body in a decline position.|inclinePress|Video Link|0.0|None|1
 
 MuscleGroup: Back
 
@@ -31,6 +32,8 @@ T-Bar Row Machine|Straddle a T-bar machine, grip the handles with both hands, an
 Chest-Supported T-Bar Row Machine|Get on T-bar machine, grip the handles with both hands, and pull the handles towards your torso and squeezing your shoulder blades together at the top of the movement.|upperBackChestSupportedRow|Video Link|0.0|Machine|1|Chest-Supported T-Bar Row
 Single-Arm Dumbbell Row|Place one knee and hand on a bench, hold a dumbbell in the other hand, and pull the dumbbell up towards your torso, squeezing your back muscles at the top of the movement.|lowRow|Video Link|0.0|Dumbbells,Bench|1
 Incline Dumbbell Row|Lie face-down on an incline bench at 45° and row the dumbbells up, squeezing your shoulder blades together.|upperBackChestSupportedRow|Video Link|0.0|Dumbbells,Bench|1
+Superman|Lie face down on the ground with your arms extended in front of you. Lift your arms, chest, and legs off the ground simultaneously, resembling the flying position of Superman. Hold for a few seconds before lowering back down.|Upper Back:3, Mid Back:2, Lower Back:2, Rear Delts:1, Glutes:1|Video Link|0.0|None|1
+Inverted Rows|Set up a bar, suspension trainer, or chair at waist height. Lie underneath it and grab it with an overhand grip. Position your body in a straight line and pull your chest towards the bar by squeezing your lats and bending your elbows. Lower your body back down to the starting position.|Mid Back:3, Lats:3, Upper Back:1, Lower Back:1, Biceps:1, Rear Delts:1|Video Link|0.0|Bar, Smith Machine|1
 
 MuscleGroup: Biceps
 
@@ -48,6 +51,7 @@ EZ-Bar Curl|Stand with an EZ-bar in front of you, hold the bar with an underhand
 Concentration Curl|Sit on a bench with a dumbbell in one hand, rest your elbow on the inside of your thigh, and curl the dumbbell up towards your shoulder while keeping your upper arm stationary, squeezing your biceps at the top of the movement.|overallBicep|Video Link|0.0|Dumbbells,Bench|1
 Chin-Up|Hang from a bar with a shoulder-width underhand grip, pull your body up with your biceps until your chin is above the bar, and lower back down in a controlled manner.|Bicep Long Head:3, Bicep Short Head:3, Lats:2|Video Link|0.0|Pull-Up Bar|1
 Incline Curl|Sit on an incline bench with your back supported against the incline, hold dumbbells with an underhand grip, and let your arms hang down straight. Curl the dumbbells up towards your shoulders while keeping your upper arms stationary and elbows tucked in, then slowly lower them back down to the starting position.|bicepLongHead|Video Link|0.0|Dumbbells,Bench|1
+Zottman Curl|Stand with a dumbbell in each hand, palms facing up. Curl the dumbbells up towards your shoulders, then rotate your palms to face downwards as you lower the weights back down. Rotate your palms back up to the starting position for the next repetition.|Bicep Long Head:3, Bicep Short Head:3, Forearms:2|Video Link|0.0|Dumbbells|1
 
 MuscleGroup: Triceps
 
@@ -55,11 +59,14 @@ Rope Pushdown|Attach a rope handle to a cable, grasp the rope with an overhand g
 Straight Bar Pushdown|Keep your shoulders still and extend your arm fully from top down.|tricepLongHead|https://youtu.be/QLI40pQ6O74|0.3|Cable|1
 EZ-Bar Skull Crusher|Lie down on a bench, hold an EZ-bar or a barbell with an overhand grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|tricepLateralHead|https://youtu.be/d_KZxkY_0cM|0.5|EZ-bar,Bench|1
 Dumbbell Skull Crusher|Lie down on a bench, hold dummbells with a neutral grip, lower it towards your forehead by bending your elbows, and extend your arms back up.|tricepLateralHead|https://youtu.be/d_KZxkY_0cM|0.5|Dumbbells,Bench|1
-Tricep Dip|Use parallel bars, lower your body by bending your elbows, and push back up.|Tricep Lateral Head:3, Tricep Long Head:2, Tricep Medial Head:2, Lower Chest:2, Front Delts:1|https://youtu.be/sM6XUdt1rm4|0.4|Parallel Bars|1
-Close Grip Bench Press|Lie down on a bench, grip the bar closer than shoulder-width, lower it to your chest, and press up.|Tricep Medial Head:3, Tricep Lateral Head:2, Tricep Long Head:1, Chest:1, Front Delts:1|https://youtu.be/nEF0bv2FW94|0.9|Barbell,Bench|0
+Tricep Dip|Use parallel bars, lower your body by bending your elbows, and push back up.|Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2, Lower Chest:2, Front Delts:1|https://youtu.be/sM6XUdt1rm4|0.4|Parallel Bars|1
+Close Grip Bench Press|Lie down on a bench, grip the bar closer than shoulder-width, lower it to your chest, and press up.|Tricep Medial Head:3, Tricep Lateral Head:3, Tricep Long Head:1, Chest:1, Front Delts:1|https://youtu.be/nEF0bv2FW94|0.9|Barbell,Bench|0
 Cable Single Arm Pushdown|Stand parallel to a cable machine with no handle or a rope attached to the high pulley, grab the cable and extend your arm down by straightening your elbow, then slowly bend your elbow and return to the starting position while maintaining control.|tricepLongHead|Video Link|0.0|Cable|1
 Machine Tricep Dip|Sit on a tricep dip machine with your back against the backrest and place your hands on the handles, press down on the handles to lift your body upward until your arms are fully extended, then slowly lower yourself back down by bending your elbows.|Tricep Lateral Head:3, Tricep Long Head:2, Tricep Medial Head:2, Lower Chest:2, Front Delts:1|Video Link|0.0|Machine|1|Tricep Dip
 Dumbbell Overhead Extension|Stand with a dumbbell overhead, grip it with both hands, and lower it down behind your head by bending your elbows, then press it back up by extending your arms, focusing on contracting your triceps.|tricepLateralHead|Video Link|0.0|Dumbbells|1
+Diamond Push-Up|Get into a push-up position, but bring your hands close together under your chest, forming a diamond shape with your thumbs and index fingers. Perform push-ups while keeping your elbows close to your body.|Tricep Medial Head:3, Tricep Lateral Head:3, Tricep Long Head:1, Chest:1, Front Delts:1|Video Link|0.0|None|1
+Bench Dip|Sit on the edge of a sturdy chair or bench with your hands gripping the edge. Slide your bottom off the edge and lower your body by bending your arms. Push back up to the starting position using your triceps.|Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2, Lower Chest:2, Front Delts:1|Video Link|0.0|None|1
+Tricep Push-Ups|Assume a push-up position, but position your hands closer to your waistline, with your fingers pointing towards your feet. Lower your body towards the ground by bending your elbows, keeping them close to your sides. Push back up to the starting position.|Triceps|Video Link|0.0|None|1
 
 MuscleGroup: Front Delts
 
@@ -70,6 +77,8 @@ Dumbbell Front Raise|Hold dumbbells in front of your thighs with palms facing yo
 Shoulder Press Machine|Sit on a shoulder press machine with your back against the backrest and grasp the handles, press the handles upward until your arms are fully extended, then slowly lower them back down to the starting position.|seatedShoulderPress|Video Link|0.0|Machine|0|Shoulder Press
 Barbell Front Raise|Stand with a barbell held in front of your thighs, palms facing your body, and raise the barbell in front of you until it reaches shoulder height, then lower it back down in a controlled manner, focusing on engaging your front delts.|Front Delts:3, Side Delts:1, Biceps:1|Video Link|0.0|Barbell|1
 Cable Front Raise|Hold a low cable with a neutral grip, and bring your arm up straight in front of you, without bending your elbow.|Front Delts:3, Side Delts:1, Biceps:1|Video Link|0.0|Cable|1
+Pike Push-Up|Start in a downward dog position with your hands on the ground and hips lifted high. Lower your head towards the ground by bending your elbows and then push back up. (Optional - Elevate your feet for more front delt activation.)|seatedShoulderPress|Video Link|0.0|None|1
+Handstand Push-Up|Kick up into a handstand position against a wall, then lower your body by bending your arms and bring your head towards the ground. Push back up to the starting position.|seatedShoulderPress|Video Link|0.0|None|1
 
 MuscleGroup: Side Delts
 
@@ -88,15 +97,20 @@ Single-Arm Dumbbell Rear Delt Row|Place one knee and hand on a bench, hold a dum
 
 MuscleGroup: Glutes
 
-Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes:3, Quads:3, Hamstrings:1, Lower Back:1|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Squat Rack|0
+Back Squat|Bring the weight down until your legs are parallel with the ground, then stand up.|Glutes:3, Quads:3, Hamstrings:1, Upper Back:1, Lower Back:1|https://youtube.com/shorts/AIZ8q1qruKw?feature=share|1.0|Barbell,Squat Rack|0
 Dumbbell RDL|Keeping bent legs, hinge back while keeping the dumbbells close and squeezing the glutes on the way up.|Glutes:3, Hamstrings:2, Lower Back:1|https://youtu.be/6_F82F5thmE|0.4|Dumbbells|1
 Glute Bridge|Lie on your back with knees bent and feet flat on the floor, lift your hips off the ground by squeezing your glutes, and hold for a few seconds before lowering back down.|Glutes:3, Hamstrings:1|Video Link|0.0|None|1
+Single-Leg Glute Bridge|Similar to the glute bridge, but lift one leg off the ground and perform the movement with the other leg. This exercise increases the focus on one leg at a time, challenging your hamstrings and glutes.|Glutes:3, Hamstrings:1|Video Link|0.0|None|1
 Machine Hip Thrust|Sit on a hip thrust machine with your upper back against the padded support, bend your knees and place your feet flat on the floor, drive through your heels and extend your hips upward until your thighs and torso are in a straight line, then slowly lower your hips back down to the starting position with control.|Glutes:3, Hamstrings:1|Video Link|0.0|Machine|1|Hip Thrust
 Reverse Hyperextension Machine|Lie face down on a reverse hyperextension machine with your hips resting on the padded platform, place your legs against the leg pads, lift your legs upward by contracting your glutes and hamstrings, then slowly lower them back down to the starting position in a controlled manner.|Glutes:3, Hamstrings:1, Lower Back:1|Video Link|0.0|Machine|1|Reverse Hyperextension
 Cable Pull-Through|Attach a rope handle to a cable machine at the lowest pulley position, stand facing away from the machine with your feet shoulder-width apart, hinge at your hips and reach through your legs to grab the rope handle, drive your hips forward and stand up tall, pulling the rope through your legs, then slowly return to the starting position by hinging at your hips and allowing the weight to pull your hips back.|Glutes:3, Hamstrings:1|Video Link|0.0|Cable|1
 Glute-Focused Hyperextension|Adjust the machine to fit your body, position yourself face down with your upper thighs on the padding and your feet secured under the ankle pads, cross your arms over your chest or place them behind your head, lower your upper body towards the floor while keeping your back straight, then use your glute muscles to lift your upper body back up to the starting position. Dumbbell optional.|Glutes:3, Hamstrings:2, Lower Back:1|Video Link|0.0|Hyper Extension|1
 Dumbbell Glute Bridge|Lie on your back with your knees bent and feet flat on the floor, hold a pair of dumbbells on your hips, lift your hips off the ground by squeezing your glutes and pushing through your heels, pause at the top for a moment, then slowly lower your hips back down to the starting position in a controlled manner.|Glutes:3, Hamstrings:1|Video Link|0.0|Dumbbells|0
 Barbell Hip Thrust|Sit on the ground with your back against a bench, position a barbell over your hips, roll the barbell towards your body and bend your knees, drive through your heels and raise your hips until your thighs and torso are parallel to the floor, squeeze your glutes at the top, then lower your hips back down to the starting position.|Glutes:3, Hamstrings:1|Video Link|0.0|Barbell, Bench|0
+Bodyweight Squat|Stand with your feet shoulder-width apart, bend your knees, and lower your body as if sitting back into a chair. Keep your chest up and push through your heels to return to the starting position.|Glutes:3, Quads:3, Hamstrings:1, Lower Back:1|Video Link|0.0|None|1
+Jump Squat|Perform a bodyweight squat, but explode off the ground with enough force to allow your feet to leave the ground. Land softly and immediately go into the next repetition.|Glutes:3, Quads:3, Hamstrings:1, Lower Back:1|Video Link|0.0|None|1
+Bodyweight Glute Kickbacks|Start on all fours with your hands and knees on the ground. Extend one leg straight back, squeezing your glutes at the top of the movement. Lower your leg back down and repeat on the other side.|Glutes:3, Hamstrings:1|Video Link|0.0|None|1
+Standing Glute Abduction|Stand with your feet shoulder-width apart. Lift one leg out to the side as far as possible while keeping your torso upright and your foot pointing forward. Squeeze your glutes at the top of the movement, then lower your leg back down and repeat on the other side.|Glutes:3|Video Link|0.0|None|1
 
 MuscleGroup: Quads
 
@@ -106,6 +120,8 @@ Dumbbell Lunge|While holding dumbbells to your side, stand with your feet hip-wi
 Bulgarian Split Squat|While holding dumbbells at your side, stand in a split stance with one foot elevated behind you, lower your body by bending your front knee until your rear knee is close to the ground, then push back up to the starting position.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|Dumbbells, Bench|0
 Leg Press|Sit on a leg press machine with your back against the backrest and feet on the platform, push the platform away from you by extending your legs, then slowly lower it back down to the starting position.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|Machine|0|Leg Press
 Pendulum Squat|Stand inside a pendulum squat machine, position your feet shoulder-width apart and slightly forward, hold onto the handles for stability, release the weight by unlocking the safety mechanism, squat down by bending your knees and hips, keeping your back straight, descend until your thighs are parallel to the floor, then push through your heels and extend your knees and hips to return to the starting position.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|Machine|0
+Bodyweight Bulgarian Split Squat|Stand in a split stance with one foot forward and the other foot elevated on an elevated surface you. Lower your body by bending your front knee and dropping your back knee towards the ground. Push back up to the starting position and repeat on the other side.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|None|1
+Bodyweight Lunge|Start in a standing position, take a step forward with one foot, and lower your body until both knees are bent at a 90-degree angle. Push back up and repeat on the other side.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|None|1
 
 MuscleGroup: Hamstrings
 
@@ -113,6 +129,7 @@ Seated Leg Curl|Push into the seat, align the axis of rotation with your knees, 
 Lying Leg Curl|Lay down, align the axis of rotation with your knees, and bring your feet in.|Hamstrings:3|https://youtu.be/1Tq3QdYUuHs|0.7|Machine|1
 Stiff-Leg Dumbbell RDL|Keeping slightly bent legs, hinge back while keeping the dumbbells close. You should feel a stretch in the hamstrings.|Hamstrings:3, Glutes:2, Lower Back:1|https://youtu.be/R6KXyhU4nTY|0.4|Dumbbells|1
 Stiff-Leg Deadlift|Stand with a barbell in front of your thighs, feet hip-width apart, and bend forward at the hips while keeping your legs straight until you feel a stretch in your hamstrings, then return to the starting position by standing up straight, focusing on engaging your hamstrings.|Hamstrings:3, Glutes:2, Lower Back:1|Video Link|0.0|Barbell|0
+Nordic Hamstring Curl|Kneel down with your feet secured under a stable object. Slowly lower your upper body forward, hinging at the knees, until you can no longer control the movement. Use your hamstrings to push back up to the starting position.|Hamstrings|Video Link|0.0|None|1
 
 MuscleGroup: Calves
 
@@ -120,6 +137,7 @@ Standing Calf Raise Machine|Raise your heels, slow & controlled.|Calves:3|https:
 Seated Calf Raise Machine|Sit on a calf raise machine with the balls of your feet on the footrest, lower your heels as far as possible, and then raise them as high as you can by pushing through the balls of your feet and contracting your calves.|Calves:3|Video Link|0.0|Machine|1|Seated Calf Raise
 Dumbbell Calf Raise|Hold dumbbells while standing on the edge of a step or a raised platform with your heels hanging off, rise up onto your toes by contracting your calf muscles, then lower your heels below the step to stretch the calves, repeat for the desired number of repetitions.|Calves:3|Video Link|0.0|Dumbbells|1
 Leg Press Calf Raise|Sit on a leg press machine with your feet on the platform, position your toes and balls of your feet on the lower edge of the platform, push the platform away by extending your ankles and flexing your calves, then slowly lower your heels back down to the starting position.|Calves:3|Video Link|0.0|Machine|1|Leg Press
+Bodyweight Calf Raise|Stand with the balls of your feet on an elevated surface, if possible. Rise up onto your toes, then lower your heels below the level of the step. Repeat the movement in a controlled manner.|Calves:3|Video Link|0.0|None|1
 
 MuscleGroup: Abs
 
@@ -129,3 +147,7 @@ Plank|Start in a push-up position, but with your forearms on the ground, engage 
 Russian Twist|Sit on the ground with your knees bent, lean back slightly, lift your feet off the ground, and twist your torso from side to side, touching the ground on each side.|Obliques:3, Lower Abs:2, Upper Abs:1|Video Link|0.0|None|1
 Side Plank|Lie on your side with your forearm on the ground and elbow directly below your shoulder, lift your hips off the ground and align your body in a straight line, hold this position for the desired duration, then repeat on the other side.|Obliques:3, Upper Abs:2, Lower Abs:2|Video Link|0.0|None|1
 Cable Oblique Twist|Attach a D-handle to a cable machine at the mid-level pulley, stand sideways to the machine and grasp the handle with both hands, pull the handle down and across your body while rotating your torso, then slowly return to the starting position and repeat on the other side.|Obliques:3, Upper Abs:1, Lower Abs:1|Video Link|0.0|Cable|1
+Shoulder Taps|Start in a push-up position and lift one hand off the ground to tap the opposite shoulder. Alternate sides with each repetition while maintaining a stable core and avoiding excessive twisting.|Upper Abs:3, Lower Abs:3, Front Delts:1, Side Delts:1|Video Link|0.0|None|1
+Bicycle Crunch|Lie on your back, lift your legs off the ground with your knees bent, and bring your opposite elbow to touch the opposite knee as you extend the other leg. Alternate sides in a pedaling motion.|Upper Abs:3, Obliques:2, Lower Abs:2|Video Link|0.0|None|1
+Mountain Climber|Start in a push-up position and quickly alternate bringing one knee towards your chest while keeping the other leg extended. Move in a running motion, engaging your core muscles throughout.|Upper Abs:3, Lower Abs:3, Front Delts:1, Side Delts:1|Video Link|0.0|None|1
+Leg Raise|Lie on your back with your legs extended and lift them up towards the ceiling. Lower them back down with control without touching the ground, then repeat the movement.|Lower Abs:3, Upper Abs:2|Video Link|0.0|None|1
