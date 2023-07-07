@@ -52,7 +52,8 @@ Concentration Curl|Sit on a bench with a dumbbell in one hand, rest your elbow o
 Chin-Up|Hang from a bar with a shoulder-width underhand grip, pull your body up with your biceps until your chin is above the bar, and lower back down in a controlled manner.|Bicep Long Head:3, Bicep Short Head:3, Lats:2|Video Link|0.0|Pull-Up Bar|1
 Incline Curl|Sit on an incline bench with your back supported against the incline, hold dumbbells with an underhand grip, and let your arms hang down straight. Curl the dumbbells up towards your shoulders while keeping your upper arms stationary and elbows tucked in, then slowly lower them back down to the starting position.|bicepLongHead|Video Link|0.0|Dumbbells,Bench|1
 Zottman Curl|Stand with a dumbbell in each hand, palms facing up. Curl the dumbbells up towards your shoulders, then rotate your palms to face downwards as you lower the weights back down. Rotate your palms back up to the starting position for the next repetition.|Bicep Long Head:3, Bicep Short Head:3, Forearms:2|Video Link|0.0|Dumbbells|1
-Bicep Leg Curl|Sit down or stand up and hold your hand under your opposite thigh. Curl your leg up using only your biceps, in a movement similar to a concentration curl.|overallBicep|Video Link|0.0|None|1
+Bicep Leg Curl|Sit down or stand up and hold your hand under your opposite thigh with an underhand grip. Curl your leg up using only your biceps, in a movement similar to a concentration curl.|overallBicep|Video Link|0.0|None|1
+Neutral-Grip Bicep Leg Curl|Sit down or stand up and hold your hand under your opposite thigh with an underhand grip. Curl your leg up using only your biceps, in a movement similar to a concentration curl.|bicepBrachialis|Video Link|0.0|None|1
 
 MuscleGroup: Triceps
 
