@@ -429,6 +429,18 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     currentSplit = split;
     // Reset exercise indices
     splitDayExerciseIndices = [[], [], [], [], [], [], []];
+    for (int i = 0; i < split.trainingDays.length; i++) {
+      print(
+          'exercise names length: ${split.trainingDays[i].exerciseNames.length}');
+      for (int j = 0; j < split.trainingDays[i].exerciseNames.length; j++) {
+        addExerciseToSplit(this, split.trainingDays[i].exerciseIdentifiers[j],
+            userGym, splitDayExerciseIndices, i, j, split);
+        print('Added exercise to day $i, exercise $j');
+      }
+    }
+    storeSplitInSharedPreferences(); // Also sets the values of exerciseNames
+    print(split.trainingDays[0].exerciseNames);
+    saveSplitDayExerciseIndicesData();
     makeNewSplit = false;
     notifyListeners();
   }
@@ -550,27 +562,29 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       int muscleGroupExerciseIndex,
       int numSets,
       String identifier,
-      String setName) {
+      String setName,
+      String exerciseName) {
     editModeTempSplit.trainingDays[dayIndex].insertMuscleGroup(
-        cardIndex, muscleGroup, numSets, identifier, setName);
+        cardIndex, muscleGroup, numSets, identifier, setName, exerciseName);
     editModeTempExerciseIndices[dayIndex]
         .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
   }
 
   List<dynamic> removeTempMuscleGroupFromSplit(int dayIndex, int cardIndex) {
-    final muscleGroupAndNumSetsAndIdentifierAndSetName =
+    final muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName =
         editModeTempSplit.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
     final exerciseIndex =
         editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     notifyListeners();
     // muscle group, exercise index, number of sets
     return [
-      muscleGroupAndNumSetsAndIdentifierAndSetName[0],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[0],
       exerciseIndex,
-      muscleGroupAndNumSetsAndIdentifierAndSetName[1],
-      muscleGroupAndNumSetsAndIdentifierAndSetName[2],
-      muscleGroupAndNumSetsAndIdentifierAndSetName[3]
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[1],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[2],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[3],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4]
     ];
   }
 
@@ -588,7 +602,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     // Wait until map is initialized before extracting previous favorite exercises & split data
     initializeOldFavorites();
-    retrieveSplitFromSharedPreferences();
+    await retrieveSplitFromSharedPreferences();
     initializeSplitDataAndExerciseIndices();
     notifyListeners();
   }
@@ -632,9 +646,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     String bicepLongHead = 'Bicep Long Head:3, Bicep Short Head:2';
     String bicepShortHead = 'Bicep Short Head:3, Bicep Long Head:2';
     String bicepBrachialis =
-        'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Brachioradialis:2';
-    String overallTricep =
-        'Tricep Long Head:3, Tricep Lateral Head:3, Tricep Medial Head:3';
+        'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Forearms:2';
     String tricepLongHead =
         'Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2';
     String tricepLateralHead =
@@ -872,11 +884,6 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             // Code for bicepBrachialis
             musclesWorkedString = bicepBrachialis;
             exerciseIdentifer = "bicepBrachialis";
-            break;
-          case "overallTricep":
-            // Code for overallTricep
-            musclesWorkedString = overallTricep;
-            exerciseIdentifer = "overallTricep";
             break;
           case "tricepLongHead":
             // Code for tricepLongHead
@@ -1138,6 +1145,34 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     print("initialized indices: $splitDayExerciseIndices");
 
+    print(currentSplit);
+
+    for (int i = 0; i < splitDayExerciseIndices.length; i++) {
+      if (currentSplit.trainingDays[i].exerciseNames.length !=
+          splitDayExerciseIndices[i].length) {
+        print("ERROR - exercise names isn't the right length");
+        return;
+      }
+      for (int j = 0; j < splitDayExerciseIndices[i].length; j++) {
+        if (splitDayExerciseIndices[i][j] == -1 || splitDayExerciseIndices[i][j] >= muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]!.length) {
+          splitDayExerciseIndices[i][j] = 0; // Reset if out of bounds
+        }
+        if (currentSplit.trainingDays[i].exerciseNames[j] !=
+            muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]![
+                    splitDayExerciseIndices[i][j]]
+                .name) {
+          // Set to updated index due to popularity chagne
+          print(
+              '${currentSplit.trainingDays[i].exerciseNames[j]} changed index due to a popularity change');
+          splitDayExerciseIndices[i][j] =
+              muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]!
+                  .indexWhere((element) =>
+                      element.name ==
+                      currentSplit.trainingDays[i].exerciseNames[j]);
+        }
+      }
+    }
+
     // _currentSplitString = _currentSplitString.substring(2); // remove first two square brackets
     // List<String> muscleGroupsPerDay = _currentSplitString.split("[");
     // List<List<String>> muscleGroupsforAllDays = [];
@@ -1170,12 +1205,28 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // Storing the Split object in SharedPreferences
   void storeSplitInSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    for (int i = 0; i < splitDayExerciseIndices.length; i++) {
+      // print(currentSplit.trainingDays[i].exerciseNames.length);
+      // print(splitDayExerciseIndices[i].length);
+      // if (currentSplit.trainingDays[i].exerciseNames.length !=
+      //     splitDayExerciseIndices[i].length) {
+      //   print("ERROR - exercise names isn't the right length");
+      //   // currentSplit.trainingDays[i].exerciseNames =
+      //   //     List.filled(splitDayExerciseIndices[i].length, '');
+      // }
+      for (int j = 0; j < splitDayExerciseIndices[i].length; j++) {
+        currentSplit.trainingDays[i].exerciseNames[j] =
+            muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]![
+                    splitDayExerciseIndices[i][j]]
+                .name;
+      }
+    }
     String splitJson = json.encode(currentSplit.toJson());
     await prefs.setString('split', splitJson);
   }
 
 // Retrieving the Split object from SharedPreferences
-  void retrieveSplitFromSharedPreferences() async {
+  Future<void> retrieveSplitFromSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? splitJson = prefs.getString('split');
     if (splitJson != null) {
@@ -3355,7 +3406,8 @@ int binarySearchBackwardsClosestIndex(List<double> numbers, double target) {
   return closestIndex;
 }
 
-MaterialStateProperty<EdgeInsetsGeometry?> resolveButtonPaddingProperty(double padding) {
+MaterialStateProperty<EdgeInsetsGeometry?> resolveButtonPaddingProperty(
+    double padding) {
   return MaterialStateProperty.resolveWith<EdgeInsetsGeometry?>(
     (Set<MaterialState> states) {
       // Return the desired EdgeInsets value based on the states

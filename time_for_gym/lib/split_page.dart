@@ -168,9 +168,6 @@ class _GymGoalAndDayOfWeekSelectorState
     //   }
     // }
 
-    appState.storeSplitInSharedPreferences();
-    appState.saveSplitDayExerciseIndicesData(); // Initialize as 0s to be saved
-
     print(appState.currentSplit);
     print(appState.splitDayExerciseIndices);
   }

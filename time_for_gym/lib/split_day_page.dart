@@ -418,7 +418,9 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                       muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
                                           3],
                                       muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          4]);
+                                          4],
+                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                          5]);
 
                                   print(
                                       "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
@@ -495,8 +497,8 @@ class _AddButtonState extends State<AddButton> {
       // Muscle Group - Add first exercise in muscle group
       // 3 sets default
       // Identifier and set name default
-      appState.addTempMuscleGroupToSplit(
-          widget.dayIndex, widget.cardIndex, name, 0, 3, "", "");
+      appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex,
+          name, 0, 3, "", "", appState.muscleGroups[name]![0].name);
     } else {
       // Exercise - Find exercise index of the main muscle group
       int index = exerciseNames.indexOf(name);
@@ -514,14 +516,20 @@ class _AddButtonState extends State<AddButton> {
       } else {
         // 3 sets default
         // Identifier and set name default
+        int exerciseIndex =
+            exercises.indexWhere((element) => element.name == name);
+        if (exerciseIndex == -1) {
+          exerciseIndex = 0; // If exercise name was changed
+        }
         appState.addTempMuscleGroupToSplit(
             widget.dayIndex,
             widget.cardIndex,
             mainMuscleGroupName,
-            exercises.indexWhere((element) => element.name == name),
+            exerciseIndex,
             3,
             "",
-            "");
+            "",
+            exercises[exerciseIndex].name);
       }
     }
   }
@@ -636,8 +644,8 @@ class _AddButtonState extends State<AddButton> {
                 TypeAheadField<String>(
                   textFieldConfiguration: TextFieldConfiguration(
                     focusNode: focusNode,
-                    style:  theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground),
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(color: theme.colorScheme.onBackground),
                     controller: searchController,
                     decoration: InputDecoration(
                       labelText: 'Search',
@@ -716,10 +724,10 @@ class _AddButtonState extends State<AddButton> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                      findMuscleGroupOrExercise(
-                          widget.appState, searchQuery, allExercises);
-                    });
-                    Navigator.of(context).pop();
+                    findMuscleGroupOrExercise(
+                        widget.appState, searchQuery, allExercises);
+                  });
+                  Navigator.of(context).pop();
                 },
                 child: Text(
                   'Add',
@@ -1178,109 +1186,6 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     }
   }
 
-  bool exerciseSatisfiesMusclesWorked(
-    List<String> musclesWorked,
-    List<int> musclesWorkedActivation,
-    List<String> musclesWorkedCheck,
-    List<int> targetActivation,
-    List<String> resourcesNeeded,
-    // Map<String, int> resourcesAvailable,
-    Exercise exercise,
-    Gym? gym,
-  ) {
-    // if (musclesWorked.length != musclesWorkedCheck.length) {
-    //   return false;
-    // }
-    // int count = 0;
-    for (int i = 0; i < musclesWorkedCheck.length; i++) {
-      // Check for exclusion of muscle group
-      if (targetActivation[i] == 0) {
-        if (musclesWorked.contains(musclesWorkedCheck[i])) {
-          return false;
-        } else {
-          continue;
-        }
-      }
-      // If muscles worked isn't long enough to fit requirements
-      if (i >= musclesWorked.length || i >= musclesWorkedActivation.length) {
-        return false;
-      }
-      // If same muscle in same order
-      if (musclesWorked[i] == musclesWorkedCheck[i]) {
-        // If sufficient activation, continue
-        if (musclesWorkedActivation[i] == targetActivation[i]) {
-          continue;
-        } else {
-          return false;
-        }
-      } else {
-        int muscleIndex = musclesWorked.indexOf(musclesWorkedCheck[i]);
-        // If target muscle is not in musclesWorked
-        if (muscleIndex == -1) {
-          return false;
-        }
-        // If target muscle has sufficient activation, continue
-        if (musclesWorkedActivation[muscleIndex] == targetActivation[i]) {
-          continue;
-        } else {
-          return false;
-        }
-      }
-    }
-    // for (int i = 0; i < musclesWorked.length; i++) {
-    //   if (i >= musclesWorkedCheck.length || i >= targetActivation.length) {
-    //     break;
-    //   }
-    //   String muscle = musclesWorked[i];
-    //   int activation = musclesWorkedActivation[i];
-    //   if (musclesWorked[i] == musclesWorkedCheck[i] &&
-    //       musclesWorkedActivation[i] == targetActivation[i]) {
-    //     count++;
-    //     continue;
-    //   }
-    //   // If target activation is greater than the muscles activation
-    //   int muscleIndex = musclesWorkedCheck.indexOf(muscle);
-    //   if (muscleIndex == -1) {
-    //     // Could be a filler muscle
-    //     if (targetActivation[i] != 0) {
-    //       return false;
-    //     } else {
-    //       // Target activation is 0, indicating that there is no muscle target, which is good
-    //       continue;
-    //     }
-    //   }
-    //   if (activation != targetActivation[muscleIndex]) {
-    //     return false;
-    //   }
-    //   count++;
-    //   // if (musclesWorked[i] != musclesWorkedCheck[i] ||
-    //   //     musclesWorkedActivation[i] != musclesWorkedActivationCheck[i]) {
-    //   //   return false;
-    //   // }
-    // }
-    // // Didn't go through all of the checks
-    // if (count < musclesWorkedCheck.length) {
-    //   return false;
-    // }
-    if (gym == null) {
-      // Assume user gym supports exercise if not initialized yet
-      return true;
-    }
-    return gym.canSupportExercise(exercise);
-  }
-
-  bool exerciseIsPreferredResource(
-      Exercise theExercise, String? preferredResource) {
-    if (preferredResource == null) {
-      return true;
-    }
-    if (theExercise.resourcesRequired != null &&
-        theExercise.resourcesRequired!.contains(preferredResource)) {
-      return true;
-    }
-    return false;
-  }
-
   void showPopUpSimilarExercises(BuildContext context, MyAppState appState,
       StateSetter setSplitDayPageState, Exercise previousExercise) {
     final theme = Theme.of(context);
@@ -1697,18 +1602,18 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           appState,
           widget.split.trainingDays[widget.dayIndex]
               .exerciseIdentifiers[widget.splitDayCardIndex],
-          appState.userGym);
+          appState.userGym,
+          widget.exerciseIndices,
+          widget.dayIndex,
+          widget.splitDayCardIndex,
+          widget.split);
+      // Update exercise names
+      appState.storeSplitInSharedPreferences();
+      // Save new indices
+      appState.saveSplitDayExerciseIndicesData();
     }
     currentExercise = appState.muscleGroups[widget.muscleGroup]![
         widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex]];
-
-    if (widget.dayIndex == 6 &&
-        widget.splitDayCardIndex ==
-            widget.exerciseIndices[widget.dayIndex].length) {
-      appState.storeSplitInSharedPreferences();
-      appState
-          .saveSplitDayExerciseIndicesData(); // Initialize as 0s to be saved
-    }
 
     // Reset exercise index if out of bounds
     if (widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] >=
@@ -2657,236 +2562,6 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
       );
     }
   }
-
-  void addExerciseToSplit(MyAppState appState, String identifier, Gym? gym) {
-    // String identifier = widget.split.trainingDays[widget.dayIndex]
-    //     .exerciseIdentifiers[widget.splitDayCardIndex];
-    // Gym? gym = appState.userGym;
-    // Map<String, int> resourcesAvailable;
-
-    // if (widget.split.equipmentLevel == 2) {
-    //   resourcesAvailable = appState.userGym != null
-    //       ? appState.userGym!.resourcesAvailable
-    //       : {};
-    // } else {
-    //   resourcesAvailable = {};
-    //   resourcesAvailable['Dumbbells'] = 1;
-    // }
-
-    switch (identifier) {
-      case 'chestPress':
-        // Add most popular chest press
-        findValidExercise(appState, gym, 'Chest',
-            ['Mid Chest', 'Lower Chest', 'Front Delts'], [3, 2, 1], null);
-        break;
-      case 'upperChestPress':
-        findValidExercise(appState, gym, 'Chest',
-            ['Upper Chest', 'Front Delts'], [3, 2], null);
-        break;
-      case 'cableUpperChest':
-        findValidExercise(appState, gym, 'Chest',
-            ['Upper Chest', 'Front Delts'], [3, 0], 'Cable');
-        break;
-      case 'cableLowerChest':
-        findValidExercise(
-            appState, gym, 'Chest', ['Lower Chest'], [3], 'Cable');
-        break;
-      case 'shoulderPressMachine':
-        findValidExercise(appState, gym, 'Front Delts',
-            ['Front Delts', 'Triceps'], [3, 1], 'Machine');
-        break;
-      case 'cableFrontRaise':
-        findValidExercise(appState, gym, 'Front Delts',
-            ['Front Delts', 'Biceps'], [3, 1], 'Cable');
-        break;
-      case 'dumbbellLateralRaise':
-        findValidExercise(
-            appState, gym, 'Side Delts', ['Side Delts'], [3], 'Dumbbells');
-        break;
-      case 'cableLateralRaise':
-        findValidExercise(
-            appState, gym, 'Side Delts', ['Side Delts'], [3], 'Cable');
-        break;
-      case 'cableTricepPushdown':
-        findValidExercise(
-            appState, gym, 'Triceps', ['Tricep Lateral Head'], [3], 'Cable');
-        break;
-      case 'overheadTricep':
-        findValidExercise(
-            appState, gym, 'Triceps', ['Tricep Long Head'], [3], 'Cable');
-        break;
-      case 'latPulldown':
-        findValidExercise(appState, gym, 'Back', ['Lats'], [3], null);
-        break;
-      case 'chestSupportedUpperBackRow':
-        findValidExercise(
-            appState, gym, 'Back', ['Upper Back'], [3], 'Machine');
-        break;
-      case 'hammerCurl':
-        findValidExercise(appState, gym, 'Biceps', ['Brachialis'], [3], null);
-        break;
-      case 'regularCurl':
-        findValidExercise(appState, gym, 'Biceps',
-            ['Bicep Long Head', 'Bicep Short Head'], [3, 3], null);
-        break;
-      case 'longHeadCurl':
-        findValidExercise(appState, gym, 'Biceps',
-            ['Bicep Long Head', 'Bicep Short Head'], [3, 2], null);
-        break;
-      case 'shortHeadCurl':
-        findValidExercise(appState, gym, 'Biceps',
-            ['Bicep Short Head', 'Bicep Long Head'], [3, 2], null);
-        break;
-      case 'rearDelt':
-        findValidExercise(
-            appState, gym, 'Rear Delts', ['Rear Delts'], [3], null);
-        break;
-      case 'upperAbs':
-        findValidExercise(appState, gym, 'Abs', ['Upper Abs'], [3], null);
-        break;
-      case 'lowerAbs':
-        findValidExercise(appState, gym, 'Abs', ['Lower Abs'], [3], null);
-        break;
-      case 'gluteSquat':
-        findValidExercise(
-            appState, gym, 'Glutes', ['Glutes', 'Quads'], [3, 3], null);
-        break;
-      case 'gluteRDL':
-        findValidExercise(
-            appState, gym, 'Glutes', ['Glutes', 'Hamstrings'], [3, 2], null);
-        break;
-      case 'quadSquat':
-        findValidExercise(
-            appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 2], null);
-        break;
-      case 'legExtension':
-        findValidExercise(
-            appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 0], null);
-        break;
-      case 'seatedLegCurl':
-        findValidExercise(appState, gym, 'Hamstrings', ['Hamstrings', 'Glutes'],
-            [3, 0], 'Machine');
-        break;
-      case 'calf':
-        findValidExercise(appState, gym, 'Calves', ['Calves'], [3], 'Machine');
-        break;
-      // Case "" or any other case
-      default:
-        widget.exerciseIndices[widget.dayIndex].add(0);
-        break;
-    }
-    print("added exercise index for card ${widget.splitDayCardIndex}");
-  }
-
-  void findValidExercise(
-    MyAppState appState,
-    Gym? gym,
-    String muscleGroupToCheck,
-    List<String> musclesWorkedCheck,
-    List<int> targetActivation,
-    String? preferredResource,
-  ) {
-    // At-home exercises only, simply compare first major muscle group (muscleGroupToCheck)
-    if (widget.split.equipmentLevel != 2) {
-      if (widget.split.equipmentLevel == 0) {
-        // Bodyweight-only
-        for (int i = 0;
-            i < appState.muscleGroups[muscleGroupToCheck]!.length;
-            i++) {
-          Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
-          if (element.resourcesRequired != null &&
-              element.resourcesRequired!.isNotEmpty &&
-              (element.resourcesRequired![0] == 'None' ||
-                  element.resourcesRequired![0] == 'Bodyweight' ||
-                  element.resourcesRequired![0] == 'Pull-Up Bar' ||
-                  element.resourcesRequired![0] == 'Parallel Bars')) {
-            widget.exerciseIndices[widget.dayIndex].add(i);
-            return;
-          }
-        }
-        // Add 0 if no index was found
-        widget.exerciseIndices[widget.dayIndex].add(0);
-      } else {
-        // == 1, Dumbbells & Bodyweight exercises
-        int? savedIndex;
-        bool savedBodyweight = false;
-        for (int i = 0;
-            i < appState.muscleGroups[muscleGroupToCheck]!.length;
-            i++) {
-          Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
-          // Just check if the first target muscle groups are the same for dumbbell or bodyweight exercises
-          if (element.resourcesRequired != null &&
-              element.resourcesRequired!.isNotEmpty &&
-              element.musclesWorked.isNotEmpty &&
-              musclesWorkedCheck.isNotEmpty &&
-              element.musclesWorked.contains(musclesWorkedCheck[0]) &&
-              element.musclesWorkedActivation[
-                      element.musclesWorked.indexOf(musclesWorkedCheck[0])] >=
-                  2) {
-            if (element.musclesWorkedActivation[
-                    element.musclesWorked.indexOf(musclesWorkedCheck[0])] ==
-                3) {
-              // element.musclesWorked[0] == musclesWorkedCheck[0]) {
-              // Prefer dumbbells over bodyweight exercises
-              if (element.resourcesRequired!.contains('Dumbbells')) {
-                widget.exerciseIndices[widget.dayIndex].add(i);
-                return;
-              } else if (element.resourcesRequired![0] == 'None' ||
-                  element.resourcesRequired![0] == 'Bodyweight' ||
-                  element.resourcesRequired![0] == 'Pull-Up Bar' ||
-                  element.resourcesRequired![0] == 'Parallel Bars') {
-                if (savedIndex == null) {
-                  savedBodyweight = true;
-                }
-                savedIndex ??= i;
-              }
-            } else if (element.resourcesRequired!.contains('Dumbbells') ||
-                element.resourcesRequired![0] == 'None' ||
-                element.resourcesRequired![0] == 'Bodyweight' ||
-                element.resourcesRequired![0] == 'Pull-Up Bar' ||
-                element.resourcesRequired![0] == 'Parallel Bars') {
-              // activation == 2
-              // Preferable save dumbbell exercise over bodyweight one
-              if (savedBodyweight) {
-                savedIndex = i;
-                savedBodyweight = false;
-              } else {
-                savedIndex ??= i;
-              }
-            }
-          }
-        }
-        // Add 0 if no index was found
-        widget.exerciseIndices[widget.dayIndex].add(savedIndex ?? 0);
-      }
-      return;
-    } else {
-      int? savedIndex;
-      for (int i = 0;
-          i < appState.muscleGroups[muscleGroupToCheck]!.length;
-          i++) {
-        Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
-        if (exerciseSatisfiesMusclesWorked(
-          element.musclesWorked,
-          element.musclesWorkedActivation,
-          musclesWorkedCheck,
-          targetActivation,
-          element.resourcesRequired ?? [],
-          element,
-          gym,
-        )) {
-          if (exerciseIsPreferredResource(element, preferredResource)) {
-            widget.exerciseIndices[widget.dayIndex].add(i);
-            return;
-          } else {
-            savedIndex ??= i; // If null, save first satisfied index
-          }
-        }
-      }
-      // Add 0 if no index was found
-      widget.exerciseIndices[widget.dayIndex].add(savedIndex ?? 0);
-    }
-  }
 }
 
 class OuterScroll extends StatelessWidget {
@@ -2904,4 +2579,449 @@ class OuterScroll extends StatelessWidget {
       return ListView(children: children);
     }
   }
+}
+
+void addExerciseToSplit(
+  MyAppState appState,
+  String identifier,
+  Gym? gym,
+  List<List<int>> exerciseIndices, // Add exerciseIndices as a parameter
+  int dayIndex, // Add dayIndex as a parameter
+  int splitDayCardIndex, // Add splitDayCardIndex as a parameter
+  Split split,
+) {
+  // String identifier = widget.split.trainingDays[widget.dayIndex]
+  //     .exerciseIdentifiers[widget.splitDayCardIndex];
+  // Gym? gym = appState.userGym;
+  // Map<String, int> resourcesAvailable;
+
+  // if (widget.split.equipmentLevel == 2) {
+  //   resourcesAvailable = appState.userGym != null
+  //       ? appState.userGym!.resourcesAvailable
+  //       : {};
+  // } else {
+  //   resourcesAvailable = {};
+  //   resourcesAvailable['Dumbbells'] = 1;
+  // }
+
+  switch (identifier) {
+    case 'chestPress':
+      // Add most popular chest press
+      findValidExercise(
+          appState,
+          gym,
+          'Chest',
+          ['Mid Chest', 'Lower Chest', 'Front Delts'],
+          [3, 2, 1],
+          null,
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'upperChestPress':
+      findValidExercise(appState, gym, 'Chest', ['Upper Chest', 'Front Delts'],
+          [3, 2], null, exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'cableUpperChest':
+      findValidExercise(appState, gym, 'Chest', ['Upper Chest', 'Front Delts'],
+          [3, 0], 'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'cableLowerChest':
+      findValidExercise(appState, gym, 'Chest', ['Lower Chest'], [3], 'Cable',
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'shoulderPressMachine':
+      findValidExercise(
+          appState,
+          gym,
+          'Front Delts',
+          ['Front Delts', 'Triceps'],
+          [3, 1],
+          'Machine',
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'cableFrontRaise':
+      findValidExercise(appState, gym, 'Front Delts', ['Front Delts', 'Biceps'],
+          [3, 1], 'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'dumbbellLateralRaise':
+      findValidExercise(appState, gym, 'Side Delts', ['Side Delts'], [3],
+          'Dumbbells', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'cableLateralRaise':
+      findValidExercise(appState, gym, 'Side Delts', ['Side Delts'], [3],
+          'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'cableTricepPushdown':
+      findValidExercise(appState, gym, 'Triceps', ['Tricep Long Head'], [3],
+          'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'overheadTricep':
+      findValidExercise(appState, gym, 'Triceps', ['Tricep Lateral Head'], [3],
+          'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'latPulldown':
+      findValidExercise(appState, gym, 'Back', ['Lats', 'Lower Back'], [3, 0],
+          null, exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'chestSupportedUpperBackRow':
+      findValidExercise(appState, gym, 'Back', ['Upper Back'], [3], 'Machine',
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'hammerCurl':
+      findValidExercise(appState, gym, 'Biceps', ['Brachialis'], [3], null,
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'regularCurl':
+      findValidExercise(
+          appState,
+          gym,
+          'Biceps',
+          ['Bicep Long Head', 'Bicep Short Head'],
+          [3, 3],
+          null,
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'longHeadCurl':
+      findValidExercise(
+          appState,
+          gym,
+          'Biceps',
+          ['Bicep Long Head', 'Bicep Short Head'],
+          [3, 2],
+          null,
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'shortHeadCurl':
+      findValidExercise(
+          appState,
+          gym,
+          'Biceps',
+          ['Bicep Short Head', 'Bicep Long Head'],
+          [3, 2],
+          null,
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'rearDelt':
+      findValidExercise(appState, gym, 'Rear Delts', ['Rear Delts'], [3], null,
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'upperAbs':
+      findValidExercise(appState, gym, 'Abs', ['Upper Abs'], [3], null,
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'lowerAbs':
+      findValidExercise(appState, gym, 'Abs', ['Lower Abs'], [3], null,
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'gluteSquat':
+      findValidExercise(appState, gym, 'Glutes', ['Glutes', 'Quads'], [3, 3],
+          null, exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'gluteRDL':
+      findValidExercise(appState, gym, 'Glutes', ['Glutes', 'Hamstrings'],
+          [3, 2], null, exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'quadSquat':
+      findValidExercise(appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 2],
+          'Machine', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'legExtension':
+      findValidExercise(appState, gym, 'Quads', ['Quads', 'Glutes'], [3, 0],
+          null, exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    case 'seatedLegCurl':
+      findValidExercise(
+          appState,
+          gym,
+          'Hamstrings',
+          ['Hamstrings', 'Glutes'],
+          [3, 0],
+          'Machine',
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+    case 'calf':
+      findValidExercise(appState, gym, 'Calves', ['Calves'], [3], 'Machine',
+          exerciseIndices, dayIndex, splitDayCardIndex, split);
+      break;
+    default:
+      // Case "" or any other case
+      // Focused exercises, or shoulder day
+      String subMuscleGroup;
+      switch (split.trainingDays[dayIndex].muscleGroups[splitDayCardIndex]) {
+        case 'Chest':
+          subMuscleGroup = 'Mid Chest';
+          break;
+        case 'Back':
+          subMuscleGroup = 'Lats';
+          break;
+        case 'Biceps':
+          subMuscleGroup = 'Bicep Long Head';
+          break;
+        case 'Triceps':
+          subMuscleGroup = 'Tricep Long Head';
+          break;
+        case 'Abs':
+          subMuscleGroup = 'Upper Abs';
+          break;
+        default:
+          subMuscleGroup =
+              split.trainingDays[dayIndex].muscleGroups[splitDayCardIndex];
+          break;
+      }
+      findValidExercise(
+          appState,
+          gym,
+          split.trainingDays[dayIndex].muscleGroups[splitDayCardIndex],
+          [subMuscleGroup],
+          [3],
+          null,
+          exerciseIndices,
+          dayIndex,
+          splitDayCardIndex,
+          split);
+      break;
+  }
+  print("added exercise index for card $splitDayCardIndex");
+}
+
+void findValidExercise(
+  MyAppState appState,
+  Gym? gym,
+  String muscleGroupToCheck,
+  List<String> musclesWorkedCheck,
+  List<int> targetActivation,
+  String? preferredResource,
+  List<List<int>> exerciseIndices, // Add exerciseIndices as a parameter
+  int dayIndex, // Add dayIndex as a parameter
+  int splitDayCardIndex, // Add splitDayCardIndex as a parameter
+  Split split,
+) {
+  // At-home exercises only, simply compare first major muscle group (muscleGroupToCheck)
+  int? savedIndex;
+  bool savedCalisthenicExercise = false;
+  bool foundGeneralNonCalisthenic = false;
+  if (split.equipmentLevel != 2) {
+    if (split.equipmentLevel == 0) {
+      // Bodyweight-only
+      for (int i = 0;
+          i < appState.muscleGroups[muscleGroupToCheck]!.length;
+          i++) {
+        Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+        // Just check if the first target muscle group is the same for bodyweight exercises
+        if (element.resourcesRequired != null &&
+            element.resourcesRequired!.isNotEmpty &&
+            (element.resourcesRequired![0] == 'None' ||
+                element.resourcesRequired![0] == 'Bodyweight' ||
+                element.resourcesRequired![0] == 'Pull-Up Bar' || // Add bench?
+                element.resourcesRequired![0] == 'Parallel Bars')) {
+          if (element.musclesWorked.isNotEmpty &&
+              musclesWorkedCheck.isNotEmpty &&
+              element.musclesWorked[0] == musclesWorkedCheck[0]) {
+            if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
+                element.resourcesRequired![0] == 'Parallel Bars' &&
+                    !savedCalisthenicExercise) {
+              savedIndex = i;
+              savedCalisthenicExercise = true;
+            } else {
+              exerciseIndices[dayIndex].add(i);
+              return;
+            }
+          } else if (!savedCalisthenicExercise) {
+            // Doesn't satisfy the target sub muscle, but still is eligible to be saved
+            if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
+                element.resourcesRequired![0] == 'Parallel Bars') {
+              if (!foundGeneralNonCalisthenic) {
+                savedIndex ??= i;
+              }
+            } else if (!foundGeneralNonCalisthenic) {
+              savedIndex = i;
+              foundGeneralNonCalisthenic = true;
+            }
+          }
+        }
+      }
+      // Add 0 if no index was found
+      exerciseIndices[dayIndex].add(savedIndex ?? 0);
+    } else {
+      // == 1, Dumbbells & Bodyweight exercises
+      int? savedIndex;
+      // bool savedBodyweight = false;
+      for (int i = 0;
+          i < appState.muscleGroups[muscleGroupToCheck]!.length;
+          i++) {
+        Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+        if (element.resourcesRequired != null &&
+            element.resourcesRequired!.isNotEmpty &&
+            element.musclesWorked.isNotEmpty &&
+            musclesWorkedCheck.isNotEmpty) {
+          bool allMusclesHit = true;
+          for (int j = 0; j < musclesWorkedCheck.length; j++) {
+            if (element.musclesWorked.contains(musclesWorkedCheck[j]) &&
+                element.musclesWorkedActivation[
+                        element.musclesWorked.indexOf(musclesWorkedCheck[j])] ==
+                    targetActivation[j]) {
+              continue;
+            } else {
+              allMusclesHit = false;
+              break;
+            }
+          }
+          if (allMusclesHit) {
+            // if (element.musclesWorkedActivation[
+            //       element.musclesWorked.indexOf(musclesWorkedCheck[0])] ==
+            //   3) {
+            // Prefer dumbbells over bodyweight exercises
+            if (element.resourcesRequired!.contains('Dumbbells')) {
+              exerciseIndices[dayIndex].add(i);
+              return;
+            } else if (element.resourcesRequired![0] == 'None' ||
+                element.resourcesRequired![0] == 'Bodyweight' ||
+                element.resourcesRequired![0] == 'Pull-Up Bar' ||
+                element.resourcesRequired![0] == 'Parallel Bars') {
+              // if (savedIndex == null) {
+              //   savedBodyweight = true;
+              // }
+              savedIndex ??= i;
+            }
+            // } else if (element.resourcesRequired!.contains('Dumbbells') ||
+            //     element.resourcesRequired![0] == 'None' ||
+            //     element.resourcesRequired![0] == 'Bodyweight' ||
+            //     element.resourcesRequired![0] == 'Pull-Up Bar' ||
+            //     element.resourcesRequired![0] == 'Parallel Bars') {
+            //   // activation == 2
+            //   // Preferable save dumbbell exercise over bodyweight one
+            //   if (savedBodyweight) {
+            //     savedIndex = i;
+            //     savedBodyweight = false;
+            //   } else {
+            //     savedIndex ??= i;
+            //   }
+            // }
+          }
+        }
+      }
+      // Add 0 if no index was found
+      exerciseIndices[dayIndex].add(savedIndex ?? 0);
+    }
+    return;
+  } else {
+    int? savedIndex;
+    for (int i = 0;
+        i < appState.muscleGroups[muscleGroupToCheck]!.length;
+        i++) {
+      Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
+      if (exerciseSatisfiesMusclesWorked(
+        element.musclesWorked,
+        element.musclesWorkedActivation,
+        musclesWorkedCheck,
+        targetActivation,
+        element.resourcesRequired ?? [],
+        element,
+        gym,
+      )) {
+        if (exerciseIsPreferredResource(element, preferredResource)) {
+          exerciseIndices[dayIndex].add(i);
+          return;
+        } else {
+          savedIndex ??= i; // If null, save first satisfied index
+        }
+      }
+    }
+    // Add 0 if no index was found
+    exerciseIndices[dayIndex].add(savedIndex ?? 0);
+  }
+}
+
+bool exerciseSatisfiesMusclesWorked(
+  List<String> musclesWorked,
+  List<int> musclesWorkedActivation,
+  List<String> musclesWorkedCheck,
+  List<int> targetActivation,
+  List<String> resourcesNeeded,
+  // Map<String, int> resourcesAvailable,
+  Exercise exercise,
+  Gym? gym,
+) {
+  // if (musclesWorked.length != musclesWorkedCheck.length) {
+  //   return false;
+  // }
+  // int count = 0;
+  for (int i = 0; i < musclesWorkedCheck.length; i++) {
+    // Check for exclusion of muscle group
+    if (targetActivation[i] == 0) {
+      if (musclesWorked.contains(musclesWorkedCheck[i])) {
+        return false;
+      } else {
+        continue;
+      }
+    }
+    // If muscles worked isn't long enough to fit requirements
+    if (i >= musclesWorked.length || i >= musclesWorkedActivation.length) {
+      return false;
+    }
+    // If same muscle in same order
+    if (musclesWorked[i] == musclesWorkedCheck[i]) {
+      // If sufficient activation, continue
+      if (musclesWorkedActivation[i] == targetActivation[i]) {
+        continue;
+      } else {
+        return false;
+      }
+    } else {
+      int muscleIndex = musclesWorked.indexOf(musclesWorkedCheck[i]);
+      // If target muscle is not in musclesWorked
+      if (muscleIndex == -1) {
+        return false;
+      }
+      // If target muscle has sufficient activation, continue
+      if (musclesWorkedActivation[muscleIndex] == targetActivation[i]) {
+        continue;
+      } else {
+        return false;
+      }
+    }
+  }
+  if (gym == null) {
+    // Assume user gym supports exercise if not initialized yet
+    return true;
+  }
+  return gym.canSupportExercise(exercise);
+}
+
+bool exerciseIsPreferredResource(
+    Exercise theExercise, String? preferredResource) {
+  if (preferredResource == null) {
+    // Don't prefer bodyweight exercises, unless for abs
+    if (theExercise.mainMuscleGroup != 'Abs' &&
+        theExercise.resourcesRequired != null &&
+        (theExercise.resourcesRequired!.contains('None') ||
+            theExercise.resourcesRequired!.contains('Pull-Up Bar') ||
+            theExercise.resourcesRequired!.contains('Parallel Bars'))) {
+      return false;
+    }
+    // Prefer any exercise
+    return true;
+  }
+  if (theExercise.resourcesRequired != null &&
+      theExercise.resourcesRequired!.contains(preferredResource)) {
+    return true;
+  }
+  return false;
 }
