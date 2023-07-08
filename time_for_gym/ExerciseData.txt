@@ -127,6 +127,7 @@ Leg Press|Sit on a leg press machine with your back against the backrest and fee
 Pendulum Squat|Stand inside a pendulum squat machine, position your feet shoulder-width apart and slightly forward, hold onto the handles for stability, release the weight by unlocking the safety mechanism, squat down by bending your knees and hips, keeping your back straight, descend until your thighs are parallel to the floor, then push through your heels and extend your knees and hips to return to the starting position.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|Machine|0
 Bodyweight Bulgarian Split Squat|Stand in a split stance with one foot forward and the other foot elevated on an elevated surface you. Lower your body by bending your front knee and dropping your back knee towards the ground. Push back up to the starting position and repeat on the other side.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|None|1
 Bodyweight Lunge|Start in a standing position, take a step forward with one foot, and lower your body until both knees are bent at a 90-degree angle. Push back up and repeat on the other side.|Quads:3, Glutes:2, Hamstrings:1|Video Link|0.0|None|1
+Sissy Squat|Hold on to something and lower your body by bending your knees and leaning back, then push through your heels to extend your knees and return to the starting position. For extra difficulty, these can be done with a smith machine or some type of machine squat.|Quads:3|Video Link|0.0|None|1
 
 MuscleGroup: Hamstrings
 
