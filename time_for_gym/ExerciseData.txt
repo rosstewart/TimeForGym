@@ -88,6 +88,7 @@ Dumbbell Lateral Raise|Leading with your elbows, raise the dumbbells up until th
 Cable Lateral Raise|Attach a D-handle to a cable at hip height, stand sideways to the cable, raise the handle out to the side until it reaches shoulder height, and return to the starting position with control.|Side Delts:3, Traps:1|Video Link|0.0|Cable|1
 Incline Dumbbell Y-Raise|Lie face down on an incline bench, holding light dumbbells with your arms straight and palms facing in. Lift your arms up and out to form a "Y" shape with your body, pause briefly, then lower the weights back down.|Side Delts:3, Traps:1|Video Link|0.0|Dumbbells,Bench|1
 Machine Lateral Raise|Sit on a lateral raise machine with your back against the backrest and place your forearms on the pads, lift your forearms out to the sides until they are parallel to the ground, then slowly lower them back down to the starting position.|Side Delts:3, Traps:1|Video Link|0.0|Machine|1|Lateral Raise
+Towel Lateral Raise|Stand with your side facing a wall and hold a towel against the wall with your forearm or hand. Keep your elbow still and raise your arm laterally until it's parallel to the ground, using the towel for stability. Lower your arm back down slowly, engaging your side deltoids throughout the movement.|Side Delts:3, Traps:1|Video Link|0.0|None|1
 
 MuscleGroup: Rear Delts
 
