@@ -1,19 +1,19 @@
 MuscleGroup: Chest
 
 Barbell Bench Press|Lie down on bench, grip the bar, lower to your chest, and press up.|chestPress|https://youtu.be/rT7DgCr-3pg|1.0|Barbell,Bench|0
-Cable Chest Fly|Bring two cables together at chest height, squeeze your chest.|overallChest|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
-High to Low Cable Fly|Bring two high cables together, move your arms down and squeeze your chest.|Lower Chest:3, Mid Chest:2|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
-Low to High Cable Fly|Bring two low cables together, move your arms up and squeeze your chest.|Upper Chest:3, Mid Chest:2|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
+Cable Chest Fly|Bring two cables together at chest height, squeeze your chest.|midChestFly|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
+High to Low Cable Fly|Bring two high cables together, move your arms down and squeeze your chest.|Lower Chest:3, Mid Chest:2, Front Delts:1, Biceps:1|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
+Low to High Cable Fly|Bring two low cables together, move your arms up and squeeze your chest.|Upper Chest:3, Mid Chest:2, Front Delts:1, Biceps:1|https://youtu.be/WEM9FCIPlxQ|0.75|Cable|1
 Incline Barbell Bench|Lie down on the incline bench, grip the bar, lower to your chest, and press up.|inclinePress|https://youtu.be/jPLdzuHckI8|0.6|Barbell,Bench|0
 Incline Dumbbell Bench|Lie down on the incline bench and press dummbells, keeping your arms about 45° in front of you.|inclinePress|https://youtu.be/8iPEnn-ltC8|0.7|Dumbbells,Bench|0
-Dumbbell Fly|Lie down on a flat bench with dumbbells, bring them out to the sides, and squeeze your chest.|overallChest|https://youtu.be/eozdVDA78K0|0.7|Dumbbells,Bench|1
+Dumbbell Fly|Lie down on a flat bench with dumbbells, bring them out to the sides, and squeeze your chest.|midChestFly|https://youtu.be/eozdVDA78K0|0.7|Dumbbells,Bench|1
 Dumbbell Bench Press|Lie down on a bench, hold dumbbells at shoulder level, lower them to your chest, and press up.|chestPress|Video Link|0.0|Dumbbells,Bench|0
 Push-Up|Start in a plank position, lower your body by bending your elbows, and push back up.|chestPress|Video Link|0.0|None|1
-Pec Deck|Sit on a pec deck machine with your back against the backrest and grasp the handles, bring the handles together in front of your chest while keeping a slight bend in your elbows, then slowly release them back out to the sides.|overallChest|Video Link|0.0|Machine|1
+Pec Deck|Sit on a pec deck machine with your back against the backrest and grasp the handles, bring the handles together in front of your chest while keeping a slight bend in your elbows, then slowly release them back out to the sides.|midChestFly|Video Link|0.0|Machine|1
 Seated Cable Chest Press|Sit in a bench facing away from a cable machine with the handles at chest level, grab and press the handles forward and bring them together until your arms are fully extended, then slowly release them back to the starting position.|chestPress|Video Link|0.0|Cable,Bench|1
 Machine Chest Press|Sit on a chest press machine with your back against the backrest and grip the handles, push the handles forward until your arms are fully extended, then slowly bring them back to the starting position by bending your elbows.|chestPress|Video Link|0.0|Machine|0|Chest Press
 Dumbbell Pullover|Lie down on a bench with a dumbbell in both hands, extend your arms overhead, and lower the dumbbell behind your head in a controlled manner, then bring it back to the starting position by contracting your chest muscles.|Mid Chest:3, Lower Chest:3, Lats:2|Video Link|0.0|Dumbbells,Bench|1
-Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Upper Chest:3, Mid Chest:2|Video Link|0.0|Dumbbells,Bench|1
+Incline Dumbbell Fly|Lie down on an incline bench with a dumbbell in each hand, extend your arms out to the sides, and bring the dumbbells together in front of your chest, squeezing your chest muscles at the top of the movement.|Upper Chest:3, Mid Chest:2, Front Delts:1, Biceps:1|Video Link|0.0|Dumbbells,Bench|1
 Chest Dip|Use parallel bars, lean forward and lower your body by bending your elbows, and push back up.|lowerPress|Video Link|0.0|Parallel Bars|0
 Decline Barbell Bench|Lie down on a decline bench, grip the bar, lower to your chest, and press up.|lowerPress|Video Link|0.0|Decline Bench Press|0
 Decline Push-Up|Place your feet on an elevated surface and perform push-ups with your body in a decline position.|inclinePress|Video Link|0.0|None|1
@@ -77,8 +77,8 @@ Military Press|Stand with a barbell in front of your shoulders, press it up over
 Arnold Press|Sit and hold dumbbells at shoulder level with palms facing you, press the dumbbells overhead while rotating your palms away from you, and lower them back down with a reverse motion.|seatedShoulderPress|Video Link|0.0|Dumbbells|0
 Dumbbell Front Raise|Hold dumbbells in front of your thighs with palms facing your body, raise the dumbbells straight out in front of you until they reach shoulder height, and lower them back down slowly.|Front Delts:3, Side Delts:1, Biceps:1|Video Link|0.0|Dumbbells|1
 Shoulder Press Machine|Sit on a shoulder press machine with your back against the backrest and grasp the handles, press the handles upward until your arms are fully extended, then slowly lower them back down to the starting position.|seatedShoulderPress|Video Link|0.0|Machine|0|Shoulder Press
-Barbell Front Raise|Stand with a barbell held in front of your thighs, palms facing your body, and raise the barbell in front of you until it reaches shoulder height, then lower it back down in a controlled manner, focusing on engaging your front delts.|Front Delts:3, Side Delts:1, Biceps:1|Video Link|0.0|Barbell|1
-Single-Arm Cable Front Raise|Hold a low cable with a neutral grip, and bring your arm up straight in front of you, without bending your elbow.|Front Delts:3, Side Delts:1, Biceps:1|Video Link|0.0|Cable|1
+Barbell Front Raise|Stand with a barbell held in front of your thighs, palms facing your body, and raise the barbell in front of you until it reaches shoulder height, then lower it back down in a controlled manner, focusing on engaging your front delts.|Front Delts:3, Side Delts:2, Biceps:1|Video Link|0.0|Barbell|1
+Single-Arm Cable Front Raise|Hold a low cable with a neutral grip, and bring your arm up straight in front of you, without bending your elbow.|Front Delts:3, Side Delts:2, Biceps:1|Video Link|0.0|Cable|1
 Pike Push-Up|Start in a downward dog position with your hands on the ground and hips lifted high. Lower your head towards the ground by bending your elbows and then push back up. (Optional - Elevate your feet to increase the difficulty.)|seatedShoulderPress|Video Link|0.0|None|1
 Handstand Push-Up|Kick up into a handstand position against a wall, then lower your body by bending your arms and bring your head towards the ground. Push back up to the starting position.|seatedShoulderPress|Video Link|0.0|None|1
 
