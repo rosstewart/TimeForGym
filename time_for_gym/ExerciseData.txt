@@ -116,7 +116,7 @@ Jump Squat|Perform a bodyweight squat, but explode off the ground with enough fo
 Bodyweight Glute Kickback|Start on all fours with your hands and knees on the ground. Extend one leg straight back, squeezing your glutes at the top of the movement. Lower your leg back down and repeat on the other side. (Optional - Use a resistance band to increase difficulty.)|Glutes:3, Hamstrings:1|Video Link|0.0|None|1
 Standing Glute Abduction|Stand with your feet shoulder-width apart. Lift one leg out to the side as far as possible while keeping your torso upright and your foot pointing forward. Squeeze your glutes at the top of the movement, then lower your leg back down and repeat on the other side.|Glutes:3, Hip Abductors:3|Video Link|0.0|None|1
 Glute Kickback Machine|Extend one leg straight back, squeezing your glutes at the top of the movement. Lower your leg back down and repeat on the other side.|Glutes:3, Hamstrings:1|Video Link|0.0|Machine|1|Glute Kickback
-Hip Abduction-Adduction Machine|Spread your legs apart or together for abduction or adduction, respectively. Hold at the top and lower slowly.|Glutes:3, Hip Abductors:3, Hip Adductors:2|Video Link|0.0|Machine|1|Hip Abduction-Adduction
+Hip Abduction-Adduction Machine|Spread your legs apart or together for abduction or adduction, respectively. Hold at the top and lower slowly.|Glutes:3, Hip Abductors:3, Hip Adductors:3|Video Link|0.0|Machine|1|Hip Abduction-Adduction
 Goblet Squat|Hold a dumbbell or kettlebell close to your chest, squat down by bending your knees and pushing your hips back, then return to the starting position by extending your knees and hips.|Glutes:3, Quads:3, Hamstrings:1, Lower Back:1|Video Link|0.0|Dumbbells|1
 
 MuscleGroup: Quads
