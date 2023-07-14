@@ -24,7 +24,7 @@ class _GymCrowdPageState extends State<GymCrowdPage> {
     // Create a reference to the Firebase Realtime Database
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.headlineSmall!.copyWith(
+    final titleStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 

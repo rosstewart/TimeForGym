@@ -6,17 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:time_for_gym/exercise.dart';
 
 class Gym implements Comparable<Gym> {
-  Gym({
-    required this.name,
-    required this.placeId,
-    required this.formattedAddress,
-    required this.photos,
-    required this.openNow,
-    required this.googleMapsRating,
-    required this.machinesAvailable,
-    required this.resourcesAvailable,
-    required this.url,
-  });
+  Gym(
+      {required this.name,
+      required this.placeId,
+      required this.formattedAddress,
+      required this.photos,
+      // required this.openNow,
+      required this.googleMapsRating,
+      required this.machinesAvailable,
+      required this.resourcesAvailable,
+      required this.url,
+      required this.openingHours,
+      required this.gymUrl,
+      required this.internationalPhoneNumber,
+      required this.priceLevel});
 
   @override
   String toString() {
@@ -24,9 +27,9 @@ class Gym implements Comparable<Gym> {
   }
 
   // Returns null if no openNow data from Google Maps
-  bool? isOpenNow() {
-    return openNow;
-  }
+  // bool? isOpenNow() {
+  //   return openNow;
+  // }
 
   @override
   // Sort from high rating to low rating
@@ -47,41 +50,41 @@ class Gym implements Comparable<Gym> {
   }
 
   // Update name - openNow if any Google Maps data was changed
-  void updateGoogleMapsData(
-      String name,
-      String formattedAddress,
-      // List<Widget> photos,
-      bool? openNow,
-      double? googleMapsRating,
-      String url) {
-    if (this.name != name) {
-      this.name = name;
-    }
-    if (this.formattedAddress != formattedAddress) {
-      this.formattedAddress = formattedAddress;
-    }
-    // Keep photos the same to reduce api requests
-    // if (this.photos.length != photos.length) {
-    //   this.photos = photos;
-    // } else {
-    //   for (Widget photo in photos) {
+  // void updateGoogleMapsData(
+  //     String name,
+  //     String formattedAddress,
+  //     // List<Widget> photos,
+  //     bool? openNow,
+  //     double? googleMapsRating,
+  //     String url) {
+  //   if (this.name != name) {
+  //     this.name = name;
+  //   }
+  //   if (this.formattedAddress != formattedAddress) {
+  //     this.formattedAddress = formattedAddress;
+  //   }
+  //   // Keep photos the same to reduce api requests
+  //   // if (this.photos.length != photos.length) {
+  //   //   this.photos = photos;
+  //   // } else {
+  //   //   for (Widget photo in photos) {
 
-    //   }
-    // }
+  //   //   }
+  //   // }
 
-    // if (this.photos != photos) {
-    //   this.photos = photos;
-    // }
-    if (this.openNow != openNow) {
-      this.openNow = openNow;
-    }
-    if (this.googleMapsRating != googleMapsRating) {
-      this.googleMapsRating = googleMapsRating;
-    }
-    if (this.url != url) {
-      this.url = url;
-    }
-  }
+  //   // if (this.photos != photos) {
+  //   //   this.photos = photos;
+  //   // }
+  //   // if (this.openNow != openNow) {
+  //   //   this.openNow = openNow;
+  //   // }
+  //   if (this.googleMapsRating != googleMapsRating) {
+  //     this.googleMapsRating = googleMapsRating;
+  //   }
+  //   if (this.url != url) {
+  //     this.url = url;
+  //   }
+  // }
 
   bool canSupportExercise(Exercise element) {
     for (String resource in element.resourcesRequired ?? []) {
@@ -121,11 +124,16 @@ class Gym implements Comparable<Gym> {
   String placeId;
   String formattedAddress;
   List<Widget> photos;
-  bool? openNow;
+  // bool? openNow;
   double? googleMapsRating;
   List<Exercise> machinesAvailable;
   Map<String, int> resourcesAvailable;
   String url;
+  String?
+      gymUrl; // url is google maps link, gymUrl is actual gym website (if any)
+  List<String>? openingHours;
+  String? internationalPhoneNumber;
+  int? priceLevel; // 0-3
 }
 
 class GymData {
@@ -138,6 +146,10 @@ class GymData {
   List<String> machinesAvailable;
   Map<String, int> resourcesAvailable;
   String url;
+  String? gymUrl;
+  List<String>? openingHours;
+  String? internationalPhoneNumber;
+  int? priceLevel; // 0-3
 
   GymData(
       this.name,
@@ -148,7 +160,11 @@ class GymData {
       this.googleMapsRating,
       this.machinesAvailable,
       this.resourcesAvailable,
-      this.url);
+      this.url,
+      this.gymUrl,
+      this.openingHours,
+      this.internationalPhoneNumber,
+      this.priceLevel);
 
   Map<String, dynamic> toJson() => {
         'name': name,
@@ -160,5 +176,9 @@ class GymData {
         'machinesAvailable': machinesAvailable,
         'resourcesAvailable': resourcesAvailable,
         'url': url,
+        'gymUrl': gymUrl,
+        'openingHours': openingHours,
+        'internationalPhoneNumber': internationalPhoneNumber,
+        'priceLevel': priceLevel,
       };
 }

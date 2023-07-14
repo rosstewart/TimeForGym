@@ -125,6 +125,7 @@ class _SearchPageState extends State<SearchPage> {
                           }
                         },
                         decoration: InputDecoration(
+                          border: InputBorder.none,
                             icon: Icon(
                               Icons.search,
                               color: theme.colorScheme.primary,

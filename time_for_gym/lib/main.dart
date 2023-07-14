@@ -7,25 +7,29 @@ import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+// import 'package:google_maps_webservice/places.dart';
+// import 'package:flutter/rendering.dart';
 // import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 // import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:connectivity/connectivity.dart';
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
 // import 'package:google_maps_webservice/places.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/gym.dart';
@@ -39,16 +43,45 @@ import 'package:time_for_gym/split_page.dart';
 import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/search_page.dart';
 import 'package:time_for_gym/gym_page.dart';
+import 'package:time_for_gym/auth_page.dart';
 
 // import 'package:time_for_gym/split_exercise_index.dart';
+
+// late final FirebaseApp app;
+// late final FirebaseAuth auth;
+late bool isAuthenticated;
+late User currentUser;
 
 void main() async {
   // GoogleMapsFlutter.init('YOUR_API_KEY');
   WidgetsFlutterBinding.ensureInitialized();
+  // app = ...
   await Firebase.initializeApp(
     name: 'TimeForGym',
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Ideal time to initialize
+  // auth = FirebaseAuth.instanceFor(app: app);
+  // auth.authStateChanges()...
+
+  FirebaseAuth.instance.authStateChanges().listen((User? theUser) {
+    if (theUser == null) {
+      print('User is not previously authenticated');
+      isAuthenticated = false;
+    } else {
+      print('User is previously authenticated');
+      currentUser = theUser;
+      isAuthenticated = true;
+    }
+  });
+
+  FirebaseFirestore.instance.settings = Settings(
+    persistenceEnabled: true, // Enable offline persistence
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+
+  // await auth.useAuthEmulator('localhost', 9099);
+
   runApp(MyApp());
 }
 
@@ -153,7 +186,7 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 }
 
 class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
-  late SharedPreferences _prefs;
+  // late SharedPreferences _prefs;
   String _favoritesString = '';
   // String _currentSplitString = '';
   String _splitDayExerciseIndicesString = '';
@@ -162,8 +195,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   late BannerAd _bannerAd;
   late Widget bannerAdWidget;
 
+  late String authUserId;
+
   // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
+  // late bool isAuthenticated = false;
   bool noInternetInitialization = false;
 
   MyAppState() {
@@ -189,17 +225,103 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     noInternetInitialization = false;
+
+    if (!isAuthenticated) {
+      notifyListeners();
+      return;
+    }
+    await initEverythingAfterAuthentication();
+    // initializeOldFavorites();
+    // initializeFirebase(); // For storing user-reported occupancy data
+    // uploadFolder();
+  }
+
+  // User will be initialized when this is called
+  Future<void> initEverythingAfterAuthentication() async {
+    authUserId = currentUser
+        .uid; // Need user id for muscle group exercise user popularity data
+    print('authentication user id: $authUserId');
     initAds();
-    notifyListeners();
-    await initializeUserID(); // Need user id for muscle group exercise user popularity data
-    await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
+    // notifyListeners();
+    // await initializeUserID(); // Need user id for muscle group exercise user popularity data
+    await getDataFromFirestore(); // Need to initialize firestore strings to initialize favorites in initializeMuscleGroups
+    // await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
     await initializeMuscleGroups();
     await initGyms();
     await initializeGymCount();
+    await initializeDefaultMusclesWorkedImage();
     isInitializing = false;
     notifyListeners();
     // initializeOldFavorites();
     // initializeFirebase(); // For storing user-reported occupancy data
+    // uploadFolder();
+  }
+
+  Future<void> getDataFromFirestore() async {
+    // Create a reference to the user document
+    DocumentReference userRef =
+        FirebaseFirestore.instance.collection('users').doc(authUserId);
+
+    // Get the document snapshot
+    DocumentSnapshot snapshot = await userRef.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Get the data as a Map
+      Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+
+      _favoritesString = userData['favorites'] ?? '';
+      _splitDayExerciseIndicesString =
+          userData['splitDayExerciseIndices'] ?? '';
+      userGymId = userData['userGymId'] ?? '';
+
+      String? splitJson = userData['split'];
+      if (splitJson != null) {
+        Map<String, dynamic> splitMap = json.decode(splitJson);
+        currentSplit = Split.fromJson(splitMap);
+        makeNewSplit = false;
+        print("initialized split: $currentSplit");
+      } else {
+        print("No split saved");
+      }
+      notifyListeners();
+    } else {
+      print('User $authUserId not found');
+    }
+  }
+
+  void storeDataInFirestore() {
+    // Create a reference to the user document
+    DocumentReference userRef =
+        FirebaseFirestore.instance.collection('users').doc(authUserId);
+
+    // Create a map of user data
+    Map<String, dynamic> userData = {
+      'favorites': _favoritesString,
+      'splitDayExerciseIndices': splitDayExerciseIndices
+          .toString(), // TODO? : Store and retrieveas List<List<int>>
+      'split': json.encode(currentSplit.toJson()),
+      'userGymId': userGymId
+    };
+
+    // await _prefs.setString('favorites', _favoritesString);
+    // await _prefs.setString(
+    //     'splitDayExerciseIndices', splitDayExerciseIndices.toString());
+    // Set the user data to the document
+    userRef
+        .set(userData)
+        .then((value) => print('User data stored successfully'))
+        .catchError((error) => print('Failed to store user data: $error'));
+  }
+
+  Future<void> initializeDefaultMusclesWorkedImage() async {
+    final imageData =
+        await rootBundle.load('muscle_group_pictures/muscle_anatomy_2.png');
+    final bytes = Uint8List.view(imageData.buffer);
+    defaultMuscleWorkedImage = img.decodePng(bytes);
+    // Set the missing pixel in the rear left inner calf
+    defaultMuscleWorkedImage?.setPixel(
+        366, 382, img.ColorInt8.rgba(150, 150, 150, 255));
   }
 
   void initAds() {
@@ -234,16 +356,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     print(userGymId);
   }
 
-  Future<void> initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    _favoritesString = _prefs.getString('favorites') ?? '';
-    // _currentSplitString = _prefs.getString('currentSplit') ?? '';
-    _splitDayExerciseIndicesString =
-        _prefs.getString('splitDayExerciseIndices') ?? '';
-    // initializeOldFavorites();
-    userGymId = _prefs.getString('userGymId') ?? '';
-    notifyListeners();
-  }
+  // Future<void> initPrefs() async {
+  // _prefs = await SharedPreferences.getInstance();
+  // _favoritesString = _prefs.getString('favorites') ?? '';
+  // _currentSplitString = _prefs.getString('currentSplit') ?? '';
+  // _splitDayExerciseIndicesString =
+  //     _prefs.getString('splitDayExerciseIndices') ?? '';
+  // initializeOldFavorites();
+  // userGymId = _prefs.getString('userGymId') ?? '';
+  //   notifyListeners();
+  // }
 
   // String get favoritesString => _favoritesString;
 
@@ -265,7 +387,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     for (Exercise exercise in favoriteExercises) {
       // name-muscleGroup,name-muscleGroup,etc.
       favoriteExercisesAsString +=
-          "${exercise.toString()}-${exercise.mainMuscleGroup},";
+          "${exercise.toString()}=${exercise.mainMuscleGroup},";
     }
     if (favoriteExercisesAsString.isNotEmpty) {
       // Remove last comma
@@ -273,7 +395,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           0, favoriteExercisesAsString.length - 1);
     }
     _favoritesString = favoriteExercisesAsString;
-    await _prefs.setString('favorites', _favoritesString);
+    storeDataInFirestore();
+    // await _prefs.setString('favorites', _favoritesString);
   }
 
   // Future<void> saveSplitData() async {
@@ -283,8 +406,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> saveSplitDayExerciseIndicesData() async {
     print(splitDayExerciseIndices.toString());
-    await _prefs.setString(
-        'splitDayExerciseIndices', splitDayExerciseIndices.toString());
+    storeDataInFirestore();
+    // await _prefs.setString(
+    //     'splitDayExerciseIndices', splitDayExerciseIndices.toString());
   }
 
   // bool _appResumed = false;
@@ -368,13 +492,192 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       splitRepsPerSet: [],
       musclesWorked: [],
       musclesWorkedActivation: []);
+  img.Image? defaultMuscleWorkedImage;
+  Image? currentMuscleWorkedImage;
+  Image? currentMuscleWorkedImageFromSplitDayPage;
+  Image? currentMuscleWorkedImageFromGymPage;
+
+  Map<String, List<Widget>> gymPhotosMap = {};
+
+  Map<String, List<Pixel>> imageMuscleLocations = {
+    'Chest': [Pixel(108, 115), Pixel(143, 115)],
+    'Front Delts': [Pixel(84, 107), Pixel(166, 107)],
+    'Triceps': [
+      Pixel(325, 148), // Long
+      Pixel(317, 148), // Medial
+      Pixel(312, 148), // Lateral
+      Pixel(421, 148), // Long
+      Pixel(430, 148), // Medial
+      Pixel(435, 148) // Lateral
+    ],
+    'Biceps': [Pixel(72, 140), Pixel(179, 140)],
+    'Brachioradialis': [
+      Pixel(52, 183),
+      Pixel(200, 183),
+      Pixel(286, 215),
+      Pixel(460, 215)
+    ],
+    'Tricep Long Head': [Pixel(325, 148), Pixel(421, 148)],
+    'Tricep Medial Head': [Pixel(317, 148), Pixel(430, 148)],
+    'Tricep Lateral Head:2': [Pixel(312, 148), Pixel(435, 148)],
+    'Side Delts': [Pixel(74, 100), Pixel(178, 100)],
+    'Upper Abs': [
+      Pixel(115, 141),
+      Pixel(115, 156),
+      Pixel(135, 141),
+      Pixel(135, 156)
+    ],
+    'Lower Abs': [
+      Pixel(115, 173),
+      Pixel(115, 200),
+      Pixel(135, 173),
+      Pixel(135, 200)
+    ],
+    'Glutes': [Pixel(355, 227), Pixel(390, 227)], // Glute maximus
+    'Glute Medius': [
+      Pixel(350, 202), // Glute medius
+      Pixel(395, 202), // Glute medius
+    ],
+    'Hip Abductors': [
+      Pixel(340, 257), // Tensor fascia latae
+      Pixel(407, 258) // Tensor fascia latae
+    ],
+    'Quads': [
+      Pixel(97, 298), // Outer
+      Pixel(155, 295), // Outer
+      Pixel(100, 260), // Mid
+      Pixel(152, 260), // Mid
+      Pixel(114, 304), // Inner
+      Pixel(138, 304), // Inner
+    ],
+    'Hamstrings': [
+      Pixel(342, 285), // Outer
+      Pixel(352, 285), // Mid
+      Pixel(361, 312), // Inner
+      Pixel(385, 312),
+      Pixel(393, 285),
+      Pixel(405, 285)
+    ],
+    'Hip Adductors': [
+      Pixel(119, 245),
+      Pixel(131, 245),
+      Pixel(364, 260),
+      Pixel(381, 260)
+    ],
+    'Calves': [
+      Pixel(115, 375), // Front
+      Pixel(135, 375), // Front
+      Pixel(346, 355), // Outer left
+      Pixel(360, 355), // Inner left
+      Pixel(388, 358), // Inner right
+      Pixel(400, 355), // Outer right
+    ],
+    'Forearms': [
+      Pixel(52, 183), // Brachioradialis
+      Pixel(200, 183), // Brachioradialis
+      Pixel(286, 215), // Brachioradialis
+      Pixel(460, 215), // Brachioradialis
+      Pixel(67, 177), // Underside Top
+      Pixel(184, 177), // Underside Top
+      Pixel(54, 195), // Underside Middle
+      Pixel(198, 195), // Underside Middle
+      Pixel(59, 198), // Underside Inner
+      Pixel(192, 198), // Underside Inner
+      Pixel(299, 193), // Outside Middle
+      Pixel(448, 193), // Outside Middle
+      Pixel(308, 193), // Outside Inner
+      Pixel(439, 193), // Outside Inner
+    ],
+    'Rear Delts': [Pixel(325, 105), Pixel(420, 105)],
+    'Obliques': [
+      Pixel(100, 190),
+      Pixel(151, 190),
+      Pixel(348, 185),
+      Pixel(397, 185)
+    ],
+    'Lower Back': [Pixel(363, 190), Pixel(382, 190)],
+    'Upper Back': [
+      // Upper traps
+      Pixel(365, 82), // Rear view
+      Pixel(383, 82), // Rear view
+      Pixel(103, 87), // Front view
+      Pixel(147, 87) // Front view
+    ],
+    'Traps': [
+      // Upper traps
+      Pixel(365, 82), // Rear view
+      Pixel(383, 82), // Rear view
+      Pixel(103, 87), // Front view
+      Pixel(147, 87) // Front view
+    ],
+    'Mid Back': [
+      // Upper traps
+      Pixel(340, 115), // Teres
+      Pixel(405, 115), // Teres
+      Pixel(360, 115), // Lower Traps
+      Pixel(385, 115) // Lower Traps
+    ],
+    'Lats': [
+      Pixel(89, 140), // Front view
+      Pixel(163, 140), // Front view
+      Pixel(352, 150), // Rear view
+      Pixel(392, 150) // Rear view
+    ],
+  };
 
   // var fromFavorites = false;
   bool fromSplitDayPage = false;
   bool fromSearchPage = false;
   bool fromGymPage = false;
 
-  final databaseRef = FirebaseDatabase.instance.ref();
+  DatabaseReference databaseRef = FirebaseDatabase.instance.ref();
+  Reference cloudStorageRef = FirebaseStorage.instance.ref();
+
+  // Future<void> uploadFolder() async {
+  //   final Directory folder = Directory('/Users/rossaroni/Desktop/gymPhotos');
+
+  //   // Get a list of files in the folder
+  //   final List<FileSystemEntity> keys = folder.listSync();
+  //   int count = 0;
+  //   for (final directory in keys) {
+  //     print(count++);
+  //     if (directory is Directory) {
+  //       final String key = directory.path.split('/').last;
+  //       // Get a list of files in the folder
+  //       final List<FileSystemEntity> images = directory.listSync();
+  //       for (final file in images) {
+  //         if (file is File) {
+  //           // Get the file name
+  //           final String fileName = file.path.split('/').last;
+
+  //           // Create a reference to the file in Firebase Storage
+  //           final Reference storageRef =
+  //               cloudStorageRef.child('gymPhotos').child(key).child(fileName);
+
+  //           try {
+  //             // Attempt to retrieve the download URL
+  //             await storageRef.getDownloadURL();
+  //             continue; // File exists
+  //           } catch (e) {
+  //             if (e is FirebaseException && e.code == 'object-not-found') {
+  //               // File does not exist
+  //               // Upload the file
+  //               final TaskSnapshot snapshot = await storageRef.putFile(file);
+
+  //               // Get the download URL for the uploaded file
+  //               final String downloadURL = await snapshot.ref.getDownloadURL();
+
+  //               // Print the download URL (optional)
+  //               print('File uploaded: $downloadURL');
+  //             }
+  //             // Handle other exceptions
+  //             rethrow;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   var hasSubmittedData = false;
 
@@ -397,10 +700,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
 
-  String userID = '';
+  // String userID = '';
 
   List<Widget> appPages = [
-    HomePage(),
+    HomePage(null),
     Placeholder(),
     Placeholder(),
     GymCrowdPage(),
@@ -418,12 +721,24 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool isHomePageSearchFieldFocused = false;
   Map<String, Gym> gyms = <String, Gym>{};
   Gym? currentGym;
+  // PlaceDetails? currentGymPlacesDetailsResponse;
   Gym? userGym;
 
   List<Widget> currentGymPhotos = [];
+  // Monday - Sunday, 12 AM - 11 PM
+  final List<List<int>> avgGymCrowdData = [
+    [0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 4, 3, 4, 5, 5, 6, 10, 11, 11, 8, 6, 3, 3, 2],
+    [1, 0, 0, 0, 1, 2, 3, 3, 2, 2, 3, 3, 5, 5, 5, 5, 10, 10, 12, 9, 4, 4, 3, 2],
+    [1, 0, 0, 0, 2, 2, 3, 3, 3, 3, 4, 3, 4, 5, 4, 7, 10, 12, 10, 9, 5, 4, 3, 2],
+    [2, 0, 0, 0, 2, 2, 6, 4, 3, 2, 3, 3, 5, 5, 4, 5, 10, 12, 10, 8, 5, 3, 3, 2],
+    [2, 0, 0, 0, 2, 2, 3, 4, 3, 2, 3, 5, 4, 6, 7, 7, 10, 10, 7, 4, 3, 2, 2, 2],
+    [1, 1, 0, 0, 0, 0, 2, 2, 2, 4, 7, 8, 6, 6, 6, 5, 5, 4, 4, 2, 2, 1, 2, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 4, 4, 4, 4, 3, 4, 4, 3, 2, 2, 2, 1, 1, 1]
+  ];
 
   String userGymId = '';
-  int showAdBeforeExerciseCounter = 1; // Number of exercises before ad pops up
+  int showAdBeforeExerciseCounter =
+      2; // Number of exercises before ad pops up (-1)
 
   void setSplit(Split split) {
     currentSplit = split;
@@ -531,6 +846,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       editModeTempSplit = Split.deepCopy(currentSplit);
       editModeTempExerciseIndices =
           splitDayExerciseIndices.map((innerList) => [...innerList]).toList();
+    } else {
+      editModeTempSplit = null;
+      editModeTempExerciseIndices = null;
     }
     notifyListeners();
   }
@@ -547,8 +865,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void saveReorderChanges() {
     // Variables now point to the new objects
-    currentSplit = editModeTempSplit;
-    splitDayExerciseIndices = editModeTempExerciseIndices;
+    if (editModeTempSplit != null && editModeTempExerciseIndices != null) {
+      currentSplit = editModeTempSplit;
+      splitDayExerciseIndices = editModeTempExerciseIndices;
+    }
 
     storeSplitInSharedPreferences();
     saveSplitDayExerciseIndicesData();
@@ -569,6 +889,53 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     editModeTempExerciseIndices[dayIndex]
         .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
+  }
+
+  void addMuscleGroupToSplit(
+      Split split,
+      int dayIndex,
+      int cardIndex,
+      String muscleGroup,
+      int muscleGroupExerciseIndex,
+      int numSets,
+      String identifier,
+      String setName,
+      String exerciseName) {
+    split.trainingDays[dayIndex].insertMuscleGroup(
+        cardIndex, muscleGroup, numSets, identifier, setName, exerciseName);
+    if (split == currentSplit) {
+      // If pointers are the same
+      splitDayExerciseIndices[dayIndex]
+          .insert(cardIndex, muscleGroupExerciseIndex);
+      storeSplitInSharedPreferences();
+      saveSplitDayExerciseIndicesData();
+    } else {
+      editModeTempExerciseIndices[dayIndex]
+          .insert(cardIndex, muscleGroupExerciseIndex);
+    }
+    notifyListeners();
+  }
+
+  List<dynamic> removeMuscleGroupFromSplit(
+      Split split, int dayIndex, int cardIndex) {
+    final muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName =
+        split.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
+    final exerciseIndex = split == currentSplit ? splitDayExerciseIndices[dayIndex].removeAt(cardIndex) : editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
+    if (split == currentSplit) {
+      // If pointers are the same
+      storeSplitInSharedPreferences();
+      saveSplitDayExerciseIndicesData();
+    }
+    notifyListeners();
+    // muscle group, exercise index, number of sets
+    return [
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[0],
+      exerciseIndex,
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[1],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[2],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[3],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4]
+    ];
   }
 
   List<dynamic> removeTempMuscleGroupFromSplit(int dayIndex, int cardIndex) {
@@ -602,7 +969,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     // Wait until map is initialized before extracting previous favorite exercises & split data
     initializeOldFavorites();
-    await retrieveSplitFromSharedPreferences();
+    // await retrieveSplitFromSharedPreferences(); // This action is performed in initializing from firestore
     initializeSplitDataAndExerciseIndices();
     notifyListeners();
   }
@@ -627,9 +994,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     Map<String, List<dynamic>> exerciseDataMap = await fetchExerciseData();
     // String => [List<double?>, List<int>, List<int>]
 
-    String overallChest = 'Mid Chest:3, Upper Chest:2, Lower Chest:2';
+    String midChestFly =
+        'Mid Chest:3, Upper Chest:2, Lower Chest:2, Front Delts:1, Biceps:1';
     String chestPress =
-        'Mid Chest:3, Lower Chest:2, Upper Chest:1, Front Delts:1, Triceps:1';
+        'Mid Chest:3, Lower Chest:2, Upper Chest:2, Front Delts:2, Triceps:1';
     String inclinePress =
         'Upper Chest:3, Mid Chest:2, Front Delts:2, Triceps:1';
     String lowerPress = 'Lower Chest:3, Mid Chest:2, Front Delts:2, Triceps:1';
@@ -646,15 +1014,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     String bicepLongHead = 'Bicep Long Head:3, Bicep Short Head:2';
     String bicepShortHead = 'Bicep Short Head:3, Bicep Long Head:2';
     String bicepBrachialis =
-        'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Forearms:2';
+        'Brachialis:3, Bicep Long Head:2, Bicep Short Head:2, Brachioradialis:2';
     String tricepLongHead =
         'Tricep Long Head:3, Tricep Lateral Head:2, Tricep Medial Head:2';
     String tricepLateralHead =
         'Tricep Lateral Head:3, Tricep Long Head:2, Tricep Medial Head:2';
     String tricepMedialHead =
         'Tricep Medial Head:3, Tricep Long Head:2, Tricep Lateral Head:2';
-    String seatedShoulderPress = 'Front Delts:3, Triceps:1';
-    String standingShoulderPress = 'Front Delts:3, Triceps:1, Lower Back:1';
+    String seatedShoulderPress = 'Front Delts:3, Triceps:2, Side Delts:1';
+    String standingShoulderPress =
+        'Front Delts:3, Triceps:2, Side Delts:1, Lower Back:1';
 
     for (final line in lines) {
       if (line.isEmpty) {
@@ -809,21 +1178,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         if (waitMultiplier > 1.0) {
           waitMultiplier = 1.0;
         }
-
         String? machineAltName;
         if (resourcesRequired.contains('Machine')) {
           if (attributes.length == 8) {
             machineAltName = attributes[7];
           }
         }
-
         String musclesWorkedString = attributes[2];
         String exerciseIdentifer = "";
         switch (musclesWorkedString) {
-          case "overallChest":
+          case "midChestFly":
             // Code for overallChest
-            musclesWorkedString = overallChest;
-            exerciseIdentifer = "overallChest";
+            musclesWorkedString = midChestFly;
+            exerciseIdentifer = "midChestFly";
             break;
           case "chestPress":
             // Code for chestPress
@@ -1059,7 +1426,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     for (String favoriteString in favoriteStrings) {
       // For each exercise
       List<String> nameAndMuscleGroup =
-          favoriteString.split("-"); // Split up name and muscle group
+          favoriteString.split("="); // Split up name and muscle group
       String name = nameAndMuscleGroup[0];
       String muscleGroupOfExercise = nameAndMuscleGroup[1];
 
@@ -1154,7 +1521,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
       for (int j = 0; j < splitDayExerciseIndices[i].length; j++) {
-        if (splitDayExerciseIndices[i][j] == -1 || splitDayExerciseIndices[i][j] >= muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]!.length) {
+        if (splitDayExerciseIndices[i][j] == -1 ||
+            splitDayExerciseIndices[i][j] >=
+                muscleGroups[currentSplit.trainingDays[i].muscleGroups[j]]!
+                    .length) {
           splitDayExerciseIndices[i][j] = 0; // Reset if out of bounds
         }
         if (currentSplit.trainingDays[i].exerciseNames[j] !=
@@ -1186,25 +1556,27 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // }
   }
 
-  void storeUserGymInSharedPreferences() async {
+  void storeUserGymInSharedPreferences() {
     if (userGym == null) {
       userGymId = '';
       print('ERROR - storing user gym, but user gym is null');
       return;
     }
     userGymId = userGym!.placeId;
-    _prefs.setString('userGymId', userGymId);
+    storeDataInFirestore();
+    // _prefs.setString('userGymId', userGymId);
     print('stored userGymId $userGymId');
   }
 
-  void removeUserGymFromSharedPreferences() async {
+  void removeUserGymFromSharedPreferences() {
     userGymId = '';
-    _prefs.remove('userGymId');
+    storeDataInFirestore();
+    // _prefs.remove('userGymId');
   }
 
   // Storing the Split object in SharedPreferences
   void storeSplitInSharedPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
     for (int i = 0; i < splitDayExerciseIndices.length; i++) {
       // print(currentSplit.trainingDays[i].exerciseNames.length);
       // print(splitDayExerciseIndices[i].length);
@@ -1221,36 +1593,37 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                 .name;
       }
     }
-    String splitJson = json.encode(currentSplit.toJson());
-    await prefs.setString('split', splitJson);
+    storeDataInFirestore();
+    // String splitJson = json.encode(currentSplit.toJson());
+    // await prefs.setString('split', splitJson);
   }
 
 // Retrieving the Split object from SharedPreferences
-  Future<void> retrieveSplitFromSharedPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? splitJson = prefs.getString('split');
-    if (splitJson != null) {
-      Map<String, dynamic> splitMap = json.decode(splitJson);
-      currentSplit = Split.fromJson(splitMap);
-      makeNewSplit = false;
-      print("initialized split: $currentSplit");
-    } else {
-      print("No split saved");
-    }
-  }
+  // Future<void> retrieveSplitFromSharedPreferences() async {
+  //   // SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? splitJson = prefs.getString('split');
+  //   if (splitJson != null) {
+  //     Map<String, dynamic> splitMap = json.decode(splitJson);
+  //     currentSplit = Split.fromJson(splitMap);
+  //     makeNewSplit = false;
+  //     print("initialized split: $currentSplit");
+  //   } else {
+  //     print("No split saved");
+  //   }
+  // }
 
-  Future<void> initializeUserID() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? uid = prefs.getString('userID');
-    if (uid != null) {
-      // userID is intialized as empty string
-      userID = uid;
-    } else {
-      userID = await getDeviceId(); // Generate unique user id for each device
-      prefs.setString('userID', userID);
-    }
-    print("userID: $userID");
-  }
+  // Future<void> initializeUserID() async {
+  // SharedPreferences prefs = await SharedPreferences.getInstance();
+  // String? uid = prefs.getString('userID');
+  // if (uid != null) {
+  //   // userID is intialized as empty string
+  //   userID = uid;
+  // } else {
+  //   userID = await getDeviceId(); // Generate unique user id for each device
+  //   prefs.setString('userID', userID);
+  // }
+  // print("userID: $userID");
+  // }
 
   Future<String> getDeviceId() async {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -1322,7 +1695,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           gym.googleMapsRating,
           gym.machinesAvailable.map((exercise) => exercise.name).toList(),
           gym.resourcesAvailable,
-          gym.url);
+          gym.url,
+          gym.gymUrl,
+          gym.openingHours,
+          gym.internationalPhoneNumber,
+          gym.priceLevel);
 
       databaseRef.child('gymData').child(data.placeId).set(data.toJson());
 
@@ -1342,26 +1719,38 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> loadGymPhotos(String placeId) async {
+    if (gymPhotosMap[placeId] != null) {
+      currentGymPhotos = gymPhotosMap[placeId]!.toList();
+      print('loaded old gym photos');
+      return;
+    }
+
     currentGymPhotos = [];
     notifyListeners();
-    // for (Gym gym in gyms.values) {
-    // print(gym);
+
     try {
-      DatabaseEvent event =
-          await databaseRef.child('gymPhotos').child(placeId).once();
-      DataSnapshot snapshot = event.snapshot;
+      final Reference storageRef =
+          FirebaseStorage.instance.ref().child('gymPhotos').child(placeId);
+      final images = (await storageRef.listAll()).items;
+      for (final image in images) {
+        currentGymPhotos.add(Image.network(await image.getDownloadURL()));
+      }
+      gymPhotosMap[placeId] = currentGymPhotos.toList();
+      // DatabaseEvent event =
+      //     await databaseRef.child('gymPhotos').child(placeId).once();
+      // DataSnapshot snapshot = event.snapshot;
 
-      List<Object?> objectData = snapshot.value as List<Object?>;
+      // List<Object?> objectData = snapshot.value as List<Object?>;
 
-      List<String> photosData = objectData.cast<String>();
+      // List<String> photosData = objectData.cast<String>();
       // List<Uint8List> binaryData = objectData.cast<Uint8List>();
 
-      for (String base64Encoding in photosData) {
-        // print('$gym photo');
-        Uint8List imageBytes = base64Decode(base64Encoding);
-        // binaryData.add(imageBytes);
-        currentGymPhotos.add(GymImageContainer(bytes: imageBytes));
-      }
+      // for (String base64Encoding in photosData) {
+      // print('$gym photo');
+      // Uint8List imageBytes = base64Decode(base64Encoding);
+      // binaryData.add(imageBytes);
+      // currentGymPhotos.add(GymImageContainer(bytes: imageBytes));
+      // }
       // await databaseRef.child('gymPhotos').child(gym.placeId).set(binaryData);
     } catch (error) {
       print("Error loading photos - $error");
@@ -1482,17 +1871,25 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           // If null create empty map
           resourcesObjects ??= {};
 
+          List<dynamic>? openingHoursAsObjects = data['openingHours'];
+          List<String>? openingHours;
+          openingHours = openingHoursAsObjects?.cast<String>();
+
           Gym gym = Gym(
-            name: data['name'] ?? '',
-            placeId: data['placeId'] ?? '',
-            formattedAddress: data['formattedAddress'] ?? '',
-            photos: [],
-            openNow: null,
-            googleMapsRating: data['googleMapsRating'] + 0.0,
-            machinesAvailable: machinesAvailable,
-            resourcesAvailable: resourcesObjects.cast<String, int>(),
-            url: data['url'] ?? '',
-          );
+              name: data['name'] ?? '',
+              placeId: data['placeId'] ?? '',
+              formattedAddress: data['formattedAddress'] ?? '',
+              photos: [],
+              // openNow: null,
+              googleMapsRating: data['googleMapsRating'] + 0.0,
+              machinesAvailable: machinesAvailable,
+              resourcesAvailable: resourcesObjects.cast<String, int>(),
+              url: data['url'] ?? '',
+              gymUrl: data['gymUrl'], // Could be null
+              openingHours: openingHours, // Could be null
+              internationalPhoneNumber:
+                  data['internationalPhoneNumber'], // Could be null
+              priceLevel: data['priceLevel']); // Could be null
 
           gyms.putIfAbsent(data['placeId'] ?? '', () => gym);
         });
@@ -1553,7 +1950,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
             // exerciseName = exercisePopularity['exerciseName'];
             mainMuscleGroup = exercisePopularity['mainMuscleGroup'];
-            if (uid == userID) {
+            if (uid == authUserId) {
               if (exercisePopularity['numStars'] != null) {
                 userNumStars =
                     exercisePopularity['numStars'] + 0.0; // Avoid error
@@ -1661,7 +2058,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void changePageToExercise(Exercise exercise) {
+  void changePageToExercise(Exercise exercise) async {
     // Exercise page from muscleGroup
     pageIndex = 5;
     showAdBeforeExerciseCounter--;
@@ -1671,11 +2068,29 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // Need a different approach for viewing exercises from favorites because of back button
     if (fromSplitDayPage) {
       currentExerciseFromSplitDayPage = exercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromSplitDayPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, exercise.musclesWorked,
+                exercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
     } else if (fromGymPage) {
       currentExerciseFromGymPage = exercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromGymPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, exercise.musclesWorked,
+                exercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
     } else {
       currentExercise = exercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImage = Image.memory(img.encodePng(applyFloodFill(
+            defaultMuscleWorkedImage!,
+            exercise.musclesWorked,
+            exercise.musclesWorkedActivation,
+            imageMuscleLocations)));
+      }
     }
+
     notifyListeners();
   }
 
@@ -1735,11 +2150,29 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     print('changing exercise to $newExercise');
     if (fromGymPage) {
       currentExerciseFromGymPage = newExercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromGymPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, newExercise.musclesWorked,
+                newExercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
     } else if (fromSplitDayPage) {
       currentExerciseFromSplitDayPage = newExercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromSplitDayPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, newExercise.musclesWorked,
+                newExercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
     } else {
       currentExercise = newExercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImage = Image.memory(img.encodePng(applyFloodFill(
+            defaultMuscleWorkedImage!,
+            newExercise.musclesWorked,
+            newExercise.musclesWorkedActivation,
+            imageMuscleLocations)));
+      }
     }
+
     notifyListeners();
   }
 }
@@ -1817,9 +2250,37 @@ class _MyHomePageState extends State<MyHomePage> {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
 
+    if (!isAuthenticated) {
+      return LayoutBuilder(builder: (context, constraints) {
+        return AuthPage(setState);
+      });
+    }
+
     if (appState.noInternetInitialization) {
       return LayoutBuilder(builder: (context, constraints) {
         return Scaffold(
+            bottomSheet: Container(
+              color: theme.colorScheme.background,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.copyright_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      "Ross Stewart",
+                      style: TextStyle(color: theme.colorScheme.onBackground),
+                    )
+                  ],
+                ),
+              ),
+            ),
             appBar: AppBar(
               title: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -1830,73 +2291,82 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               backgroundColor: theme.scaffoldBackgroundColor,
             ),
-            body: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.copyright_outlined,
-                        color: theme.colorScheme.primary,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "Ross Stewart",
-                        style: TextStyle(color: theme.colorScheme.onBackground),
-                      )
-                    ],
-                  ),
-                  Spacer(),
-                  Text(
-                    "Check Internet Connection",
-                    style: theme.textTheme.titleMedium!.copyWith(
-                      color: theme.colorScheme.onBackground,
+            body: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      height: 20,
                     ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  if (isReloadingInternet) CircularProgressIndicator(),
-                  if (!isReloadingInternet)
-                    ElevatedButton.icon(
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(
-                              theme.colorScheme.primary),
-                          surfaceTintColor: MaterialStateProperty.all<Color>(
-                              theme.colorScheme.primary),
-                        ),
-                        onPressed: () async {
-                          // Restart app
-                          reloadInternetAnimation();
-                          appState.initEverything();
-                        },
-                        icon: Icon(
-                          Icons.refresh,
-                          color: theme.colorScheme.onBackground,
-                        ),
-                        label: Text(
-                          'Refresh',
-                          style:
-                              TextStyle(color: theme.colorScheme.onBackground),
-                        )),
-                  // CircularProgressIndicator(),
-                  Spacer(),
-                  SizedBox(
-                    height: 150,
-                  ),
-                ]));
+                    Spacer(),
+                    Text(
+                      "Check Internet Connection",
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        color: theme.colorScheme.onBackground,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    if (isReloadingInternet) CircularProgressIndicator(),
+                    if (!isReloadingInternet)
+                      ElevatedButton.icon(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                theme.colorScheme.primary),
+                            surfaceTintColor: MaterialStateProperty.all<Color>(
+                                theme.colorScheme.primary),
+                          ),
+                          onPressed: () async {
+                            // Restart app
+                            reloadInternetAnimation();
+                            appState.initEverything();
+                          },
+                          icon: Icon(
+                            Icons.refresh,
+                            color: theme.colorScheme.onBackground,
+                          ),
+                          label: Text(
+                            'Refresh',
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
+                          )),
+                    // CircularProgressIndicator(),
+                    Spacer(),
+                    SizedBox(
+                      height: 150,
+                    ),
+                  ]),
+            ));
       });
     }
 
     if (appState.isInitializing) {
       return LayoutBuilder(builder: (context, constraints) {
         return Scaffold(
+            bottomSheet: Container(
+              color: theme.colorScheme.background,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.copyright_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      "Ross Stewart",
+                      style: TextStyle(color: theme.colorScheme.onBackground),
+                    )
+                  ],
+                ),
+              ),
+            ),
             appBar: AppBar(
               title: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -1907,47 +2377,34 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               backgroundColor: theme.scaffoldBackgroundColor,
             ),
-            body: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.copyright_outlined,
-                        color: theme.colorScheme.primary,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "Ross Stewart",
-                        style: TextStyle(color: theme.colorScheme.onBackground),
-                      )
-                    ],
-                  ),
-                  Spacer(),
-                  CircularProgressIndicator(),
-                  Spacer(),
-                  SizedBox(
-                    height: 150,
-                  ),
-                ]));
+            body: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Spacer(),
+                    CircularProgressIndicator(),
+                    Spacer(),
+                    SizedBox(
+                      height: 150,
+                    ),
+                  ]),
+            ));
       });
     }
 
     Widget page;
     switch (appState.pageIndex) {
       case 0:
-        appState.fromSplitDayPage = false;
-        appState.fromSearchPage = false;
-        appState.fromGymPage = false;
+        // appState.fromSplitDayPage = false;
+        // appState.fromSearchPage = false;
+        // appState.fromGymPage = false;
         _bottomNavigationIndex = 0; // Update navigation bar
         appState.presetHomePage = 0;
-        page = HomePage();
+        page = HomePage(setState);
         break;
       case 1: // Deprecated
         // page = MuscleGroupsPage();
@@ -2024,9 +2481,9 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 6:
         // Reversion changes are already stored in currentSplit
-        appState.fromSplitDayPage = false;
-        appState.fromSearchPage = false;
-        appState.fromGymPage = false;
+        // appState.fromSplitDayPage = false;
+        // appState.fromSearchPage = false;
+        // appState.fromGymPage = false;
         appState.splitDayEditMode = false;
         appState.splitDayReorderMode = false;
         _bottomNavigationIndex = 2; // Update navigation bar
@@ -2067,6 +2524,7 @@ class _MyHomePageState extends State<MyHomePage> {
           gym: appState.currentGym,
           isSelectedGym: appState.userGym == appState.currentGym,
         );
+
         break;
       default:
         throw UnimplementedError('No widget for ${appState.pageIndex}');
@@ -2131,8 +2589,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         appState.makeNewSplit = false;
                       }
                       if (index == 0) {
-                        appState.fromSearchPage = false;
-                        appState.fromSplitDayPage = false;
+                        appState.toSplitDayReorderMode(false);
+                        // appState.fromSearchPage = false;
+                        // appState.fromSplitDayPage = false;
                         // Home
                         if (appState.presetHomePage == 0 ||
                             appState.pageIndex == 9) {
@@ -2148,6 +2607,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         appState.splitWeekEditMode = false;
                       } else if (index == 1) {
                         // Search Page
+                        appState.toSplitDayReorderMode(false);
                         if (appState.pageIndex == 4 ||
                             (appState.pageIndex == 5 &&
                                 !appState.fromSplitDayPage &&
@@ -2172,8 +2632,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           }
                         }
                       } else if (index == 2) {
-                        appState.fromSearchPage = false;
-                        appState.fromGymPage = false;
+                        appState.toSplitDayReorderMode(false);
+                        // appState.fromSearchPage = false;
+                        // appState.fromGymPage = false;
                         print(
                             "Changing to split page: ${appState.currentDayIndex} ${appState.pageIndex}");
                         // Split Page
@@ -2474,82 +2935,6 @@ class MuscleGroupSelectorButton extends StatelessWidget {
   }
 }
 
-class ExerciseSelectorButton extends StatelessWidget {
-  const ExerciseSelectorButton({
-    super.key,
-    required this.exercise,
-    // required this.index,
-  });
-
-  final Exercise exercise;
-  // final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
-    final style = theme.textTheme.bodyMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    void togglePressed() {
-      // Coming from individual muscle group page
-      appState.fromSearchPage = false;
-      // appState.fromFavorites = false;
-      appState.fromSplitDayPage = false;
-      appState.changePageToExercise(exercise);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-      child: TextButton(
-        onPressed: togglePressed,
-        child: Row(children: [
-          Container(
-            height: 80,
-            width: 80,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: theme.colorScheme.onBackground),
-            child: Padding(
-              padding: const EdgeInsets.all(1.0),
-              child: ImageContainer(exerciseName: exercise.name),
-            ),
-          ),
-          SizedBox(width: 25),
-          SizedBox(
-            width: 260,
-            child: Text(
-              exercise.name,
-              style: style,
-              maxLines: 2,
-            ),
-          ),
-        ]),
-      ),
-
-      //  ElevatedButton(
-      //   style: ButtonStyle(
-      //     backgroundColor:
-      //         MaterialStateProperty.all<Color>(theme.colorScheme.primary),
-      //     // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-      //   ),
-      //   onPressed: togglePressed,
-      //   child: Padding(
-      //     padding: const EdgeInsets.all(20),
-      //     child: Center(
-      //       child: Text(
-      //         exercise.name,
-      //         style: style,
-      //         textAlign: TextAlign.center,
-      //       ),
-      //     ),
-      //   ),
-      // ),
-    );
-  }
-}
-
 // class FavoriteExerciseSelectorButton extends StatelessWidget {
 //   const FavoriteExerciseSelectorButton({
 //     super.key,
@@ -2596,317 +2981,6 @@ class ExerciseSelectorButton extends StatelessWidget {
 //     );
 //   }
 // }
-
-// ignore: must_be_immutable
-class ExerciseCard extends StatefulWidget {
-  ExerciseCard({
-    super.key,
-    required this.exercise,
-    // required this.name,
-    // required this.description,
-    // required this.mainMuscleGroup,
-    // required this.musclesWorked,
-    required this.expectedWaitTime,
-    // required this.imageUrl,
-    // required this.averageRating,
-    // this.userRating});
-  });
-
-  Exercise exercise;
-
-  // final String name = exercise.name;
-  // final String description;
-  // final String mainMuscleGroup;
-  // final String musclesWorked;
-  final String expectedWaitTime;
-
-  @override
-  State<ExerciseCard> createState() => _ExerciseCardState();
-}
-
-class _ExerciseCardState extends State<ExerciseCard> {
-  bool _isSubmitButtonPressed = false;
-  Timer? _timer;
-  double? initialStars;
-  double? starsToSubmit;
-
-  @override
-  void initState() {
-    super.initState();
-    initialStars = widget.exercise.userRating;
-    initialStars ??= 2.5; // if null set to 2.5
-    starsToSubmit = initialStars;
-    print("initial stars $initialStars");
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _handleSubmitButtonPress(double starsToSubmit) {
-    setState(() {
-      _isSubmitButtonPressed = true;
-    });
-
-    widget.exercise.userRating =
-        starsToSubmit; // Update exercise data in memory
-
-    _timer = Timer(Duration(seconds: 2), () {
-      setState(() {
-        widget.exercise.userRating =
-            starsToSubmit; // Update exercise data in memory
-        _isSubmitButtonPressed = false;
-      });
-    });
-
-    // _timer;
-  }
-
-  // final String imageUrl;
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    final theme = Theme.of(context);
-    // final titleStyle = theme.textTheme.displaySmall!.copyWith(
-    //   color: theme.colorScheme.secondary,
-    // );
-    final headingStyle = theme.textTheme.titleMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-      // fontWeight: FontWeight.bold,
-    );
-    final textStyle = theme.textTheme.bodyMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    Icon submittedIcon;
-    Text submittedText;
-    print(
-        "$_isSubmitButtonPressed ${widget.exercise.userRating} $starsToSubmit");
-    if (!_isSubmitButtonPressed &&
-        widget.exercise.userRating != starsToSubmit) {
-      submittedIcon = Icon(
-        Icons.send,
-        color: theme.colorScheme.primary,
-      );
-      submittedText = Text('Submit',
-          style: TextStyle(color: theme.colorScheme.onBackground));
-    } else {
-      submittedIcon = Icon(
-        Icons.check,
-        color: theme.colorScheme.primary,
-      );
-      submittedText = Text('Submitted',
-          style: TextStyle(color: theme.colorScheme.onBackground));
-    }
-
-    String equipmentNeededString = "None";
-    if (widget.exercise.resourcesRequired != null &&
-        widget.exercise.resourcesRequired!.isNotEmpty) {
-      equipmentNeededString = "";
-      for (String resourceRequired in widget.exercise.resourcesRequired!) {
-        equipmentNeededString += "$resourceRequired, ";
-      }
-      if (equipmentNeededString.isNotEmpty) {
-        // Remove trailing comma and space
-        equipmentNeededString = equipmentNeededString.substring(
-            0, equipmentNeededString.length - 2);
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-      // child: Card(
-      //   color: theme.colorScheme.surface,
-      //   elevation: 10, // Shadow
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          // mainAxisAlignment: MainAxisAlignment.spaceEvenly
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Instructions',
-              style: headingStyle,
-            ),
-            SizedBox(height: 5),
-            Text(
-              widget.exercise.description,
-              style: textStyle,
-            ),
-            // Text(name,style: titleStyle),
-            // Image.asset('assets/images/Barbell Bench Press.gif'),
-            SizedBox(
-              height: 30,
-            ),
-            Text(
-              'Muscles Worked',
-              style: headingStyle,
-            ),
-            SizedBox(height: 5),
-            for (int i = 0; i < widget.exercise.musclesWorked.length; i++)
-              Text(
-                '${widget.exercise.musclesWorked[i]} : ${widget.exercise.musclesWorkedActivation}',
-                style: textStyle,
-              ),
-            SizedBox(
-              height: 30,
-            ),
-            Text(
-              'Expected Wait Time',
-              style: headingStyle,
-            ),
-            SizedBox(height: 5),
-            Text(
-              '${widget.expectedWaitTime} Minutes',
-              style: textStyle,
-            ),
-            SizedBox(
-              height: 30,
-            ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Average Rating',
-                  style: headingStyle,
-                ),
-                Spacer(),
-                if (widget.exercise.userRating == null)
-                  Text(
-                    'Leave a Rating',
-                    style: headingStyle,
-                  ),
-                if (widget.exercise.userRating != null)
-                  Text(
-                    'Edit Rating',
-                    style: headingStyle,
-                  ),
-              ],
-            ),
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${widget.exercise.starRating}',
-                  style: textStyle,
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                for (int i = 0; i < 5; i++)
-                  if (i + 1 <= widget.exercise.starRating)
-                    Icon(Icons.star, color: theme.colorScheme.primary)
-                  else if (i + 0.5 <= widget.exercise.starRating)
-                    Icon(Icons.star_half, color: theme.colorScheme.primary)
-                  else
-                    Icon(Icons.star_border, color: theme.colorScheme.primary),
-
-                Spacer(),
-                // if (userRating == null)
-                // for (int i = 0; i < 5; i++)
-
-                // StarRatingButton(
-                //   onRatingSelected: (rating) {
-                //     // Handle the selected rating value
-                //     print('Selected rating: $rating');
-                //   },
-                // )
-
-                RatingBar.builder(
-                  unratedColor: theme.colorScheme.primaryContainer,
-                  initialRating: initialStars!,
-                  minRating: 0,
-                  direction: Axis.horizontal,
-                  allowHalfRating: true,
-                  itemCount: 5,
-                  itemSize: 23.5,
-                  glow: false,
-                  itemBuilder: (context, index) {
-                    return Icon(Icons.star, color: theme.colorScheme.primary);
-                  },
-                  onRatingUpdate: (rating) {
-                    // Handle the selected rating value
-                    print('Selected rating: $rating');
-                    setState(() {
-                      starsToSubmit = rating;
-                    });
-                  },
-                ),
-
-                // for (int i = 0; i < 5; i++)
-                //   if (i + 1 <= averageRating)
-                //     Icon(Icons.star, color: theme.colorScheme.onBackground,)
-                //   else if (i + 0.5 <= averageRating)
-                //     Icon(Icons.star_half, color: theme.colorScheme.onBackground)
-                //   else
-                //     Icon(Icons.star_border,
-                //         color: theme.colorScheme.onBackground),
-              ],
-            ),
-            SizedBox(
-              height: 8,
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                style: ButtonStyle(
-                    backgroundColor:
-                        resolveColor(theme.colorScheme.primaryContainer),
-                    surfaceTintColor:
-                        resolveColor(theme.colorScheme.primaryContainer)),
-                onPressed: () {
-                  // if (widget.exercise.userRating == null) {
-                  // User hasn't submitted data for this exercise yet
-
-                  // Doesn't matter if user has submitted data already
-                  if (!_isSubmitButtonPressed &&
-                      widget.exercise.userRating != starsToSubmit) {
-                    appState.submitExercisePopularityDataToFirebase(
-                        appState.userID,
-                        widget.exercise.name,
-                        widget.exercise.mainMuscleGroup,
-                        starsToSubmit,
-                        widget.exercise.userOneRepMax,
-                        widget.exercise.splitWeightAndReps,
-                        widget.exercise.splitWeightPerSet,
-                        widget.exercise.splitRepsPerSet);
-                    _handleSubmitButtonPress(starsToSubmit!);
-                  }
-                  // } else {
-                  // User has already submitted data for this exercise, update data
-                  //   appState.submitExercisePopularityDataToFirebase(
-                  //       appState.userID,
-                  //       widget.exercise.name,
-                  //       widget.exercise.mainMuscleGroup,
-                  //       starsToSubmit);
-                  //   widget.exercise.userRating = starsToSubmit;
-                  // }
-                },
-                label: submittedIcon,
-                icon: submittedText,
-              ),
-            ),
-            Text(
-              'Equipment Needed',
-              style: headingStyle,
-            ),
-            SizedBox(height: 5),
-            Text(
-              equipmentNeededString,
-              style: textStyle,
-            ),
-          ],
-        ),
-      ),
-      // ),
-    );
-  }
-}
 
 // class CapacityChart extends StatelessWidget {
 //   final int capacity;

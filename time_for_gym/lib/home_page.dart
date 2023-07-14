@@ -1,19 +1,24 @@
 // import 'dart:async';
 
 // import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+// import 'package:google_maps_webservice/places.dart';
 import 'package:provider/provider.dart';
 // import 'package:provider/provider.dart';
 import 'package:time_for_gym/main.dart';
 // import 'package:flutter/services.dart' show rootBundle;
-// import 'package:google_maps_webservice/places.dart';
-// import 'api_keys.dart';
 import 'package:time_for_gym/gym.dart';
+
+// import 'api_keys.dart';
 // import 'package:time_for_gym/gym_page.dart';
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
 
+// ignore: must_be_immutable
 class HomePage extends StatefulWidget {
+  final StateSetter? setAuthenticationState;
+  HomePage(this.setAuthenticationState);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -47,12 +52,38 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-            child: SizedBox(
-              height: 50,
-              child: Image.asset('assets/images/gym_brain_logo.png'),
-            ),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Spacer(
+                flex: 16,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: SizedBox(
+                  height: 50,
+                  child: Image.asset('assets/images/gym_brain_logo.png'),
+                ),
+              ),
+              Spacer(
+                flex: 15,
+              ),
+              GestureDetector(
+                onTap: () {
+                  if (widget.setAuthenticationState != null) {
+                    widget.setAuthenticationState!(() {
+                      isAuthenticated = false;
+                    });
+                  }
+                  FirebaseAuth.instance.signOut();
+                  print(isAuthenticated);
+                },
+                child: Icon(
+                  Icons.settings,
+                  color: theme.colorScheme.primary,
+                ),
+              )
+            ],
           ),
 
           // title: Row(
@@ -82,6 +113,17 @@ class _HomePageState extends State<HomePage> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width - 100,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
+                child: Text('Welcome, ${currentUser.displayName ?? ''}',
+                    style: theme.textTheme.titleLarge!
+                        .copyWith(color: theme.colorScheme.onBackground),
+                    textAlign: TextAlign.center,
+                    maxLines: 1),
+              ),
+            ),
             // PageSelectorButton(
             //   text: "Exercise Library",
             //   index: 8,
@@ -198,14 +240,37 @@ class _GymSearchBarState extends State<GymSearchBar> {
   //   });
   // }
 
-  void _handleGymSubmit(Gym gym, MyAppState appState) {
-    // appState.loadGymPhotos(gym.placeId);
+  void _handleGymSubmit(Gym gym, MyAppState appState) async {
+    appState.loadGymPhotos(gym.placeId);
 
     setState(() {
       widget.textEditingController.text = gym.name;
       appState.isHomePageSearchFieldFocused = false;
     });
     appState.currentGym = gym;
+
+
+
+    // try {
+    //   // appState.currentGymPlacesDetailsResponse =
+    //   //     (await GoogleMapsPlaces(apiKey: googleMapsApiKey).getDetailsByPlaceId(gym.placeId)).result;
+    //   for (String gymKey in appState.gyms.keys) {
+    //     PlaceDetails placeDetails = (await GoogleMapsPlaces(apiKey: googleMapsApiKey).getDetailsByPlaceId(gymKey)).result;
+    //     List<String>? openingHours;
+    //     if (placeDetails.openingHours == null) {
+    //       print('ERROR - $gymKey: ${placeDetails.name} opening hours is null');
+    //     } else {
+    //       openingHours = placeDetails.openingHours!.weekdayText;
+    //     }
+    //     Gym theGym = appState.gyms[gymKey]!;
+    //     theGym.openingHours = openingHours; // Could be null
+    //     theGym.gymUrl = placeDetails.website; // Could be null
+    //     theGym.internationalPhoneNumber = placeDetails.internationalPhoneNumber; // Could be null
+    //     appState.submitGymDataToFirebase(theGym);
+    //   }
+    // } catch (e) {
+    //   print('Error loading gym - $e');
+    // }
 
     // Change to gym page
     appState.changePage(9);

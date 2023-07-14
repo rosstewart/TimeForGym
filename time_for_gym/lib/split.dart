@@ -25,7 +25,7 @@ class TrainingDay {
       List<String> focusedMuscleGroups) {
     for (String focusedMuscleGroup in focusedMuscleGroups) {
       int focusedIndex = muscleGroupsToAdd.indexOf(focusedMuscleGroup);
-      if (focusedIndex != -1) {
+      while (focusedIndex != -1) {
         muscleGroupsToAdd
             .removeAt(focusedIndex); // Move focused muscle groups to first
         String focusedIdentifier =
@@ -34,6 +34,8 @@ class TrainingDay {
         muscleGroups.add(focusedMuscleGroup);
         exerciseIdentifiers.add(focusedIdentifier);
         setNames.add(focusedSetName);
+        // Repeat until all focused muscle groups are first
+        focusedIndex = muscleGroupsToAdd.indexOf(focusedMuscleGroup);
       }
       // if (muscleGroupsToAdd.contains(focusedMuscleGroup)) {
       //   if (!muscleGroups.contains(focusedMuscleGroup)) {
@@ -88,7 +90,7 @@ class TrainingDay {
       "overheadTricep" // Lengthened
     ], [
       "Upper Chest",
-      "Mid/Lower Chest",
+      "Lower/Mid Chest",
       "",
       "",
       "Triceps (Lateral & Medial Head)"
@@ -476,24 +478,24 @@ class TrainingDay {
       case 'U':
         addUpper2(focusedMuscleGroups);
         break;
-        // Remove focused muscle groups addition from upper and lower as it's too much volume
-        // if (char == "U") {
-        //   // Also focused
-        //   additionallyAddFocused(focusedMuscleGroups);
-        //   splitDay += " with Focused Muscle Groups";
-        // }
+      // Remove focused muscle groups addition from upper and lower as it's too much volume
+      // if (char == "U") {
+      //   // Also focused
+      //   additionallyAddFocused(focusedMuscleGroups);
+      //   splitDay += " with Focused Muscle Groups";
+      // }
       case 'w':
         addLower1(focusedMuscleGroups);
         break;
       case 'W':
         addLower2(focusedMuscleGroups);
         break;
-        // Remove focused muscle groups addition from upper and lower as it's too much volume
-        // if (char == "W") {
-        //   // Also focused
-        //   additionallyAddFocused(focusedMuscleGroups);
-        //   splitDay += " with Focused Muscle Groups";
-        // }
+      // Remove focused muscle groups addition from upper and lower as it's too much volume
+      // if (char == "W") {
+      //   // Also focused
+      //   additionallyAddFocused(focusedMuscleGroups);
+      //   splitDay += " with Focused Muscle Groups";
+      // }
       case 'b':
         addFullBody1(focusedMuscleGroups);
         break;
@@ -508,7 +510,11 @@ class TrainingDay {
       // }
       case 'f':
       case 'F':
-        muscleGroups.addAll(focusedMuscleGroups);
+        // No focused muscle groups parameter as they are already being added in the first
+        addMuscleGroups(
+            focusedMuscleGroups,
+            List.filled(focusedMuscleGroups.length, ""),
+            List.filled(focusedMuscleGroups.length, ""), []);
         splitDay = "Focused Muscle Groups";
         break;
       default:
@@ -704,7 +710,7 @@ class Split {
       } else {
         focusedFlag = "legs";
       }
-      if (maxFocused > 2) {
+      if (numPushFocused + numPullFocused + numLegsFocused > 2) {
         focusedDay = true;
       }
     }

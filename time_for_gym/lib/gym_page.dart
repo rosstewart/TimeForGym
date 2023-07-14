@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+// import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 // import 'package:google_maps_webservice/places.dart';
@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:intl/intl.dart';
 
 // import 'dart:io';
 
@@ -28,13 +29,18 @@ class GymPage extends StatefulWidget {
 }
 
 class _GymPageState extends State<GymPage> {
+  // final places = GoogleMapsPlaces(apiKey: googleMapsApiKey);
+
   // List<String> urls = [];
   // List<Widget> images = [];
+
+  DateTime currentTime = DateTime.now();
 
   bool editResourcesMode = false;
   bool editMachinesMode = false;
 
   late bool isSelectedGym;
+  late String currentlyOpenString;
 
   // List<String> resourceKeys = [
   //   'Barbell',
@@ -188,6 +194,18 @@ class _GymPageState extends State<GymPage> {
     //     ));
     //   }
     // }
+
+    // currentlyOpenString = getCurrentlyOpenString(DateTime.now());
+    if (widget.gym!.openingHours == null) {
+      currentlyOpenString = '';
+    } else {
+      final GymOpeningHours gymOpeningHours =
+          GymOpeningHours(widget.gym!.openingHours!);
+      currentlyOpenString = gymOpeningHours.getCurrentlyOpenString();
+    }
+    // currentlyOpenString =
+    //     getGymStatus(widget.gym!.openingHours, DateTime.now());
+    print(currentlyOpenString);
   }
 
   void showPopUpMachinesDialog(BuildContext context, MyAppState appState,
@@ -251,15 +269,10 @@ class _GymPageState extends State<GymPage> {
                       // Close the dialog
                       Navigator.of(context).pop();
                     },
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.primary,
-                      size: 20,
-                    ),
+                    icon: Icon(Icons.close,
+                        color: theme.colorScheme.primary, size: 20),
                   ),
-                  SizedBox(
-                    width: 10,
-                  ),
+                  SizedBox(width: 10),
                   IconButton(
                     style: ButtonStyle(
                       backgroundColor: resolveColor(
@@ -353,9 +366,7 @@ class _GymPageState extends State<GymPage> {
                                     )),
                               ])),
                         ),
-                        SizedBox(
-                          height: 3,
-                        ),
+                        SizedBox(height: 3),
                         Text(
                           displayExercises[index].machineAltName ??
                               displayExercises[index].name,
@@ -376,12 +387,78 @@ class _GymPageState extends State<GymPage> {
     );
   }
 
+  bool isHoliday(DateTime now) {
+    return false;
+  }
+
+  void _launchPhoneCall(String phoneNumber) async {
+    // Format correctly
+    final url = 'tel:${phoneNumber.replaceAll(RegExp(r'\s+|-'), '')}';
+    try {
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      print(e);
+      // print('If on a simulator, ignore next error:');
+      // print('ERROR - Invalid phone number $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.gym == null) {
       return Placeholder();
     }
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
+
+    // String? s = widget.gym!.openingHours?[currentTime.weekday - 1];
+    // s = s?.substring(s.indexOf(':') + 2);
+
+    // if (s != null) {
+    //   if (s == 'Open 24 hours') {
+
+    //   }
+    //   List<String> times = s.split(' – ');
+    //   String startTime = times[0];
+    //   String endTime = times[1];
+
+    //   int startHour = int.parse(startTime.split(':')[0]);
+    //   int endHour = int.parse(endTime.split(':')[0]);
+
+    //   if (startTime.endsWith('AM') && startHour == 12) {
+    //     startHour = 0;
+    //   } else if (startTime.endsWith('PM') && startHour != 12) {
+    //     startHour += 12;
+    //   }
+    //   if (endTime.endsWith('AM') && endHour == 12) {
+    //     endHour = 0;
+    //   } else if (endTime.endsWith('PM') && endHour != 12) {
+    //     endHour += 12;
+    //   }
+
+    //   print(startHour);
+    //   print(endHour);
+    // }
+
+    // print('weekday ${currentTime.weekday}'); // 1 - 7
+    // print('hour ${currentTime.hour}');
+
+    // Open 24 hours or Open -
+    if (currentlyOpenString.contains('Open ')) {
+    print(
+        'Estimated ${((appState.avgGymCrowdData[currentTime.weekday - 1][currentTime.hour] / 12.0) * 100).toInt()}% capactiy');
+    }
+
+    // if (appState.currentGymPlacesDetailsResponse != null) {
+    //   PlaceDetails gymDetails = appState.currentGymPlacesDetailsResponse!;
+    //   print('Phone number: ${gymDetails.website}');
+    //   print(widget.gym!.openingHours);
+    //   print('International Phone number: ${gymDetails.internationalPhoneNumber}');
+    //   print('Icon: ${gymDetails.icon}');
+    // }
 
     Widget photosRow;
 
@@ -412,9 +489,7 @@ class _GymPageState extends State<GymPage> {
                 ),
               ),
             ),
-          SizedBox(
-            width: 15,
-          ),
+          SizedBox(width: 15),
         ],
       );
     } else {
@@ -432,36 +507,30 @@ class _GymPageState extends State<GymPage> {
     int backIndex = 0; // Home page
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleMedium!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
+    final titleStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
     final headlineStyle = theme.textTheme.titleSmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-    final bodyMedium = theme.textTheme.bodyMedium!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-    final textStyle = theme.textTheme.bodySmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-    final labelStyle = theme.textTheme.labelSmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
+        color: currentlyOpenString.startsWith('Closed')
+            ? theme.colorScheme.secondary
+            : theme.colorScheme.primary);
+    final subHeadlineStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+    final bodyMedium = theme.textTheme.bodyMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final textStyle = theme.textTheme.bodySmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
 
     Widget selectButtonLabel;
     Widget selectButtonIcon;
     if (!isSelectedGym) {
-      selectButtonLabel = Icon(
-        Icons.check_box_outline_blank,
-        size: 20,
-      );
-      selectButtonIcon = Text('Select gym', style: textStyle);
+      selectButtonIcon = Icon(Icons.check_box_outline_blank,
+          size: 16, color: theme.colorScheme.onBackground);
+      selectButtonLabel = Text('Select gym', style: textStyle);
     } else {
-      selectButtonLabel = Icon(
-        Icons.check_box,
-        size: 20,
-      );
-      selectButtonIcon = Text('Selected gym', style: textStyle);
+      selectButtonIcon = Icon(Icons.check_box, size: 16);
+      selectButtonLabel = Text('Selected gym', style: textStyle);
     }
 
     double resourceWidth = editResourcesMode ? 100 : 90;
@@ -481,42 +550,180 @@ class _GymPageState extends State<GymPage> {
             leading: Back(appState: appState, index: backIndex),
             leadingWidth: 70,
             title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.gym!.name,
-                  style: titleStyle,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Spacer(flex: 3),
+                    Text(
+                      widget.gym!.name,
+                      style: titleStyle,
+                    ),
+                    Spacer(flex: 5),
+                  ],
                 ),
-                if (widget.gym!.openNow != null &&
-                    widget.gym!.isOpenNow() == true)
-                  Text(
-                    'Open Now',
-                    style: headlineStyle.copyWith(
-                        color: theme.colorScheme.primary),
-                  ),
-                if (widget.gym!.openNow != null &&
-                    widget.gym!.isOpenNow() == false)
-                  Text(
-                    'Closed',
-                    style: headlineStyle.copyWith(
-                        color: theme.colorScheme.secondary),
-                  ),
+                Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  if (widget.gym!.googleMapsRating != null &&
+                      widget.gym!.googleMapsRating! > 4.0)
+                    Text(
+                      '${widget.gym!.googleMapsRating ?? 0}',
+                      style: textStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(0.65)),
+                    ),
+                  if (widget.gym!.googleMapsRating != null &&
+                      (widget.gym!.googleMapsRating! <= 4.0 &&
+                          widget.gym!.googleMapsRating! > 2.5))
+                    Text(
+                      '${widget.gym!.googleMapsRating ?? 0}',
+                      style: textStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(0.65)),
+                    ),
+                  if (widget.gym!.googleMapsRating != null &&
+                      widget.gym!.googleMapsRating! <= 2.5)
+                    Text(
+                      '${widget.gym!.googleMapsRating ?? 0}',
+                      style: textStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(0.65)),
+                    ),
+                  if (widget.gym!.googleMapsRating == null)
+                    Text(
+                      'No rating available',
+                      style: textStyle.copyWith(
+                        color: theme.colorScheme.onBackground.withOpacity(0.65),
+                      ),
+                    ),
+                  if (widget.gym!.googleMapsRating != null) SizedBox(width: 3),
+                  for (int i = 0; i < 5; i++)
+                    if (i + 1 <= widget.gym!.googleMapsRating!)
+                      Icon(Icons.star,
+                          color: theme.colorScheme.primary, size: 14)
+                    else if (i + 0.5 <= widget.gym!.googleMapsRating!)
+                      Icon(Icons.star_half,
+                          color: theme.colorScheme.primary, size: 14)
+                    else
+                      Icon(Icons.star_border,
+                          color: theme.colorScheme.primary, size: 14),
+                  // There is openingHours data for the gym
+                  if (currentlyOpenString.isNotEmpty) Spacer(),
+                  if (currentlyOpenString.isNotEmpty)
+                    if (!currentlyOpenString.contains('-'))
+                      Text(currentlyOpenString, style: headlineStyle),
+                  if (currentlyOpenString.isNotEmpty)
+                    if (currentlyOpenString.contains('-'))
+                      Text(currentlyOpenString.split('-')[0],
+                          style: headlineStyle),
+                  Text('-${currentlyOpenString.split('-')[1]}',
+                      style: subHeadlineStyle),
+                  Spacer(),
+                ]),
+                SizedBox(height: 5),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Spacer(flex: 1),
+                      Text(
+                        widget.gym!.formattedAddress,
+                        style: labelStyle.copyWith(
+                            color: labelStyle.color!.withOpacity(.65)),
+                      ),
+                      Spacer(flex: 4),
+                    ]),
               ],
             ),
             backgroundColor: theme.scaffoldBackgroundColor,
+            toolbarHeight: 90,
           ),
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: Text(
-                    widget.gym!.formattedAddress,
-                    style: labelStyle,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          style: ButtonStyle(
+                              backgroundColor: resolveColor(isSelectedGym
+                                  ? theme.colorScheme.primaryContainer
+                                  : theme.colorScheme.primary),
+                              surfaceTintColor: resolveColor(isSelectedGym
+                                  ? theme.colorScheme.primaryContainer
+                                  : theme.colorScheme.primary)),
+                          onPressed: () {
+                            if (isSelectedGym) {
+                              setState(() {
+                                isSelectedGym = false;
+                                appState.userGym = null;
+                              });
+                              appState.removeUserGymFromSharedPreferences();
+                            } else {
+                              setState(() {
+                                isSelectedGym = true;
+                                appState.userGym = widget.gym;
+                              });
+                              appState.storeUserGymInSharedPreferences();
+                            }
+                            print(isSelectedGym);
+                          },
+                          label: selectButtonLabel,
+                          icon: selectButtonIcon,
+                        ),
+                        SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                  theme.colorScheme.primaryContainer),
+                              surfaceTintColor: resolveColor(
+                                  theme.colorScheme.primaryContainer)),
+                          onPressed: () {
+                            launchUrl(Uri.parse(widget.gym!.url));
+                          },
+                          icon: Icon(Icons.location_pin, size: 16),
+                          label: Text('Map', style: labelStyle),
+                        ),
+                        if (widget.gym!.gymUrl != null) SizedBox(width: 10),
+                        if (widget.gym!.gymUrl != null)
+                          ElevatedButton.icon(
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            onPressed: () {
+                              launchUrl(Uri.parse(widget.gym!.gymUrl!));
+                            },
+                            icon: Icon(Icons.web, size: 16),
+                            label: Text('Website', style: labelStyle),
+                          ),
+                        if (widget.gym!.internationalPhoneNumber != null)
+                          SizedBox(width: 10),
+                        if (widget.gym!.internationalPhoneNumber != null)
+                          ElevatedButton.icon(
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            onPressed: () {
+                              _launchPhoneCall(
+                                  widget.gym!.internationalPhoneNumber!);
+                            },
+                            icon: Icon(Icons.call, size: 16),
+                            label: Text('Call', style: labelStyle),
+                          ),
+                        SizedBox(width: 10),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 10),
                 // Photo
                 // if (appState.currentGymPhotos.isNotEmpty)
                 Center(
@@ -527,143 +734,19 @@ class _GymPageState extends State<GymPage> {
                         child: photosRow),
                   ),
                 ),
-
-                SizedBox(
-                  height: 10,
-                ),
-                Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Rating - ',
-                          style: bodyMedium,
-                        ),
-                        if (widget.gym!.googleMapsRating != null &&
-                            widget.gym!.googleMapsRating! > 4.0)
-                          Text(
-                            '${widget.gym!.googleMapsRating ?? 0} Stars',
-                            style: textStyle.copyWith(
-                                color: theme.colorScheme.primary),
-                          ),
-                        if (widget.gym!.googleMapsRating != null &&
-                            (widget.gym!.googleMapsRating! <= 4.0 &&
-                                widget.gym!.googleMapsRating! > 2.5))
-                          Text(
-                            '${widget.gym!.googleMapsRating ?? 0} Stars',
-                            style: textStyle.copyWith(color: Colors.yellow),
-                          ),
-                        if (widget.gym!.googleMapsRating != null &&
-                            widget.gym!.googleMapsRating! <= 2.5)
-                          Text(
-                            '${widget.gym!.googleMapsRating ?? 0} Stars',
-                            style: textStyle.copyWith(color: Colors.yellow),
-                          ),
-                        if (widget.gym!.googleMapsRating == null)
-                          Text(
-                            'No rating available',
-                            style: textStyle.copyWith(
-                              color: theme.colorScheme.onBackground
-                                  .withOpacity(0.65),
-                            ),
-                          ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (widget.gym!.googleMapsRating != null)
-                          for (int i = 0; i < 5; i++)
-                            if (i + 1 <= widget.gym!.googleMapsRating!)
-                              Icon(
-                                Icons.star,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              )
-                            else if (i + 0.5 <= widget.gym!.googleMapsRating!)
-                              Icon(
-                                Icons.star_half,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              )
-                            else
-                              Icon(
-                                Icons.star_border,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer,
-                              ),
-                              surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer,
-                              ),
-                            ),
-                            onPressed: () {
-                              launchUrl(Uri.parse(widget.gym!.url));
-                            },
-                            child: Text('View on Map', style: labelStyle),
-                          ),
-                          ElevatedButton.icon(
-                            style: ButtonStyle(
-                              backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer,
-                              ),
-                              surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer,
-                              ),
-                            ),
-                            onPressed: () {
-                              if (isSelectedGym) {
-                                setState(() {
-                                  isSelectedGym = false;
-                                  appState.userGym = null;
-                                });
-                                appState.removeUserGymFromSharedPreferences();
-                              } else {
-                                setState(() {
-                                  isSelectedGym = true;
-                                  appState.userGym = widget.gym;
-                                });
-                                appState.storeUserGymInSharedPreferences();
-                              }
-                              print(isSelectedGym);
-                            },
-                            label: selectButtonLabel,
-                            icon: selectButtonIcon,
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Row(
                         children: [
                           Text(
                             'Gym Resources',
                             style: titleStyle,
                           ),
-                          SizedBox(
-                            width: 10,
-                          ),
+                          SizedBox(width: 10),
                           if (!editResourcesMode)
                             IconButton(
                               style: ButtonStyle(
@@ -679,11 +762,8 @@ class _GymPageState extends State<GymPage> {
                                   editResourcesMode = true;
                                 });
                               },
-                              icon: Icon(
-                                Icons.edit,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
+                              icon: Icon(Icons.edit,
+                                  color: theme.colorScheme.primary, size: 16),
                               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
                             ),
                           if (editResourcesMode)
@@ -705,17 +785,11 @@ class _GymPageState extends State<GymPage> {
                                   editResourcesMode = false;
                                 });
                               },
-                              icon: Icon(
-                                Icons.cancel,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
+                              icon: Icon(Icons.cancel,
+                                  color: theme.colorScheme.primary, size: 20),
                               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
                             ),
-                          if (editResourcesMode)
-                            SizedBox(
-                              width: 10,
-                            ),
+                          if (editResourcesMode) SizedBox(width: 10),
                           if (editResourcesMode)
                             IconButton(
                               style: ButtonStyle(
@@ -735,18 +809,13 @@ class _GymPageState extends State<GymPage> {
                                   appState.submitGymDataToFirebase(widget.gym!);
                                 });
                               },
-                              icon: Icon(
-                                Icons.check,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
+                              icon: Icon(Icons.check,
+                                  color: theme.colorScheme.primary, size: 24),
                               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
                             ),
                         ],
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
+                      SizedBox(height: 10),
                       Container(
                         decoration: BoxDecoration(
                             color: theme.colorScheme.primaryContainer,
@@ -769,9 +838,7 @@ class _GymPageState extends State<GymPage> {
                                           resourceNames[i],
                                           style: textStyle,
                                         ),
-                                        SizedBox(
-                                          width: 10,
-                                        ),
+                                        SizedBox(width: 10),
                                         Icon(
                                           showResources[i]
                                               ? Icons.keyboard_arrow_up
@@ -781,9 +848,7 @@ class _GymPageState extends State<GymPage> {
                                       ],
                                     ),
                                   ),
-                                  SizedBox(
-                                    height: showResources[i] ? 10 : 5,
-                                  ),
+                                  SizedBox(height: showResources[i] ? 10 : 5),
                                   if (showResources[i])
                                     SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
@@ -813,9 +878,7 @@ class _GymPageState extends State<GymPage> {
                                                         child: Image.asset(
                                                             'assets/images/resource_icons/${typesOfResources[i][j]}.png'),
                                                       ),
-                                                      SizedBox(
-                                                        height: 5,
-                                                      ),
+                                                      SizedBox(height: 5),
                                                       if (typesOfResources[i][j]
                                                           .endsWith('h'))
                                                         Text(
@@ -828,13 +891,12 @@ class _GymPageState extends State<GymPage> {
                                                       if (typesOfResources[i][j]
                                                           .endsWith('s'))
                                                         Text(
-                                                          typesOfResources[i]
-                                                              [j],
-                                                          style: labelStyle,
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          maxLines: 2,
-                                                        ),
+                                                            typesOfResources[i]
+                                                                [j],
+                                                            style: labelStyle,
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            maxLines: 2),
                                                       if (!typesOfResources[i]
                                                                   [j]
                                                               .endsWith('h') &&
@@ -860,19 +922,18 @@ class _GymPageState extends State<GymPage> {
                                                                         .circular(
                                                                             10)),
                                                             child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .fromLTRB(
-                                                                      12,
-                                                                      10,
-                                                                      12,
-                                                                      10),
-                                                              child: Text(
-                                                                '${resourcesAvailable[typesOfResources[i][j]] ?? 'No value'}',
-                                                                style:
-                                                                    labelStyle,
-                                                              ),
-                                                            )),
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .fromLTRB(
+                                                                        12,
+                                                                        10,
+                                                                        12,
+                                                                        10),
+                                                                child: Text(
+                                                                  '${resourcesAvailable[typesOfResources[i][j]] ?? 'No value'}',
+                                                                  style:
+                                                                      labelStyle,
+                                                                ))),
                                                       if ((typesOfResources[i]
                                                                       [j] ==
                                                                   'Dumbbells' ||
@@ -1021,9 +1082,7 @@ class _GymPageState extends State<GymPage> {
                                                     typesOfResources[i].length -
                                                         1)
                                                   // if (editResourcesMode)
-                                                  SizedBox(
-                                                    width: 10,
-                                                  ),
+                                                  SizedBox(width: 10),
                                               ],
                                             ),
                                         ],
@@ -1035,18 +1094,14 @@ class _GymPageState extends State<GymPage> {
                           ],
                         ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
+                      SizedBox(height: 10),
                       Row(
                         children: [
                           Text(
                             'Machines Available',
                             style: titleStyle,
                           ),
-                          SizedBox(
-                            width: 10,
-                          ),
+                          SizedBox(width: 10),
                           if (!editMachinesMode)
                             IconButton(
                               style: ButtonStyle(
@@ -1062,11 +1117,8 @@ class _GymPageState extends State<GymPage> {
                                   editMachinesMode = true;
                                 });
                               },
-                              icon: Icon(
-                                Icons.edit,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
+                              icon: Icon(Icons.edit,
+                                  color: theme.colorScheme.primary, size: 16),
                               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
                             ),
                           if (editMachinesMode)
@@ -1088,17 +1140,11 @@ class _GymPageState extends State<GymPage> {
                                   editMachinesMode = false;
                                 });
                               },
-                              icon: Icon(
-                                Icons.cancel,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
+                              icon: Icon(Icons.cancel,
+                                  color: theme.colorScheme.primary, size: 20),
                               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
                             ),
-                          if (editMachinesMode)
-                            SizedBox(
-                              width: 10,
-                            ),
+                          if (editMachinesMode) SizedBox(width: 10),
                           if (editMachinesMode)
                             IconButton(
                               style: ButtonStyle(
@@ -1128,13 +1174,9 @@ class _GymPageState extends State<GymPage> {
                         ],
                       ),
                       if (machinesAvailable.isEmpty && !editMachinesMode)
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                       if (!(machinesAvailable.isEmpty && !editMachinesMode))
-                        SizedBox(
-                          height: 5,
-                        ),
+                        SizedBox(height: 5),
                       if (machinesAvailable.isEmpty && !editMachinesMode)
                         ElevatedButton.icon(
                           style: ButtonStyle(
@@ -1192,10 +1234,7 @@ class _GymPageState extends State<GymPage> {
                                     color: theme.colorScheme.primary,
                                   ),
                                 ),
-                              if (editMachinesMode)
-                                SizedBox(
-                                  width: 10,
-                                ),
+                              if (editMachinesMode) SizedBox(width: 10),
                               if (machinesAvailable.isNotEmpty)
                                 Container(
                                   // height: 200,
@@ -1293,21 +1332,19 @@ class _GymPageState extends State<GymPage> {
                                                               machinesAvailable);
                                                         },
                                                         child: Icon(
-                                                          Icons.delete_forever,
-                                                          size: 20,
-                                                          color: theme
-                                                              .colorScheme
-                                                              .primary,
-                                                        ),
+                                                            Icons
+                                                                .delete_forever,
+                                                            size: 20,
+                                                            color: theme
+                                                                .colorScheme
+                                                                .primary),
                                                       )
                                                   ],
                                                 ),
                                               ),
                                               if (i <
                                                   machinesAvailable.length - 1)
-                                                SizedBox(
-                                                  width: 10,
-                                                ),
+                                                SizedBox(width: 10),
                                             ],
                                           ),
                                     ],
@@ -1329,83 +1366,454 @@ class _GymPageState extends State<GymPage> {
       ),
     );
   }
+
+  // String getCurrentlyOpenString(DateTime now) {
+  //   String? openingHours = widget.gym!.openingHours?[currentTime.weekday - 1];
+  //   String result = '';
+
+  //   if (openingHours != null) {
+  //     // Check if current date is a holiday
+  //     if (isHoliday(now)) {
+  //       result = 'Holiday Hours';
+  //     } else if (openingHours.contains('Open 24 hours')) {
+  //       result = 'Open 24 hours';
+  //     } else {
+  //       openingHours = openingHours.substring(openingHours.indexOf(':') + 2);
+  //       List<String> times = openingHours.split(' – ');
+  //       String startTime = times[0];
+  //       String endTime = times[1];
+
+  //       int startHour = int.parse(startTime.split(':')[0]);
+  //       int endHour = int.parse(endTime.split(':')[0]);
+
+  //       if (startTime.endsWith('AM') && startHour == 12) {
+  //         startHour = 0;
+  //       } else if (startTime.endsWith('PM') && startHour != 12) {
+  //         startHour += 12;
+  //       }
+  //       if (endTime.endsWith('AM') && endHour == 12) {
+  //         endHour = 0;
+  //       } else if (endTime.endsWith('PM') && endHour != 12) {
+  //         endHour += 12;
+  //       }
+
+  //       if (endHour < startHour) {
+  //         // Check if the current time is within the opening hours
+  //         if (currentTime.hour >= startHour || currentTime.hour < endHour) {
+  //           result = 'Open';
+  //           int totalMinutesUntilClose =
+  //               ((endHour - currentTime.hour + 24 - 1) % 24) * 60 +
+  //                   (60 - currentTime.minute);
+  //           int hoursUntilClose = totalMinutesUntilClose ~/ 60;
+  //           int minutesUntilClose = totalMinutesUntilClose % 60;
+  //           result +=
+  //               ' - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+  //         } else {
+  //           // Check if previous day is still open
+  //           String? previousDayOpeningHours =
+  //               widget.gym!.openingHours?[(currentTime.weekday - 2) % 7];
+  //           if (previousDayOpeningHours != null) {
+  //             previousDayOpeningHours = previousDayOpeningHours
+  //                 .substring(previousDayOpeningHours.indexOf(':') + 2);
+  //             List<String> previousTimes = previousDayOpeningHours.split(' – ');
+  //             String previousEndTime = previousTimes[1];
+  //             int previousEndHour = int.parse(previousEndTime.split(':')[0]);
+
+  //             if (previousEndTime.endsWith('AM') && previousEndHour == 12) {
+  //               previousEndHour = 0;
+  //             } else if (previousEndTime.endsWith('PM') &&
+  //                 previousEndHour != 12) {
+  //               previousEndHour += 12;
+  //             }
+
+  //             if (previousEndHour > currentTime.hour) {
+  //               // Previous day is still open
+  //               result = 'Open';
+  //               int totalMinutesUntilClose =
+  //                   (previousEndHour - currentTime.hour - 1) * 60 +
+  //                       (60 - currentTime.minute);
+  //               int hoursUntilClose = totalMinutesUntilClose ~/ 60;
+  //               int minutesUntilClose = totalMinutesUntilClose % 60;
+  //               result +=
+  //                   ' - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+  //             } else {
+  //               result = 'Closed';
+  //               int totalMinutesUntilOpen =
+  //                   (startHour - currentTime.hour - 1) * 60 +
+  //                       (60 - currentTime.minute);
+  //               int hoursUntilOpen = totalMinutesUntilOpen ~/ 60;
+  //               int minutesUntilOpen = totalMinutesUntilOpen % 60;
+  //               result +=
+  //                   ' - Opens in $hoursUntilOpen hours and $minutesUntilOpen minutes';
+  //             }
+  //           } else {
+  //             result = 'Closed';
+  //             int totalMinutesUntilOpen =
+  //                 (startHour - currentTime.hour - 1) * 60 +
+  //                     (60 - currentTime.minute);
+  //             int hoursUntilOpen = totalMinutesUntilOpen ~/ 60;
+  //             int minutesUntilOpen = totalMinutesUntilOpen % 60;
+  //             result +=
+  //                 ' - Opens in $hoursUntilOpen hours and $minutesUntilOpen minutes';
+  //           }
+  //         }
+  //       } else {
+  //         if (currentTime.hour >= startHour && currentTime.hour < endHour) {
+  //           result = 'Open';
+  //           int totalMinutesUntilClose =
+  //               (endHour - currentTime.hour) * 60 + (60 - currentTime.minute);
+  //           int hoursUntilClose = totalMinutesUntilClose ~/ 60;
+  //           int minutesUntilClose = totalMinutesUntilClose % 60;
+  //           result +=
+  //               ' - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+  //         } else {
+  //           // Check if previous day is still open
+  //           String? previousDayOpeningHours =
+  //               widget.gym!.openingHours?[(currentTime.weekday - 2) % 7];
+  //           if (previousDayOpeningHours != null) {
+  //             previousDayOpeningHours = previousDayOpeningHours
+  //                 .substring(previousDayOpeningHours.indexOf(':') + 2);
+  //             List<String> previousTimes = previousDayOpeningHours.split(' – ');
+  //             String previousEndTime = previousTimes[1];
+  //             int previousEndHour = int.parse(previousEndTime.split(':')[0]);
+
+  //             if (previousEndTime.endsWith('AM') && previousEndHour == 12) {
+  //               previousEndHour = 0;
+  //             } else if (previousEndTime.endsWith('PM') &&
+  //                 previousEndHour != 12) {
+  //               previousEndHour += 12;
+  //             }
+
+  //             if (previousEndHour > currentTime.hour) {
+  //               // Previous day is still open
+  //               result = 'Open';
+  //               int totalMinutesUntilClose =
+  //                   (previousEndHour - currentTime.hour - 1) * 60 +
+  //                       (60 - currentTime.minute);
+  //               int hoursUntilClose = totalMinutesUntilClose ~/ 60;
+  //               int minutesUntilClose = totalMinutesUntilClose % 60;
+  //               result +=
+  //                   ' - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+  //             } else {
+  //               result = 'Closed';
+  //               int totalMinutesUntilOpen =
+  //                   (startHour - currentTime.hour - 1) * 60 +
+  //                       (60 - currentTime.minute);
+  //               int hoursUntilOpen = totalMinutesUntilOpen ~/ 60;
+  //               int minutesUntilOpen = totalMinutesUntilOpen % 60;
+  //               result +=
+  //                   ' - Opens in $hoursUntilOpen hours and $minutesUntilOpen minutes';
+  //             }
+  //           } else {
+  //             result = 'Closed';
+  //             int totalMinutesUntilOpen =
+  //                 (startHour - currentTime.hour - 1) * 60 +
+  //                     (60 - currentTime.minute);
+  //             int hoursUntilOpen = totalMinutesUntilOpen ~/ 60;
+  //             int minutesUntilOpen = totalMinutesUntilOpen % 60;
+  //             result +=
+  //                 ' - Opens in $hoursUntilOpen hours and $minutesUntilOpen minutes';
+  //           }
+  //         }
+  //       }
+
+  //       // Grammar
+  //       result.replaceAll('1 hours', '1 hour');
+  //       result.replaceAll('1 minutes', '1 minute');
+
+  //       // if (endHour < startHour) {
+  //       //   // Handle case where end hour is less than start hour (e.g., 9 PM - 3 AM)
+  //       //   if (currentTime.hour >= startHour || currentTime.hour < endHour) {
+  //       //     result = 'Open';
+  //       //     int hoursUntilClose = (endHour - currentTime.hour + 24) % 24;
+  //       //     int minutesUntilClose =
+  //       //         hoursUntilClose * 60 + (60 - currentTime.minute);
+  //       //     result +=
+  //       //         ' - Closes in $hoursUntilClose hours and ${minutesUntilClose % 60} minutes';
+  //       //   } else {
+  //       //     result = 'Closed';
+  //       //     int hoursUntilOpen = (startHour - currentTime.hour + 24) % 24;
+  //       //     int minutesUntilOpen =
+  //       //         hoursUntilOpen * 60 + (60 - currentTime.minute);
+  //       //     result +=
+  //       //         ' - Opens in $hoursUntilOpen hours and ${minutesUntilOpen % 60} minutes';
+  //       //   }
+  //       // } else {
+  //       //   // Handle normal case
+  //       //   if (currentTime.hour >= startHour && currentTime.hour < endHour) {
+  //       //     result = 'Open';
+  //       //     int hoursUntilClose = (endHour - currentTime.hour) % 24;
+  //       //     int minutesUntilClose =
+  //       //         hoursUntilClose * 60 + (60 - currentTime.minute);
+  //       //     result +=
+  //       //         ' - Closes in $hoursUntilClose hours and ${minutesUntilClose % 60} minutes';
+  //       //   } else {
+  //       //     result = 'Closed';
+  //       //     int hoursUntilOpen = (startHour - currentTime.hour + 24) % 24;
+  //       //     int minutesUntilOpen =
+  //       //         hoursUntilOpen * 60 + (60 - currentTime.minute);
+  //       //     result +=
+  //       //         ' - Opens in $hoursUntilOpen hours and ${minutesUntilOpen % 60} minutes';
+  //       //   }
+  //       // }
+  //     }
+  //   }
+
+  //   return result;
+
+  //   String? openingHours = widget.gym!.openingHours?[currentTime.weekday - 1];
+  //   String result = '';
+
+  //   if (openingHours != null) {
+  //     // Check if current date is a holiday
+  //     DateTime now = DateTime.now();
+  //     if (isHoliday(now)) {
+  //       result = 'Holiday Hours';
+  //     } else if (openingHours.contains('Open 24 hours')) {
+  //       result = 'Open 24 hours';
+  //     } else {
+  //       openingHours = openingHours.substring(openingHours.indexOf(':') + 2);
+  //       List<String> times = openingHours.split(' – ');
+  //       String startTime = times[0];
+  //       String endTime = times[1];
+
+  //       int startHour = int.parse(startTime.split(':')[0]);
+  //       int endHour = int.parse(endTime.split(':')[0]);
+
+  //       if (startTime.endsWith('AM') && startHour == 12) {
+  //         startHour = 0;
+  //       } else if (startTime.endsWith('PM') && startHour != 12) {
+  //         startHour += 12;
+  //       }
+  //       if (endTime.endsWith('AM') && endHour == 12) {
+  //         endHour = 0;
+  //       } else if (endTime.endsWith('PM') && endHour != 12) {
+  //         endHour += 12;
+  //       }
+
+  //       if (currentTime.hour >= startHour && currentTime.hour < endHour) {
+  //         result = 'Open';
+  //         int minutesUntilClose =
+  //             (endHour - currentTime.hour - 1) * 60 + (60 - currentTime.minute);
+  //         result += ' - Closes in $minutesUntilClose minutes';
+  //       } else {
+  //         // Check if previous day is still open
+  //         String? previousDayOpeningHours =
+  //             widget.gym!.openingHours?[(currentTime.weekday - 2) % 7];
+  //         if (previousDayOpeningHours != null) {
+  //           previousDayOpeningHours = previousDayOpeningHours
+  //               .substring(previousDayOpeningHours.indexOf(':') + 2);
+  //           List<String> previousTimes = previousDayOpeningHours.split(' – ');
+  //           String previousEndTime = previousTimes[1];
+  //           int previousEndHour = int.parse(previousEndTime.split(':')[0]);
+
+  //           if (previousEndTime.endsWith('AM') && previousEndHour == 12) {
+  //             previousEndHour = 0;
+  //           } else if (previousEndTime.endsWith('PM') &&
+  //               previousEndHour != 12) {
+  //             previousEndHour += 12;
+  //           }
+
+  //           if (previousEndHour > currentTime.hour) {
+  //             // Previous day is still open
+  //             result = 'Open';
+  //             int minutesUntilClose =
+  //                 (previousEndHour - currentTime.hour - 1) * 60 +
+  //                     (60 - currentTime.minute);
+  //             result += ' - Closes in $minutesUntilClose minutes';
+  //           } else {
+  //             result = 'Closed';
+  //             int minutesUntilOpen = (startHour - currentTime.hour - 1) * 60 +
+  //                 (60 - currentTime.minute);
+  //             result += ' - Opens in $minutesUntilOpen minutes';
+  //           }
+  //         } else {
+  //           result = 'Closed';
+  //           int minutesUntilOpen = (startHour - currentTime.hour - 1) * 60 +
+  //               (60 - currentTime.minute);
+  //           result += ' - Opens in $minutesUntilOpen minutes';
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return result;
 }
 
-class GymImageContainer extends StatefulWidget {
-  final Uint8List bytes;
+// String getGymStatus(List<String>? openingHoursStrings, DateTime now) {
+//   // DateTime now = DateTime.now();
+//   if (openingHoursStrings == null) {
+//     return '';
+//   }
+//   if (isHoliday(now)) {
+//     return 'Holiday Hours';
+//   } else if (openingHoursStrings[now.weekday - 1].contains('Open 24 hours')) {
+//     return 'Open 24 hours';
+//   }
+//   List<int?> openingHours = List<int?>.filled(168, null);
 
-  GymImageContainer({required this.bytes});
+//   // Helper function to convert time string to minutes past 12 AM
+//   int convertTimeToMinutes(String timeString) {
+//     List<String> timeParts = timeString.split(':');
+//     // timeParts[0] = timeParts[0].replaceAll('00', '0');
+//     // timeParts[1] = timeParts[1].replaceAll('00', '0');
+//     int hours = int.parse(timeParts[0].trim());
+//     int minutes = int.parse(timeParts[1].substring(0, 2));
+//     bool isPM = timeParts[1].endsWith('PM');
 
-  @override
-  _GymImageContainerState createState() => _GymImageContainerState();
-}
+//     if (hours == 12) {
+//       hours = 0;
+//     }
+//     if (isPM) {
+//       hours += 12;
+//     }
 
-class _GymImageContainerState extends State<GymImageContainer> {
-  bool _loading = true;
-  bool _error = false;
+//     return hours * 60 + minutes;
+//   }
 
-  void _loadImage() {
-    // Image.network(widget.imageUrl)
-    //     .image
-    //     .resolve(const ImageConfiguration())
-    //     .addListener(ImageStreamListener((info, _) {
-    //       if (mounted) {
-    //         setState(() {
-    //           _loading = false;
-    //         });
-    //       }
-    //     }, onError: (_, __) {
-    //       if (mounted) {
-    //         setState(() {
-    //           _loading = false;
-    //           _error = true;
-    //         });
-    //       }
-    //     }));
-    Image.memory(widget.bytes)
-        .image
-        .resolve(const ImageConfiguration())
-        .addListener(ImageStreamListener((info, _) {
-          if (mounted) {
-            setState(() {
-              _loading = false;
-            });
-          }
-        }, onError: (_, __) {
-          if (mounted) {
-            setState(() {
-              _loading = false;
-              _error = true;
-            });
-          }
-        }));
-  }
+//   // Parse opening hours strings into openingHours array
+//   for (int i = 0; i < openingHoursStrings.length; i++) {
+//     String openingHoursString = openingHoursStrings[i];
+//     openingHoursString =
+//         openingHoursString.substring(openingHoursString.indexOf(':') + 2);
+//     List<String> timeRangeParts = openingHoursString.split(' – ');
 
-  @override
-  void initState() {
-    super.initState();
-    _loadImage();
-  }
+//     int startMinutes = convertTimeToMinutes(timeRangeParts[0]);
+//     int endMinutes = convertTimeToMinutes(timeRangeParts[1]);
 
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return Container(
-        color: Colors.grey,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    } else if (_error) {
-      return Container(
-        color: Colors.grey,
-      );
-    } else {
-      return Image.memory(
-        widget.bytes,
-        fit: BoxFit.cover,
-      );
-    }
-  }
-}
+//     // Handle case when closing time is in the AM of the next day
+//     if (endMinutes < startMinutes) {
+//       endMinutes += 24 * 60;
+//     }
+
+//     for (int j = startMinutes; j <= endMinutes; j++) {
+//       openingHours[i * 24 + (j % 24)] = j;
+//     }
+//   }
+
+//   // Rest of the code remains the same
+//   int currentDayIndex = (now.weekday + 5) % 7; // Fix index calculation
+//   int currentHourIndex = currentDayIndex * 24 + now.hour;
+
+//   // Check if the current time is within the opening hours
+//   if (openingHours[currentHourIndex] != null) {
+//     int minutesUntilClose =
+//         openingHours[currentHourIndex]! - (now.hour * 60 + now.minute);
+//     if (minutesUntilClose < 0) {
+//       minutesUntilClose += 24 * 60;
+//     }
+//     int hoursUntilClose = minutesUntilClose ~/ 60;
+//     minutesUntilClose %= 60;
+//     return 'Open - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+//   }
+
+//   int? currentOpeningHour = openingHours[currentHourIndex];
+//   if (currentOpeningHour != null) {
+//     if (currentOpeningHour >= 0) {
+//       int hoursUntilClose = currentOpeningHour ~/ 60;
+//       int minutesUntilClose = currentOpeningHour % 60;
+//       return 'Open - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+//     } else {
+//       int minutesUntilOpen = -currentOpeningHour;
+//       return 'Closed - Opens in $minutesUntilOpen minutes';
+//     }
+//   } else {
+//     int nextOpeningIndex = currentHourIndex;
+//     int nextClosingIndex = currentHourIndex;
+
+//     while (openingHours[nextOpeningIndex] == null) {
+//       nextOpeningIndex = (nextOpeningIndex + 1) % openingHours.length;
+//     }
+
+//     while (openingHours[nextClosingIndex] == null) {
+//       nextClosingIndex = (nextClosingIndex + 1) % openingHours.length;
+//     }
+
+//     int hoursUntilOpen = ((nextOpeningIndex - currentHourIndex) + 168) % 168;
+//     int minutesUntilOpen = openingHours[nextOpeningIndex]!;
+//     int hoursUntilClose = ((nextClosingIndex - currentHourIndex) + 168) % 168;
+//     int minutesUntilClose = -openingHours[nextClosingIndex]!;
+
+//     return 'Closed - Opens in $hoursUntilOpen hours and $minutesUntilOpen minutes\n'
+//         'Open - Closes in $hoursUntilClose hours and $minutesUntilClose minutes';
+//   }
+// }
+// }
+
+// class GymImageContainer extends StatefulWidget {
+//   final Uint8List bytes;
+
+//   GymImageContainer({required this.bytes});
+
+//   @override
+//   _GymImageContainerState createState() => _GymImageContainerState();
+// }
+
+// class _GymImageContainerState extends State<GymImageContainer> {
+//   bool _loading = true;
+//   bool _error = false;
+
+//   void _loadImage() {
+//     // Image.network(widget.imageUrl)
+//     //     .image
+//     //     .resolve(const ImageConfiguration())
+//     //     .addListener(ImageStreamListener((info, _) {
+//     //       if (mounted) {
+//     //         setState(() {
+//     //           _loading = false;
+//     //         });
+//     //       }
+//     //     }, onError: (_, __) {
+//     //       if (mounted) {
+//     //         setState(() {
+//     //           _loading = false;
+//     //           _error = true;
+//     //         });
+//     //       }
+//     //     }));
+//     Image.memory(widget.bytes)
+//         .image
+//         .resolve(const ImageConfiguration())
+//         .addListener(ImageStreamListener((info, _) {
+//           if (mounted) {
+//             setState(() {
+//               _loading = false;
+//             });
+//           }
+//         }, onError: (_, __) {
+//           if (mounted) {
+//             setState(() {
+//               _loading = false;
+//               _error = true;
+//             });
+//           }
+//         }));
+//   }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadImage();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     if (_loading) {
+//       return Container(
+//         color: Colors.grey,
+//         child: Center(child: CircularProgressIndicator()),
+//       );
+//     } else if (_error) {
+//       return Container(
+//         color: Colors.grey,
+//       );
+//     } else {
+//       return Image.memory(
+//         widget.bytes,
+//         fit: BoxFit.cover,
+//       );
+//     }
+//   }
+// }
 
 class FullScreenPhoto extends StatelessWidget {
   final String photoTag;
@@ -1476,3 +1884,230 @@ class FullScreenPhoto extends StatelessWidget {
 //     );
 //   }
 // }
+
+class GymStatus {
+  final String dayOfWeek;
+  final TimeOfDay? openingTime;
+  final TimeOfDay? closingTime;
+
+  GymStatus(this.dayOfWeek, this.openingTime, this.closingTime);
+}
+
+class GymOpeningHours {
+  final DateFormat dateFormat = DateFormat('hh:mm a');
+  final List<String> openingHours;
+
+  GymOpeningHours(this.openingHours);
+
+  List<GymStatus> parseOpeningHours() {
+    return openingHours.map((openingHour) {
+      final List<String> parts = openingHour.split(':');
+      final String dayOfWeek = parts[0];
+      final String hoursPart =
+          openingHour.substring(openingHour.indexOf(':') + 2).trim();
+
+      if (hoursPart == 'Open 24 hours') {
+        return GymStatus(dayOfWeek, null, null);
+      } else if (hoursPart == 'Closed') {
+        return GymStatus(dayOfWeek, TimeOfDay(hour: 0, minute: 0),
+            TimeOfDay(hour: 0, minute: 0));
+      } else {
+        final List<String> timeParts = hoursPart.split('–');
+        final String openingTimeStr = timeParts[0].trim();
+        final String closingTimeStr = timeParts[1].trim();
+
+        // final TimeOfDay openingTime = parseTime(openingTimeStr);
+        // final TimeOfDay closingTime = parseTime(closingTimeStr);
+        List<TimeOfDay> openAndClosingTime =
+            parseTime('$openingTimeStr-$closingTimeStr');
+
+        return GymStatus(
+            dayOfWeek, openAndClosingTime[0], openAndClosingTime[1]);
+      }
+    }).toList();
+  }
+
+//   TimeOfDay parseTime(String timeStr) {
+//   final String formattedTimeStr = timeStr.replaceAll('\u202F', ' ').trim();
+//   final DateTime dateTime = dateFormat.parse(formattedTimeStr);
+//   return TimeOfDay.fromDateTime(dateTime);
+// }
+
+  List<TimeOfDay> parseTime(String timeStr) {
+    final String formattedTimeStr = timeStr.replaceAll('\u202F', ' ').trim();
+    final List<String> timeParts = formattedTimeStr.split('-');
+    final String openingTimeStr = timeParts[0].trim();
+    final String closingTimeStr = timeParts[1].trim();
+
+    String openingTimeFormatted = openingTimeStr;
+    String closingTimeFormatted = closingTimeStr;
+
+    if (!openingTimeStr.contains(RegExp('[APM]'))) {
+      // If opening time does not contain AM/PM, assume it is the same as closing time's AM/PM
+      final RegExp pmRegex = RegExp('PM');
+      final RegExp amRegex = RegExp('AM');
+
+      if (pmRegex.hasMatch(closingTimeStr)) {
+        openingTimeFormatted += ' PM';
+      } else if (amRegex.hasMatch(closingTimeStr)) {
+        openingTimeFormatted += ' AM';
+      }
+    }
+
+    final DateTime openingDateTime = dateFormat.parse(openingTimeFormatted);
+    final DateTime closingDateTime = dateFormat.parse(closingTimeFormatted);
+
+    return [
+      TimeOfDay.fromDateTime(openingDateTime),
+      TimeOfDay.fromDateTime(closingDateTime)
+    ];
+  }
+
+  String getCurrentlyOpenString() {
+    final DateTime now = DateTime.now();
+    final int currentDayOfWeek = now.weekday;
+
+    final List<GymStatus> gymStatusList = parseOpeningHours();
+    final GymStatus gymStatus = gymStatusList[currentDayOfWeek - 1];
+
+    if (gymStatus.openingTime == null || gymStatus.closingTime == null) {
+      return 'Open 24 Hours';
+    } else if (gymStatus.openingTime == TimeOfDay(hour: 0, minute: 0) &&
+        gymStatus.closingTime == TimeOfDay(hour: 0, minute: 0)) {
+      final DateTime? nextOpeningDateTime =
+          findNextOpenDate(now, gymStatusList);
+      if (nextOpeningDateTime == null) {
+        print('ERROR - ALL SUBSEQUENT DAYS ARE CLOSED');
+        return '';
+      }
+      return 'Closed - Opens ${formatHours(nextOpeningDateTime.hour)} ${[
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat',
+        'Sun'
+      ][nextOpeningDateTime.weekday - 1]}';
+      // return 'Closed';
+    } else {
+      final DateTime openingDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        gymStatus.openingTime!.hour,
+        gymStatus.openingTime!.minute,
+      );
+      DateTime closingDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        gymStatus.closingTime!.hour,
+        gymStatus.closingTime!.minute,
+      );
+
+      if (gymStatus.closingTime!.hour == 12) {
+        // Adjust closing time from 12 AM to 12 PM
+        closingDateTime = closingDateTime.add(Duration(hours: 12));
+      } else if (gymStatus.closingTime!.hour < gymStatus.openingTime!.hour) {
+        // Adjust closing time if it is on the next day
+        closingDateTime = closingDateTime.add(Duration(days: 1));
+      }
+
+      if (now.isBefore(openingDateTime)) {
+        return 'Closed - Opens ${formatHours(openingDateTime.hour)}';
+        // final Duration timeUntilOpen = openingDateTime.difference(now);
+        // return 'Closed - Opens in ${formatDuration(timeUntilOpen)}';
+      } else if (now.isAfter(closingDateTime)) {
+        final DateTime? nextOpeningDateTime =
+            findNextOpenDate(now, gymStatusList);
+        if (nextOpeningDateTime == null) {
+          print('ERROR - ALL SUBSEQUENT DAYS ARE CLOSED');
+          return '';
+        }
+        // final DateTime nextOpeningDateTime = DateTime(
+        //   now.year,
+        //   now.month,
+        //   now.day + 1,
+        //   gymStatusList[(currentDayOfWeek) % 7].openingTime!.hour,
+        //   gymStatusList[(currentDayOfWeek) % 7].openingTime!.minute,
+        // );
+
+        return 'Closed - Opens ${formatHours(nextOpeningDateTime.hour)} ${[
+          'Mon',
+          'Tue',
+          'Wed',
+          'Thu',
+          'Fri',
+          'Sat',
+          'Sun'
+        ][nextOpeningDateTime.weekday - 1]}';
+        // final Duration timeUntilOpen = nextOpeningDateTime.difference(now);
+        // return 'Closed - Opens in ${formatDuration(timeUntilOpen)}';
+      } else {
+        return 'Open - Closes ${formatHours(closingDateTime.hour)}';
+        // final Duration timeUntilClose = closingDateTime.difference(now);
+        // return 'Open - Closes in ${formatDuration(timeUntilClose)}';
+      }
+    }
+  }
+
+  DateTime? findNextOpenDate(
+      DateTime currentDate, List<GymStatus> gymStatusList) {
+    final int currentDayOfWeek = currentDate.weekday;
+
+    int nextDay = currentDayOfWeek;
+    do {
+      nextDay = (nextDay % 7) + 1; // Get the next day of the week
+      final GymStatus nextDayStatus = gymStatusList[nextDay - 1];
+      final TimeOfDay? openingTime = nextDayStatus.openingTime;
+      final TimeOfDay? closingTime = nextDayStatus.closingTime;
+
+      if (openingTime == null || closingTime == null) {
+        // Open 24 hours
+        return DateTime(
+          currentDate.year,
+          currentDate.month,
+          currentDate.day + (nextDay - currentDayOfWeek),
+          0,
+          0,
+        );
+      }
+
+      if (openingTime != TimeOfDay(hour: 0, minute: 0) ||
+          closingTime != TimeOfDay(hour: 0, minute: 0)) {
+        // Found a day where it is not closed the whole day
+        return DateTime(
+          currentDate.year,
+          currentDate.month,
+          currentDate.day + (nextDay - currentDayOfWeek),
+          openingTime.hour,
+          openingTime.minute,
+        );
+      }
+    } while (nextDay !=
+        currentDayOfWeek); // Keep iterating until returning to the current day
+
+    return null; // Return null if no open day is found
+  }
+
+  String formatHours(int hour) {
+    if (hour == 0) {
+      return '12 AM';
+    }
+    if (hour == 12) {
+      return '12 PM';
+    }
+    if (hour < 12) {
+      return '$hour AM';
+    } else {
+      return '${hour % 12} PM';
+    }
+  }
+
+  String formatDuration(Duration duration) {
+    final int hours = duration.inHours;
+    final int minutes = duration.inMinutes.remainder(60);
+    return '$hours hours, $minutes minutes';
+  }
+}

@@ -20,37 +20,86 @@ class _ExercisesPageState extends State<ExercisesPage> {
   ];
   String selectedFilterOption = 'None';
 
+  Map<String, List<String>> subMuscleGroups = {
+    'Chest': ['Upper Chest', 'Mid Chest', 'Lower Chest'],
+    'Back': ['Lats', 'Upper Back', 'Mid Back', 'Lower Back'],
+    'Triceps': ['Long Head', 'Lateral Head', 'Medial Head'],
+    'Biceps': ['Long Head', 'Short Head', 'Brachialis', 'Forearms'],
+    'Abs': ['Upper Abs', 'Lower Abs'],
+    'Glutes': ['Glute Medius', 'Hip Adductors'],
+  };
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
     var exercises = appState.muscleGroups[appState.currentMuscleGroup];
+    while (filterOptions.length > 3 &&
+        filterOptions[0] !=
+            (subMuscleGroups[appState.currentMuscleGroup] ?? [''])[0]) {
+      filterOptions.removeAt(0);
+    }
+    if (filterOptions.length == 3 &&
+        subMuscleGroups[appState.currentMuscleGroup] != null) {
+      filterOptions.insertAll(0, subMuscleGroups[appState.currentMuscleGroup]!);
+    }
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge!.copyWith(
+    final titleStyle = theme.textTheme.titleMedium!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
     List<Exercise> filteredExercises = [];
     if (exercises != null) {
-      filteredExercises = exercises.where((exercise) {
-        if (selectedFilterOption == 'Dumbbell-Only') {
+      if (selectedFilterOption == 'Dumbbell-Only') {
+        filteredExercises = exercises.where((exercise) {
           if (exercise.resourcesRequired != null) {
             return exercise.resourcesRequired!.contains('Dumbbells');
           }
-        } else if (selectedFilterOption == 'No Equipment') {
+          return true;
+        }).toList();
+      } else if (selectedFilterOption == 'No Equipment') {
+        filteredExercises = exercises.where((exercise) {
           if (exercise.resourcesRequired != null) {
             return exercise.resourcesRequired!.contains('None') ||
                 exercise.resourcesRequired!.contains('Pull-Up Bar') ||
                 exercise.resourcesRequired!.contains('Parallel Bars');
           }
-        } else if (selectedFilterOption == 'Machine-Only') {
+          return true;
+        }).toList();
+      } else if (selectedFilterOption == 'Machine-Only') {
+        filteredExercises = exercises.where((exercise) {
           if (exercise.resourcesRequired != null) {
             return exercise.resourcesRequired!.contains('Machine');
           }
+          return true;
+        }).toList();
+      } else if (selectedFilterOption == 'Forearms') {
+        filteredExercises = exercises.where((exercise) {
+          return exercise.musclesWorked.contains('Forearms') ||
+              exercise.musclesWorked.contains('Brachioradialis');
+        }).toList();
+      } else if (selectedFilterOption == 'None') {
+        filteredExercises = exercises;
+      } else {
+        // selectedFilterOption is a regular sub muscle group
+        int index;
+        String subMuscleGroup = selectedFilterOption;
+        if (appState.currentMuscleGroup == 'Biceps' &&
+            subMuscleGroup != 'Brachialis') {
+          subMuscleGroup = 'Bicep $subMuscleGroup';
+        } else if (appState.currentMuscleGroup == 'Triceps') {
+          subMuscleGroup = 'Tricep $subMuscleGroup';
         }
-        return true; // Return true to include all exercises by default
-      }).toList();
+        filteredExercises = exercises.where((exercise) {
+          index = exercise.musclesWorked.indexOf(subMuscleGroup);
+          if (index == -1) {
+            return false;
+          }
+          // If high activation, class it in the sub muscle group
+          return exercise.musclesWorkedActivation[index] == 3;
+        }).toList();
+      }
     }
 
     return SwipeBack(
@@ -77,6 +126,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     width: 5, // Buffer space from left
                   ),
                   ...filterOptions.map((option) {
+                    final labelStyle =  theme.textTheme.labelSmall!.copyWith(
+                                color: theme.colorScheme.onBackground);
                     bool isSelected = option == selectedFilterOption;
                     if (isSelected) {
                       return Padding(
@@ -98,13 +149,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
                                   resolveColor(theme.colorScheme.primary)),
                           label: Text(
                             option,
-                            style: TextStyle(
-                                color: theme.colorScheme.onBackground),
+                            style: labelStyle,
                           ),
-                          icon: Icon(
-                            Icons.cancel,
-                            color: theme.colorScheme.onBackground,
-                          ),
+                          icon: Icon(Icons.cancel,
+                              color: theme.colorScheme.onBackground, size: 16),
                         ),
                       );
                     } else {
@@ -123,15 +171,14 @@ class _ExercisesPageState extends State<ExercisesPage> {
                                   theme.colorScheme.primaryContainer)),
                           child: Text(
                             option,
-                            style: TextStyle(
-                                color: theme.colorScheme.onBackground),
+                            style: labelStyle,
                           ),
                         ),
                       );
                     }
                   }).toList(),
                   SizedBox(
-                    width: 5, // Buffer space from left
+                    width: 5, // Buffer space from right
                   ),
                 ],
               ),
@@ -145,6 +192,65 @@ class _ExercisesPageState extends State<ExercisesPage> {
         ),
       ),
       // ),
+    );
+  }
+}
+
+class ExerciseSelectorButton extends StatelessWidget {
+  const ExerciseSelectorButton({
+    super.key,
+    required this.exercise,
+    // required this.index,
+  });
+
+  final Exercise exercise;
+  // final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodyMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+
+    void togglePressed() {
+      // Coming from individual muscle group page
+      appState.fromSearchPage = false;
+      // appState.fromFavorites = false;
+      appState.fromSplitDayPage = false;
+      appState.changePageToExercise(exercise);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+      child: TextButton(
+        onPressed: togglePressed,
+        child: Expanded(
+          child: Row(children: [
+            Container(
+              height: 80,
+              width: 80,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: theme.colorScheme.onBackground),
+              child: Padding(
+                padding: const EdgeInsets.all(1.0),
+                child: ImageContainer(exerciseName: exercise.name),
+              ),
+            ),
+            SizedBox(width: 25),
+            SizedBox(
+              width: 260,
+              child: Text(
+                exercise.name,
+                style: style,
+                maxLines: 2,
+              ),
+            ),
+          ]),
+        ),
+      ),
     );
   }
 }

@@ -165,7 +165,9 @@ class _SplitDayPageState extends State<SplitDayPage> {
                       ),
                       child: Text(
                         trainingDays[widget.dayIndex].splitDay,
-                        style: titleStyle,
+                        style: theme.textTheme.bodyMedium!.copyWith(
+                          color: theme.colorScheme.onBackground,
+                        ),
                         maxLines: 3,
                         textAlign: TextAlign.center,
                       ),
@@ -287,22 +289,57 @@ class _SplitDayPageState extends State<SplitDayPage> {
                     //     )),
                     // if (muscleGroupCards.length >
                     //     1) // If 0 or 1 muscle groups, no option to reorder
-                    ElevatedButton.icon(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () {
-                          appState.toSplitDayReorderMode(true);
-                        },
-                        icon:
-                            Icon(Icons.edit, color: theme.colorScheme.primary),
-                        label: Text(
-                          "Edit",
-                          style: theme.textTheme.labelSmall!
-                              .copyWith(color: theme.colorScheme.onBackground),
-                        )),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            onPressed: () {
+                              appState.toSplitDayReorderMode(true);
+                            },
+                            icon: Icon(Icons.edit,
+                                color: theme.colorScheme.primary, size: 16),
+                            label: Text(
+                              'Edit',
+                              style: theme.textTheme.labelSmall!.copyWith(
+                                  color: theme.colorScheme.onBackground),
+                            )),
+                        ElevatedButton.icon(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    resolveColor(theme.colorScheme.primary),
+                                surfaceTintColor:
+                                    resolveColor(theme.colorScheme.primary)),
+                            onPressed: () {
+                              // Don't include exercises already in the split day
+                              _showSearchExercisesWindow(
+                                  context,
+                                  appState,
+                                  appState.muscleGroups.values
+                                      .toList()
+                                      .expand((innerList) => innerList)
+                                      .toList()
+                                      .where((element) => !split
+                                          .trainingDays[widget.dayIndex]
+                                          .exerciseNames
+                                          .contains(element.name))
+                                      .toList(),
+                                  widget.dayIndex);
+                            },
+                            icon: Icon(Icons.add,
+                                color: theme.colorScheme.onBackground,
+                                size: 16),
+                            label: Text(
+                              'Add exercise',
+                              style: theme.textTheme.labelSmall!.copyWith(
+                                  color: theme.colorScheme.onBackground),
+                            )),
+                      ],
+                    ),
                   //   ],
                   // ),
                   // if (appState.splitDayEditMode || appState.splitDayReorderMode)
@@ -560,10 +597,10 @@ class _AddButtonState extends State<AddButton> {
 
     muscleGroups = widget.appState.muscleGroups.keys.toList();
 
-    List<List<Exercise>> exercisesByMuscleGroup =
-        widget.appState.muscleGroups.values.toList();
-    List<Exercise> allExercises =
-        exercisesByMuscleGroup.expand((innerList) => innerList).toList();
+    List<Exercise> allExercises = widget.appState.muscleGroups.values
+        .toList()
+        .expand((innerList) => innerList)
+        .toList();
     exerciseNames = allExercises.map((exercise) => exercise.name).toList();
 
     final RelativeRect position = RelativeRect.fromRect(
@@ -1077,7 +1114,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         });
 
         appState.submitExercisePopularityDataToFirebase(
-            appState.userID,
+            appState.authUserId,
             currentExercise.name,
             currentExercise.mainMuscleGroup,
             currentExercise.userRating,
@@ -1172,7 +1209,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         });
 
         appState.submitExercisePopularityDataToFirebase(
-          appState.userID,
+          appState.authUserId,
           currentExercise.name,
           currentExercise.mainMuscleGroup,
           currentExercise.userRating,
@@ -2523,6 +2560,21 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           // SizedBox(width: 20),
           IconButton(
             onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  width: MediaQuery.of(context).size.width * .8,
+                  backgroundColor: theme.colorScheme.onBackground,
+                  content: SizedBox(
+                      width: MediaQuery.of(context).size.width * .8,
+                      child: Text(
+                          'Removed ${appState.editModeTempSplit.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex]}',
+                          textAlign: TextAlign.center,
+                          style:
+                              TextStyle(color: theme.colorScheme.background))),
+                  duration: Duration(milliseconds: 1500),
+                ),
+              );
               appState.removeTempMuscleGroupFromSplit(
                 widget.dayIndex,
                 widget.splitDayCardIndex,
@@ -2624,8 +2676,9 @@ void addExerciseToSplit(
           [3, 2], null, exerciseIndices, dayIndex, splitDayCardIndex, split);
       break;
     case 'cableUpperChest':
-      findValidExercise(appState, gym, 'Chest', ['Upper Chest', 'Front Delts'],
-          [3, 0], 'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
+      // Upper chest fly variation
+      findValidExercise(appState, gym, 'Chest', ['Upper Chest', 'Biceps'],
+          [3, 1], 'Cable', exerciseIndices, dayIndex, splitDayCardIndex, split);
       break;
     case 'cableLowerChest':
       findValidExercise(appState, gym, 'Chest', ['Lower Chest'], [3], 'Cable',
@@ -2813,18 +2866,16 @@ void findValidExercise(
   int splitDayCardIndex, // Add splitDayCardIndex as a parameter
   Split split,
 ) {
-  // At-home exercises only, simply compare first major muscle group (muscleGroupToCheck)
-  int? savedIndex;
-  bool savedCalisthenicExercise = false;
-  bool foundGeneralNonCalisthenic = false;
   if (split.equipmentLevel != 2) {
     if (split.equipmentLevel == 0) {
       // Bodyweight-only
+      int? savedIndex;
+      int savedPriorityFlag =
+          5; // 0: allMusclesHit return, 1: allMusclesHit calisthenic, 2: notAllMusclesHit, 3: notAllMusclesHitCalisthenic, 4: generalNonCalisthenic, 5: generalCalisthenic
       for (int i = 0;
           i < appState.muscleGroups[muscleGroupToCheck]!.length;
           i++) {
         Exercise element = appState.muscleGroups[muscleGroupToCheck]![i];
-        // Just check if the first target muscle group is the same for bodyweight exercises
         if (element.resourcesRequired != null &&
             element.resourcesRequired!.isNotEmpty &&
             (element.resourcesRequired![0] == 'None' ||
@@ -2834,25 +2885,60 @@ void findValidExercise(
           if (element.musclesWorked.isNotEmpty &&
               musclesWorkedCheck.isNotEmpty &&
               element.musclesWorked[0] == musclesWorkedCheck[0]) {
-            if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
-                element.resourcesRequired![0] == 'Parallel Bars' &&
-                    !savedCalisthenicExercise) {
-              savedIndex = i;
-              savedCalisthenicExercise = true;
-            } else {
-              exerciseIndices[dayIndex].add(i);
-              return;
+            // If they don't have the same first sub muscle, assume not a high priority exercise
+            bool allMusclesHit = true;
+            for (int j = 0; j < musclesWorkedCheck.length; j++) {
+              if (targetActivation[j] == 0) {
+                // Don't include the muscle
+                if (element.musclesWorked.contains(musclesWorkedCheck[j])) {
+                  allMusclesHit = false;
+                  break;
+                } else {
+                  continue;
+                }
+              }
+              if (element.musclesWorked.contains(musclesWorkedCheck[j]) &&
+                  element.musclesWorkedActivation[element.musclesWorked
+                          .indexOf(musclesWorkedCheck[j])] ==
+                      targetActivation[j]) {
+                continue;
+              } else {
+                allMusclesHit = false;
+                break;
+              }
             }
-          } else if (!savedCalisthenicExercise) {
+            if (allMusclesHit) {
+              if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
+                  element.resourcesRequired![0] == 'Parallel Bars' &&
+                      savedPriorityFlag > 1) {
+                savedIndex = i;
+
+                /// allMusclesHit calisthenic (1)
+                savedPriorityFlag = 1;
+              } else {
+                exerciseIndices[dayIndex].add(i); // Highest priority (0)
+                return;
+              }
+            } else {
+              // Not all muscles hit
+              if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
+                  element.resourcesRequired![0] == 'Parallel Bars' &&
+                      savedPriorityFlag > 3) {
+                savedIndex = i; // notAllMusclesHit calisthenic
+                savedPriorityFlag = 3;
+              } else if (savedPriorityFlag > 2) {
+                savedIndex = i; // notAllMusclesHit nonCalisthenic
+                savedPriorityFlag = 2;
+              }
+            }
+          } else if (savedPriorityFlag > 4) {
             // Doesn't satisfy the target sub muscle, but still is eligible to be saved
             if (element.resourcesRequired![0] == 'Pull-Up Bar' ||
                 element.resourcesRequired![0] == 'Parallel Bars') {
-              if (!foundGeneralNonCalisthenic) {
-                savedIndex ??= i;
-              }
-            } else if (!foundGeneralNonCalisthenic) {
-              savedIndex = i;
-              foundGeneralNonCalisthenic = true;
+              savedIndex ??= i; // General calisthenic, least priority (5)
+            } else {
+              savedIndex = i; // General nonCalisthenic
+              savedPriorityFlag = 4;
             }
           }
         }
@@ -2873,6 +2959,15 @@ void findValidExercise(
             musclesWorkedCheck.isNotEmpty) {
           bool allMusclesHit = true;
           for (int j = 0; j < musclesWorkedCheck.length; j++) {
+            if (targetActivation[j] == 0) {
+              // Don't include the muscle
+              if (element.musclesWorked.contains(musclesWorkedCheck[j])) {
+                allMusclesHit = false;
+                break;
+              } else {
+                continue;
+              }
+            }
             if (element.musclesWorked.contains(musclesWorkedCheck[j]) &&
                 element.musclesWorkedActivation[
                         element.musclesWorked.indexOf(musclesWorkedCheck[j])] ==
@@ -3024,4 +3119,380 @@ bool exerciseIsPreferredResource(
     return true;
   }
   return false;
+}
+
+void _showSearchExercisesWindow(BuildContext context, MyAppState appState,
+    List<Exercise> allExercises, int dayIndex) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      String initialFilterOption = 'None';
+      if (appState.currentSplit.equipmentLevel < 2) {
+        initialFilterOption = appState.currentSplit.equipmentLevel == 1
+            ? 'Dumbbell-Only'
+            : 'No Equipment';
+      }
+      return SearchExercises(
+          appState, allExercises, initialFilterOption, dayIndex);
+    },
+  );
+}
+
+// ignore: must_be_immutable
+class SearchExercises extends StatefulWidget {
+  MyAppState appState;
+  List<Exercise> allExercises;
+  String selectedFilterOption;
+  int dayIndex;
+
+  SearchExercises(this.appState, this.allExercises, this.selectedFilterOption,
+      this.dayIndex);
+
+  @override
+  _SearchExercisesState createState() => _SearchExercisesState();
+}
+
+class _SearchExercisesState extends State<SearchExercises>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+  String pattern = '';
+
+  List<String> filterOptions = [
+    'Dumbbell-Only',
+    'No Equipment',
+    'Machine-Only'
+  ];
+
+  late TextEditingController searchController;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _showSnackBar(ThemeData theme, Exercise exercise) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: MediaQuery.of(context).size.width * .8,
+        backgroundColor: theme.colorScheme.onBackground,
+        content: SizedBox(
+            width: MediaQuery.of(context).size.width * .8,
+            child: Text('${exercise.name} added!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.background))),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchController = TextEditingController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MyAppState appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+
+    List<Exercise> filteredExercises = [];
+    if (widget.selectedFilterOption == 'Dumbbell-Only') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('Dumbbells');
+        }
+        return true;
+      }).toList();
+    } else if (widget.selectedFilterOption == 'No Equipment') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('None') ||
+              exercise.resourcesRequired!.contains('Pull-Up Bar') ||
+              exercise.resourcesRequired!.contains('Parallel Bars');
+        }
+        return true;
+      }).toList();
+    } else if (widget.selectedFilterOption == 'Machine-Only') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('Machine');
+        }
+        return true;
+      }).toList();
+    } else {
+      // No filter option
+      filteredExercises = widget.allExercises;
+    }
+
+    List<Exercise> searchFilteredExercises;
+    if (pattern.isNotEmpty) {
+      searchFilteredExercises = filteredExercises
+          .where((element) =>
+              element.name.toLowerCase().contains(pattern.toLowerCase()) ||
+              element.mainMuscleGroup
+                  .toLowerCase()
+                  .contains(pattern.toLowerCase()))
+          .toList();
+    } else {
+      searchFilteredExercises = filteredExercises.toList();
+    }
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            key: _scaffoldKey,
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          // _animationController.reverse().then((_) {
+                          // _animationController.reverse();
+                          Navigator.of(context).pop();
+                          // });
+                        },
+                        child: Text('Cancel',
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground)),
+                      ),
+                    ],
+                  ),
+                ),
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: theme.colorScheme.primaryContainer),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
+                            child: TextField(
+                              style: TextStyle(
+                                  color: theme.colorScheme.onBackground),
+                              controller: searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  // If value is empty, no search query
+                                  pattern = value;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  icon: Icon(
+                                    Icons.search,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        pattern = '';
+                                      });
+                                      searchController
+                                          .clear(); // Clear the text field
+                                    },
+                                  ),
+                                  labelText:
+                                      'Search for an exercise or muscle group',
+                                  labelStyle: labelStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65)),
+                                  floatingLabelStyle: labelStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65))),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 5, // Buffer space from left
+                      ),
+                      ...filterOptions.map((option) {
+                        bool isSelected = option == widget.selectedFilterOption;
+                        if (isSelected) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  if (!isSelected) {
+                                    widget.selectedFilterOption = option;
+                                  } else {
+                                    widget.selectedFilterOption = 'None';
+                                  }
+                                });
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor:
+                                      resolveColor(theme.colorScheme.primary),
+                                  surfaceTintColor:
+                                      resolveColor(theme.colorScheme.primary)),
+                              label: Text(
+                                option,
+                                style: labelStyle,
+                              ),
+                              icon: Icon(Icons.cancel,
+                                  color: theme.colorScheme.onBackground,
+                                  size: 16),
+                            ),
+                          );
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  widget.selectedFilterOption = option;
+                                });
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              child: Text(
+                                option,
+                                style: labelStyle,
+                              ),
+                            ),
+                          );
+                        }
+                      }).toList(),
+                      SizedBox(
+                        width: 5, // Buffer space from right
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: searchFilteredExercises.length,
+                    itemBuilder: (context, index) {
+                      Exercise exercise = searchFilteredExercises[index];
+                      return ListTile(
+                          onTap: () {},
+                          leading: Container(
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: theme.colorScheme.onBackground),
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.0),
+                              child:
+                                  ImageContainer(exerciseName: exercise.name),
+                            ),
+                          ),
+                          title: Row(children: [
+                            SizedBox(
+                              width: 200,
+                              child: Text(
+                                exercise.name,
+                                style: labelStyle,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ]),
+                          subtitle: Text(
+                            exercise.mainMuscleGroup,
+                            style: labelStyle.copyWith(
+                                color: theme.colorScheme.primary),
+                            maxLines: 2,
+                          ),
+                          trailing: GestureDetector(
+                            onTap: () {
+                              appState.addMuscleGroupToSplit(
+                                  appState.currentSplit,
+                                  widget.dayIndex,
+                                  appState
+                                      .currentSplit
+                                      .trainingDays[widget.dayIndex]
+                                      .muscleGroups
+                                      .length,
+                                  exercise.mainMuscleGroup,
+                                  appState
+                                      .muscleGroups[exercise.mainMuscleGroup]!
+                                      .indexOf(exercise),
+                                  3,
+                                  '',
+                                  exercise.musclesWorked[0],
+                                  exercise.name);
+                              setState(() {
+                                widget.allExercises.remove(exercise);
+                              });
+                              _showSnackBar(theme, exercise);
+                              print(
+                                  'Added ${exercise.name} to the end of training day ${widget.dayIndex}');
+                            },
+                            child: Icon(Icons.add,
+                                color: theme.colorScheme.onBackground,
+                                size: 20),
+                          ));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

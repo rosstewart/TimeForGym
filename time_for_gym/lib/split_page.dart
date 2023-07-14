@@ -123,7 +123,8 @@ class _GymGoalAndDayOfWeekSelectorState
   List<String> selectedMuscleGroups = [];
   List<MultiSelectItem<String>> chipItems = [];
 
-  bool isValidated = true;
+  bool isValidatedDayOfWeek = true;
+  bool isValidatedMuscleGroups = true;
 
   void submitSplitOnPressed(MyAppState appState) {
     // Since selectedDayOfWeekOptions is unsorted:
@@ -511,14 +512,17 @@ class _GymGoalAndDayOfWeekSelectorState
                 surfaceTintColor:
                     resolveColor(theme.colorScheme.primaryContainer)),
             onPressed: () {
-              if (selectedDayOfWeekOptions.isEmpty) {
+              if (selectedDayOfWeekOptions.isEmpty ||
+                  selectedMuscleGroups.length > 6) {
                 setState(() {
-                  isValidated = false;
+                  isValidatedDayOfWeek = selectedDayOfWeekOptions.isNotEmpty;
+                  isValidatedMuscleGroups = selectedMuscleGroups.length <= 6;
                 });
               } else {
-                if (!isValidated) {
+                if (!isValidatedDayOfWeek && !isValidatedMuscleGroups) {
                   setState(() {
-                    isValidated = true;
+                    isValidatedDayOfWeek = true;
+                    isValidatedMuscleGroups = true;
                   });
                 }
                 submitSplitOnPressed(appState);
@@ -532,10 +536,14 @@ class _GymGoalAndDayOfWeekSelectorState
               "Generate Split",
               style: textStyle.copyWith(color: theme.colorScheme.onBackground),
             )),
-        if (!isValidated) SizedBox(height: 5),
-        if (!isValidated)
+        if (!isValidatedDayOfWeek || !isValidatedMuscleGroups)
+          SizedBox(height: 5),
+        if (!isValidatedDayOfWeek || !isValidatedMuscleGroups)
           Text(
-            'Select Days to Train',
+            // If day of week isn't valid, display that. If it is valid, muscles group must be invalid
+            isValidatedDayOfWeek
+                ? 'Please Select 6 Muscle Groups or Less'
+                : 'Please Select Days to Train',
             style: labelStyle.copyWith(color: theme.colorScheme.secondary),
           )
       ],
