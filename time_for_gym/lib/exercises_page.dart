@@ -126,8 +126,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     width: 5, // Buffer space from left
                   ),
                   ...filterOptions.map((option) {
-                    final labelStyle =  theme.textTheme.labelSmall!.copyWith(
-                                color: theme.colorScheme.onBackground);
+                    final labelStyle = theme.textTheme.labelSmall!
+                        .copyWith(color: theme.colorScheme.onBackground);
                     bool isSelected = option == selectedFilterOption;
                     if (isSelected) {
                       return Padding(
@@ -226,30 +226,28 @@ class ExerciseSelectorButton extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
       child: TextButton(
         onPressed: togglePressed,
-        child: Expanded(
-          child: Row(children: [
-            Container(
-              height: 80,
-              width: 80,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: theme.colorScheme.onBackground),
-              child: Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: ImageContainer(exerciseName: exercise.name),
-              ),
+        child: Row(children: [
+          Container(
+            height: 80,
+            width: 80,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: theme.colorScheme.onBackground),
+            child: Padding(
+              padding: const EdgeInsets.all(1.0),
+              child: ImageContainer(exerciseName: exercise.name),
             ),
-            SizedBox(width: 25),
-            SizedBox(
-              width: 260,
-              child: Text(
-                exercise.name,
-                style: style,
-                maxLines: 2,
-              ),
+          ),
+          SizedBox(width: 25),
+          SizedBox(
+            width: 260,
+            child: Text(
+              exercise.name,
+              style: style,
+              maxLines: 2,
             ),
-          ]),
-        ),
+          ),
+        ]),
       ),
     );
   }

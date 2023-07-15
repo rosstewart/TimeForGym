@@ -1843,7 +1843,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(15),
                     color: theme.colorScheme.primaryContainer,
                   ),
                   child: SingleChildScrollView(

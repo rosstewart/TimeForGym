@@ -46,6 +46,7 @@ import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/search_page.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'package:time_for_gym/auth_page.dart';
+import 'package:time_for_gym/search_exercises_page.dart';
 
 // import 'package:time_for_gym/split_exercise_index.dart';
 
@@ -2528,7 +2529,13 @@ class _MyHomePageState extends State<MyHomePage> {
           gym: appState.currentGym,
           isSelectedGym: appState.userGym == appState.currentGym,
         );
-
+        break;
+      case 10:
+      // All exercises
+        page = SearchExercisesPage(appState.muscleGroups.values
+            .toList()
+            .expand((innerList) => innerList)
+            .toList());
         break;
       default:
         throw UnimplementedError('No widget for ${appState.pageIndex}');
@@ -3232,8 +3239,8 @@ class _ImageContainerState extends State<ImageContainer>
   Widget build(BuildContext context) {
     try {
       return FutureBuilder(
-        future: checkAssetExists(
-            "exercise_pictures/${widget.exerciseName}_m.gif"),
+        future:
+            checkAssetExists("exercise_pictures/${widget.exerciseName}_m.gif"),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData && snapshot.data == true) {
@@ -3280,7 +3287,9 @@ class _ImageContainerState extends State<ImageContainer>
               // );
             } else {
               print(('Failed to load ${widget.exerciseName} image'));
-              return Container(color: Colors.grey[200],);
+              return Container(
+                color: Colors.grey[200],
+              );
               // return Text('Failed to load image');
             }
           } else {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/main.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+// import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -67,10 +67,7 @@ class _SearchPageState extends State<SearchPage> {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
     final theme = Theme.of(context);
-    final suggestionStyle = theme.textTheme.bodyLarge!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final suggestionMuscleGroupStyle =
-        theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.primary);
+    // final suggestionStyle = theme.textTheme.bodyLarge!
     final titleStyle = theme.textTheme.titleMedium!
         .copyWith(color: theme.colorScheme.onBackground);
 
@@ -106,104 +103,117 @@ class _SearchPageState extends State<SearchPage> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // SizedBox(width: 5),
               Expanded(
                 child: Container(
                   // width: 300,
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      color: theme.colorScheme.primaryContainer),
+                      borderRadius: BorderRadius.circular(12),
+                      color: theme.colorScheme.onBackground),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
-                    child: TypeAheadField<String>(
-                      textFieldConfiguration: TextFieldConfiguration(
-                        style: TextStyle(color: theme.colorScheme.onBackground),
-                        controller: searchController,
-                        focusNode: focusNode,
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            openSuggestions();
-                          }
-                        },
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            icon: Icon(
-                              Icons.search,
-                              color: theme.colorScheme.primary,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.65),
-                              ),
-                              onPressed: () {
-                                searchController
-                                    .clear(); // Clear the text field
-                                searchQuery =
-                                    ''; // Clear user input if they click search right away
-                              },
-                            ),
-                            labelText: 'Search for an Exercise',
-                            labelStyle: TextStyle(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.65)),
-                            floatingLabelStyle: TextStyle(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.65))),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.search,
+                        color: theme.colorScheme.background,
                       ),
-                      suggestionsCallback: (pattern) {
-                        // setState(() {
-                        //   isSuggestionsOpen = pattern.isNotEmpty;
-                        // });
-                        if (pattern.isEmpty) {
-                          return List<String>.empty();
-                        } else {
-                          return exerciseNames.where((item) => item
-                              .toLowerCase()
-                              .contains(pattern.toLowerCase()));
-                        }
-                      },
-                      itemBuilder: (context, suggestion) {
-                        Exercise exercise =
-                            allExercises[exerciseNames.indexOf(suggestion)];
-                        return ListTile(
-                          tileColor: theme.colorScheme.primaryContainer,
-                          leading: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: ImageContainer(exerciseName: exercise.name),
-                          ),
-                          title: Text(suggestion, style: suggestionStyle),
-                          subtitle: Text(
-                            exercise.mainMuscleGroup,
-                            style: suggestionMuscleGroupStyle,
-                          ),
-                        );
-                      },
-                      onSuggestionSelected: (suggestion) {
-                        setState(() {
-                          searchQuery = suggestion;
-                          searchController.text =
-                              suggestion; // Update the text field
-                        });
-                        appState.changePageToExercise(
-                            allExercises[exerciseNames.indexOf(suggestion)]);
+                      title: Text(
+                        'Search for an exercise',
+                        style: TextStyle(
+                            color: theme.colorScheme.background, fontSize: 16),
+                      ),
+                      onTap: () {
+                        appState.changePage(10);
                       },
                     ),
+                    // child: TypeAheadField<String>(
+                    //   textFieldConfiguration: TextFieldConfiguration(
+                    //     style: TextStyle(color: theme.colorScheme.onBackground),
+                    //     controller: searchController,
+                    //     focusNode: focusNode,
+                    //     onChanged: (value) {
+                    //       if (value.isNotEmpty) {
+                    //         openSuggestions();
+                    //       }
+                    //     },
+                    //     decoration: InputDecoration(
+                    //         border: InputBorder.none,
+                    //         icon: Icon(
+                    //           Icons.search,
+                    //           color: theme.colorScheme.primary,
+                    //         ),
+                    //         suffixIcon: IconButton(
+                    //           icon: Icon(
+                    //             Icons.clear,
+                    //             color: theme.colorScheme.onBackground
+                    //                 .withOpacity(0.65),
+                    //           ),
+                    //           onPressed: () {
+                    //             searchController
+                    //                 .clear(); // Clear the text field
+                    //             searchQuery =
+                    //                 ''; // Clear user input if they click search right away
+                    //           },
+                    //         ),
+                    //         labelText: 'Search for an Exercise',
+                    //         labelStyle: TextStyle(
+                    //             color: theme.colorScheme.onBackground
+                    //                 .withOpacity(0.65)),
+                    //         floatingLabelStyle: TextStyle(
+                    //             color: theme.colorScheme.onBackground
+                    //                 .withOpacity(0.65))),
+                    //   ),
+                    //   suggestionsCallback: (pattern) {
+                    //     // setState(() {
+                    //     //   isSuggestionsOpen = pattern.isNotEmpty;
+                    //     // });
+                    //     if (pattern.isEmpty) {
+                    //       return List<String>.empty();
+                    //     } else {
+                    //       return exerciseNames.where((item) => item
+                    //           .toLowerCase()
+                    //           .contains(pattern.toLowerCase()));
+                    //     }
+                    //   },
+                    //   itemBuilder: (context, suggestion) {
+                    //     Exercise exercise =
+                    //         allExercises[exerciseNames.indexOf(suggestion)];
+                    //     return ListTile(
+                    //       tileColor: theme.colorScheme.primaryContainer,
+                    //       leading: SizedBox(
+                    //         width: 40,
+                    //         height: 40,
+                    //         child: ImageContainer(exerciseName: exercise.name),
+                    //       ),
+                    //       title: Text(suggestion, style: suggestionStyle),
+                    //       subtitle: Text(
+                    //         exercise.mainMuscleGroup,
+                    //         style: suggestionMuscleGroupStyle,
+                    //       ),
+                    //     );
+                    //   },
+                    //   onSuggestionSelected: (suggestion) {
+                    //     setState(() {
+                    //       searchQuery = suggestion;
+                    //       searchController.text =
+                    //           suggestion; // Update the text field
+                    //     });
+                    //     appState.changePageToExercise(
+                    //         allExercises[exerciseNames.indexOf(suggestion)]);
+                    //   },
+                    // ),
                   ),
                 ),
               ),
-              SizedBox(
-                width: 10,
-              ),
-              if (isSuggestionsOpen)
-                TextButton(
-                    onPressed: () {
-                      closeSuggestions();
-                      FocusScope.of(context).requestFocus(FocusNode());
-                      // widget.focusNode.unfocus();
-                    },
-                    child: Text("Cancel", style: suggestionStyle)),
+              // SizedBox(width: 5),
+              // if (isSuggestionsOpen)
+              //   TextButton(
+              //       onPressed: () {
+              //         closeSuggestions();
+              //         FocusScope.of(context).requestFocus(FocusNode());
+              //         // widget.focusNode.unfocus();
+              //       },
+              //       child: Text("Cancel", style: suggestionStyle)),
             ],
           ),
         ),
