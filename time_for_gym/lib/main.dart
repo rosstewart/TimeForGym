@@ -3007,16 +3007,17 @@ class MuscleGroupSelectorButton extends StatelessWidget {
 class CustomCircularProgressIndicator extends StatelessWidget {
   final double strokeWidth;
   final double percentCapacity;
+  final double size;
 
   CustomCircularProgressIndicator(
-      {this.strokeWidth = 10.0, this.percentCapacity = 0.0});
+      {this.strokeWidth = 10.0, this.percentCapacity = 0.0, this.size = 60.0});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      width: 60.0,
-      height: 60.0,
+      width: size,
+      height: size,
       child: CircularProgressIndicator(
         strokeWidth: strokeWidth,
         value: percentCapacity,
@@ -3279,7 +3280,7 @@ class _ImageContainerState extends State<ImageContainer>
               // );
             } else {
               print(('Failed to load ${widget.exerciseName} image'));
-              return Container();
+              return Container(color: Colors.grey[200],);
               // return Text('Failed to load image');
             }
           } else {

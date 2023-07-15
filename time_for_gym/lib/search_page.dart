@@ -125,7 +125,7 @@ class _SearchPageState extends State<SearchPage> {
                           }
                         },
                         decoration: InputDecoration(
-                          border: InputBorder.none,
+                            border: InputBorder.none,
                             icon: Icon(
                               Icons.search,
                               color: theme.colorScheme.primary,
@@ -164,27 +164,19 @@ class _SearchPageState extends State<SearchPage> {
                         }
                       },
                       itemBuilder: (context, suggestion) {
+                        Exercise exercise =
+                            allExercises[exerciseNames.indexOf(suggestion)];
                         return ListTile(
                           tileColor: theme.colorScheme.primaryContainer,
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  suggestion,
-                                  textAlign: TextAlign.left,
-                                  style: suggestionStyle,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  allExercises[
-                                          exerciseNames.indexOf(suggestion)]
-                                      .mainMuscleGroup,
-                                  textAlign: TextAlign.right,
-                                  style: suggestionMuscleGroupStyle,
-                                ),
-                              ),
-                            ],
+                          leading: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: ImageContainer(exerciseName: exercise.name),
+                          ),
+                          title: Text(suggestion, style: suggestionStyle),
+                          subtitle: Text(
+                            exercise.mainMuscleGroup,
+                            style: suggestionMuscleGroupStyle,
                           ),
                         );
                       },
