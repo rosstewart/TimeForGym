@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 // import 'dart:io';
 
@@ -448,8 +449,8 @@ class _GymPageState extends State<GymPage> {
 
     // Open 24 hours or Open -
     if (currentlyOpenString.contains('Open ')) {
-    print(
-        'Estimated ${((appState.avgGymCrowdData[currentTime.weekday - 1][currentTime.hour] / 12.0) * 100).toInt()}% capactiy');
+      print(
+          'Estimated ${((appState.avgGymCrowdData[currentTime.weekday - 1][currentTime.hour] / 12.0) * 100).toInt()}% capactiy');
     }
 
     // if (appState.currentGymPlacesDetailsResponse != null) {
@@ -1356,6 +1357,14 @@ class _GymPageState extends State<GymPage> {
                     ],
                   ),
                 ),
+                SizedBox(height: 30),
+                Center(
+                  child: SizedBox(
+                    height: 400,
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    child: GymCrowdednessChart(appState.avgGymCrowdData),
+                  ),
+                ),
                 SizedBox(
                   height: 40,
                 ), // Extra scrolling buffer
@@ -2109,5 +2118,241 @@ class GymOpeningHours {
     final int hours = duration.inHours;
     final int minutes = duration.inMinutes.remainder(60);
     return '$hours hours, $minutes minutes';
+  }
+}
+
+class GymCrowdednessChart extends StatefulWidget {
+  final List<List<int>> data;
+
+  GymCrowdednessChart(this.data);
+
+  @override
+  _GymCrowdednessChartState createState() => _GymCrowdednessChartState();
+}
+
+class _GymCrowdednessChartState extends State<GymCrowdednessChart> {
+  int selectedWeekday = DateTime.now().weekday - 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelSmall;
+    final titleStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
+    return Column(
+      children: [
+        Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Predicted Gym Occupancy', style: titleStyle)),
+        SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (int index = 0; index < widget.data.length; index++)
+                Padding(
+                  padding: index != 0
+                      ? const EdgeInsets.fromLTRB(3, 0, 0, 0)
+                      : EdgeInsets.zero,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedWeekday = index;
+                      });
+                    },
+                    style: ButtonStyle(
+                        padding: MaterialStateProperty.all(EdgeInsets.zero),
+                        backgroundColor: resolveColor(selectedWeekday == index
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.primaryContainer),
+                        surfaceTintColor: resolveColor(selectedWeekday == index
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.primaryContainer)),
+                    child: Text(
+                      getWeekdayName(index),
+                      style: labelStyle!.copyWith(
+                        fontSize: 10,
+                        color: selectedWeekday == index
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8),
+        Expanded(
+          child: GestureDetector(
+            onHorizontalDragUpdate:
+                (_) {}, // Empty callback to prevent horizontal swiping
+            child: Container(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+              child: LineChart(
+                createChartData(widget.data[selectedWeekday]),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  LineChartData createChartData(List<int> data) {
+    final DateTime now = DateTime.now();
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    return LineChartData(
+      extraLinesData: ExtraLinesData(verticalLines: [
+        VerticalLine(
+          // Out of bounds if 11 PM
+            x: (now.hour + (now.hour != 23 ? (now.minute / 60.0) : 0)),
+            dashArray: [8, 10],
+            color: theme.colorScheme.primary,
+            label: VerticalLineLabel(
+                show: true,
+                labelResolver: (p0) => 'Current time',
+                style: labelStyle,
+                alignment: now.hour > 12 ? Alignment.topLeft : Alignment.topRight))
+      ]),
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+            return touchedSpots.map((LineBarSpot touchedSpot) {
+              final spot = touchedSpot;
+              final xValue = spot.x.toInt();
+              final String hour;
+              if (xValue == 0) {
+                hour = '12 AM';
+              } else if (xValue == 12) {
+                hour = '12 PM';
+              } else if (xValue < 12) {
+                hour = '$xValue AM';
+              } else {
+                // > 12
+                hour = '${xValue - 12} PM';
+              }
+              final yValue = spot.y.toInt();
+              return LineTooltipItem(
+                '$hour\n$yValue% capacity',
+                TextStyle(color: Colors.white),
+              );
+            }).toList();
+          },
+        ),
+        // getTouchedSpotIndicator: (barData, spotIndexes) {
+        //   return spotIndexes.map((index) {
+        //     final spot = barData.spots[index];
+        //     return TouchedSpotIndicatorData(
+        //       FlLine(color: Colors.red), // Customize the indicator line
+        //       FlDotData(
+        //         show: true,
+        //         getDotPainter: (spot, percent, barData, index) {
+        //           return FlDotCirclePainter(
+        //             radius: 8,
+        //             color: Colors.red,
+        //             strokeWidth: 2,
+        //             strokeColor: Colors.white,
+        //             textStyle: TextStyle(color: Colors.white),
+        //             getTooltipText: (spot, percent, barData, index) {
+        //               final xValue = spot.x.toInt();
+        //               final yValue = spot.y.toInt();
+        //               return 'Time: $xValue\nPercentage: $yValue%';
+        //             },
+        //           );
+        //         },
+        //       ),
+        //     );
+        //   }).toList();
+      ),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 10,
+        getDrawingHorizontalLine: (value) =>
+            FlLine(color: Colors.white.withOpacity(.07)),
+        getDrawingVerticalLine: (value) =>
+            FlLine(color: Colors.white.withOpacity(.07)),
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        leftTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 45,
+          getTextStyles: (value) => TextStyle(
+            color: Theme.of(context).colorScheme.onBackground,
+            fontSize: 12,
+          ),
+          getTitles: (value) => value % 10 == 0 ? '${value.toInt()}%' : '',
+        ),
+        // Buffer space
+        rightTitles: SideTitles(showTitles: true, reservedSize: 25, checkToShowTitle:(minValue, maxValue, sideTitles, appliedInterval, value) => false,),
+        bottomTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 22,
+          getTextStyles: (value) => TextStyle(
+            color: Theme.of(context).colorScheme.onBackground,
+          ),
+          getTitles: (value) {
+            switch (value.toInt()) {
+              case 0:
+                return '12 AM';
+              case 6:
+                return '6 AM';
+              case 12:
+                return '12 PM';
+              case 18:
+                return '6 PM';
+              case 23:
+                return '11 PM';
+            }
+            return '';
+          },
+          margin: 8,
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: 23,
+      minY: 0,
+      maxY: 100,
+      lineBarsData: [
+        LineChartBarData(
+          spots: List.generate(
+            data.length,
+            (index) => FlSpot(
+                index.toDouble(), (data[index] * 100 / 13).round().toDouble()),
+          ),
+          isCurved: true,
+          colors: [Theme.of(context).colorScheme.primary],
+          barWidth: 4,
+          dotData: FlDotData(show: false),
+          belowBarData: BarAreaData(show: true),
+        ),
+      ],
+    );
+  }
+
+  String getWeekdayName(int index) {
+    final weekdays = [
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun',
+    ];
+    return weekdays[index];
+  }
+
+  int calculatePercentage(int value) {
+    int result = (value * 100 / 13).round();
+    return result;
   }
 }

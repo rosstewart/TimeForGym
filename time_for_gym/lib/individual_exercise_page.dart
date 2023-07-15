@@ -281,7 +281,39 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                                       builder: (context) => FullScreenPhoto(
                                             photoTag: '2',
                                             photo: Image.asset(
-                                                'exercise_pictures/${exercise.name}.gif'),
+                                              'exercise_pictures/${exercise.name}_m.gif',
+                                              frameBuilder: (BuildContext
+                                                      context,
+                                                  Widget child,
+                                                  int? frame,
+                                                  bool wasSynchronouslyLoaded) {
+                                                // Calculate custom duration based on the desired animation speed
+                                                const frameDuration = Duration(
+                                                    milliseconds:
+                                                        500); // Set your desired frame duration here
+                                                return AnimatedSwitcher(
+                                                  duration: frameDuration,
+                                                  switchInCurve: Curves.linear,
+                                                  switchOutCurve: Curves.linear,
+                                                  layoutBuilder: (Widget?
+                                                          currentChild,
+                                                      List<Widget>
+                                                          previousChildren) {
+                                                    return Stack(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      children: <Widget>[
+                                                        ...previousChildren,
+                                                        if (currentChild !=
+                                                            null)
+                                                          currentChild,
+                                                      ],
+                                                    );
+                                                  },
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
                                           )));
                             },
                             child: Container(

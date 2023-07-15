@@ -3,7 +3,7 @@
 // import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+// import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
@@ -408,12 +408,12 @@ class _SplitDayPageState extends State<SplitDayPage> {
                     Column(
                       children: [
                         // Add to end, then reorder
-                        AddButton(
-                            appState: appState,
-                            dayIndex: widget.dayIndex,
-                            cardIndex: split.trainingDays[widget.dayIndex]
-                                .muscleGroups.length),
-                        SizedBox(height: 5),
+                        // AddButton(
+                        //     appState: appState,
+                        //     dayIndex: widget.dayIndex,
+                        //     cardIndex: split.trainingDays[widget.dayIndex]
+                        //         .muscleGroups.length),
+                        SizedBox(height: 15),
                         SizedBox(
                           height: 557,
                           child: ReorderableListView(
@@ -507,296 +507,296 @@ class _SplitDayPageState extends State<SplitDayPage> {
   }
 }
 
-class AddButton extends StatefulWidget {
-  const AddButton({
-    super.key,
-    required this.appState,
-    required this.dayIndex,
-    required this.cardIndex,
-  });
+// class AddButton extends StatefulWidget {
+//   const AddButton({
+//     super.key,
+//     required this.appState,
+//     required this.dayIndex,
+//     required this.cardIndex,
+//   });
 
-  final MyAppState appState;
-  final int dayIndex;
-  final int cardIndex;
+//   final MyAppState appState;
+//   final int dayIndex;
+//   final int cardIndex;
 
-  @override
-  State<AddButton> createState() => _AddButtonState();
-}
+//   @override
+//   State<AddButton> createState() => _AddButtonState();
+// }
 
-class _AddButtonState extends State<AddButton> {
-  // String _selectedItem = '';
-  List<String> muscleGroups = [];
-  List<String> exerciseNames = [];
+// class _AddButtonState extends State<AddButton> {
+//   // String _selectedItem = '';
+//   List<String> muscleGroups = [];
+//   List<String> exerciseNames = [];
 
-  void findMuscleGroupOrExercise(
-      MyAppState appState, String name, List<Exercise> allExercises) {
-    if (muscleGroups.contains(name)) {
-      // Muscle Group - Add first exercise in muscle group
-      // 3 sets default
-      // Identifier and set name default
-      appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex,
-          name, 0, 3, "", "", appState.muscleGroups[name]![0].name);
-    } else {
-      // Exercise - Find exercise index of the main muscle group
-      int index = exerciseNames.indexOf(name);
-      if (index == -1) {
-        // Invalid search query
-        print("Invalid search query");
-        return;
-      }
+//   void findMuscleGroupOrExercise(
+//       MyAppState appState, String name, List<Exercise> allExercises) {
+//     if (muscleGroups.contains(name)) {
+//       // Muscle Group - Add first exercise in muscle group
+//       // 3 sets default
+//       // Identifier and set name default
+//       appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex,
+//           name, 0, 3, "", "", appState.muscleGroups[name]![0].name);
+//     } else {
+//       // Exercise - Find exercise index of the main muscle group
+//       int index = exerciseNames.indexOf(name);
+//       if (index == -1) {
+//         // Invalid search query
+//         print("Invalid search query");
+//         return;
+//       }
 
-      String mainMuscleGroupName = allExercises[index].mainMuscleGroup;
-      List<Exercise>? exercises = appState.muscleGroups[mainMuscleGroupName];
-      if (exercises == null) {
-        print("ERROR - null search");
-        return;
-      } else {
-        // 3 sets default
-        // Identifier and set name default
-        int exerciseIndex =
-            exercises.indexWhere((element) => element.name == name);
-        if (exerciseIndex == -1) {
-          exerciseIndex = 0; // If exercise name was changed
-        }
-        appState.addTempMuscleGroupToSplit(
-            widget.dayIndex,
-            widget.cardIndex,
-            mainMuscleGroupName,
-            exerciseIndex,
-            3,
-            "",
-            "",
-            exercises[exerciseIndex].name);
-      }
-    }
-  }
+//       String mainMuscleGroupName = allExercises[index].mainMuscleGroup;
+//       List<Exercise>? exercises = appState.muscleGroups[mainMuscleGroupName];
+//       if (exercises == null) {
+//         print("ERROR - null search");
+//         return;
+//       } else {
+//         // 3 sets default
+//         // Identifier and set name default
+//         int exerciseIndex =
+//             exercises.indexWhere((element) => element.name == name);
+//         if (exerciseIndex == -1) {
+//           exerciseIndex = 0; // If exercise name was changed
+//         }
+//         appState.addTempMuscleGroupToSplit(
+//             widget.dayIndex,
+//             widget.cardIndex,
+//             mainMuscleGroupName,
+//             exerciseIndex,
+//             3,
+//             "",
+//             "",
+//             exercises[exerciseIndex].name);
+//       }
+//     }
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
-    return IconButton(
-        style: ButtonStyle(
-            backgroundColor: resolveColor(theme.colorScheme.primaryContainer),
-            surfaceTintColor: resolveColor(theme.colorScheme.primaryContainer)),
-        onPressed: () {
-          showDropdownMenu(context);
-          // widget.appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex, "Chest");
-        },
-        icon: Icon(
-          Icons.add,
-          color: theme.colorScheme.primary,
-        ));
-  }
+//   @override
+//   Widget build(BuildContext context) {
+//     ThemeData theme = Theme.of(context);
+//     return IconButton(
+//         style: ButtonStyle(
+//             backgroundColor: resolveColor(theme.colorScheme.primaryContainer),
+//             surfaceTintColor: resolveColor(theme.colorScheme.primaryContainer)),
+//         onPressed: () {
+//           showDropdownMenu(context);
+//           // widget.appState.addTempMuscleGroupToSplit(widget.dayIndex, widget.cardIndex, "Chest");
+//         },
+//         icon: Icon(
+//           Icons.add,
+//           color: theme.colorScheme.primary,
+//         ));
+//   }
 
-  void showDropdownMenu(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    // var appState = context.watch<MyAppState>();
-    final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+//   void showDropdownMenu(BuildContext context) {
+//     final ThemeData theme = Theme.of(context);
+//     // var appState = context.watch<MyAppState>();
+//     final RenderBox button = context.findRenderObject() as RenderBox;
+//     final RenderBox overlay =
+//         Overlay.of(context).context.findRenderObject() as RenderBox;
 
-    muscleGroups = widget.appState.muscleGroups.keys.toList();
+//     muscleGroups = widget.appState.muscleGroups.keys.toList();
 
-    List<Exercise> allExercises = widget.appState.muscleGroups.values
-        .toList()
-        .expand((innerList) => innerList)
-        .toList();
-    exerciseNames = allExercises.map((exercise) => exercise.name).toList();
+//     List<Exercise> allExercises = widget.appState.muscleGroups.values
+//         .toList()
+//         .expand((innerList) => innerList)
+//         .toList();
+//     exerciseNames = allExercises.map((exercise) => exercise.name).toList();
 
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(button.size.bottomLeft(Offset.zero),
-            ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero),
-            ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
+//     final RelativeRect position = RelativeRect.fromRect(
+//       Rect.fromPoints(
+//         button.localToGlobal(button.size.bottomLeft(Offset.zero),
+//             ancestor: overlay),
+//         button.localToGlobal(button.size.bottomRight(Offset.zero),
+//             ancestor: overlay),
+//       ),
+//       Offset.zero & overlay.size,
+//     );
 
-    showMenu<String>(
-      color: theme.colorScheme.primaryContainer,
-      surfaceTintColor: theme.colorScheme.primaryContainer,
-      context: context,
-      position: position,
-      items: [
-        PopupMenuItem<String>(
-          value: 'Search Muscle Groups',
-          child: ListTile(
-            leading: Icon(Icons.search, color: theme.colorScheme.primary),
-            title: Text('Search Muscle Groups',
-                style: TextStyle(color: theme.colorScheme.onBackground)),
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'Search All Exercises',
-          child: ListTile(
-            leading: Icon(Icons.search, color: theme.colorScheme.primary),
-            title: Text('Search All Exercises',
-                style: TextStyle(color: theme.colorScheme.onBackground)),
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'Search Muscle Groups') {
-        performSearchAction(muscleGroups, allExercises, false);
-      } else if (value == 'Search All Exercises') {
-        performSearchAction(exerciseNames, allExercises, true);
-      }
-    });
-  }
+//     showMenu<String>(
+//       color: theme.colorScheme.primaryContainer,
+//       surfaceTintColor: theme.colorScheme.primaryContainer,
+//       context: context,
+//       position: position,
+//       items: [
+//         PopupMenuItem<String>(
+//           value: 'Search Muscle Groups',
+//           child: ListTile(
+//             leading: Icon(Icons.search, color: theme.colorScheme.primary),
+//             title: Text('Search Muscle Groups',
+//                 style: TextStyle(color: theme.colorScheme.onBackground)),
+//           ),
+//         ),
+//         PopupMenuItem<String>(
+//           value: 'Search All Exercises',
+//           child: ListTile(
+//             leading: Icon(Icons.search, color: theme.colorScheme.primary),
+//             title: Text('Search All Exercises',
+//                 style: TextStyle(color: theme.colorScheme.onBackground)),
+//           ),
+//         ),
+//       ],
+//     ).then((value) {
+//       if (value == 'Search Muscle Groups') {
+//         performSearchAction(muscleGroups, allExercises, false);
+//       } else if (value == 'Search All Exercises') {
+//         performSearchAction(exerciseNames, allExercises, true);
+//       }
+//     });
+//   }
 
-  void performSearchAction(
-      List<String> list, List<Exercise> allExercises, bool searchExercise) {
-    TextEditingController searchController = TextEditingController();
-    String searchQuery = '';
+//   void performSearchAction(
+//       List<String> list, List<Exercise> allExercises, bool searchExercise) {
+//     TextEditingController searchController = TextEditingController();
+//     String searchQuery = '';
 
-    final ThemeData theme = Theme.of(context);
-    final TextStyle whiteTextStyle = theme.textTheme.bodyLarge!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final TextStyle textStyle = TextStyle(
-      color: theme.colorScheme.primary,
-    );
-    final TextStyle labelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
+//     final ThemeData theme = Theme.of(context);
+//     final TextStyle whiteTextStyle = theme.textTheme.bodyLarge!
+//         .copyWith(color: theme.colorScheme.onBackground);
+//     final TextStyle textStyle = TextStyle(
+//       color: theme.colorScheme.primary,
+//     );
+//     final TextStyle labelStyle = theme.textTheme.labelSmall!
+//         .copyWith(color: theme.colorScheme.onBackground);
 
-    final focusNode = FocusNode();
+//     final focusNode = FocusNode();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return GestureDetector(
-          onTap: focusNode.unfocus,
-          child: AlertDialog(
-            backgroundColor: theme.colorScheme.background,
-            surfaceTintColor: theme.colorScheme.background,
-            title: Text(
-              searchExercise ? 'Find Exercise' : 'Find Muscle Group',
-              style: whiteTextStyle,
-              textAlign: TextAlign.center,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 30),
-                TypeAheadField<String>(
-                  textFieldConfiguration: TextFieldConfiguration(
-                    focusNode: focusNode,
-                    style: theme.textTheme.bodyMedium!
-                        .copyWith(color: theme.colorScheme.onBackground),
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      labelText: 'Search',
-                      labelStyle: whiteTextStyle.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.65)),
-                      floatingLabelStyle: whiteTextStyle.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.65)),
-                    ),
-                  ),
-                  suggestionsCallback: (pattern) {
-                    return list.where((item) =>
-                        item.toLowerCase().contains(pattern.toLowerCase()));
-                  },
-                  itemBuilder: (context, suggestion) {
-                    return ListTile(
-                      title: Text(
-                        suggestion,
-                        style: labelStyle,
-                      ),
-                      trailing: Container(
-                        color: theme.colorScheme.onBackground,
-                        height: 45,
-                        width: 45,
-                        child: ImageContainer(exerciseName: suggestion),
-                      ),
-                    );
-                  },
-                  onSuggestionSelected: (suggestion) {
-                    setState(() {
-                      searchQuery = suggestion;
-                      searchController.text =
-                          suggestion; // Update the text field
-                    });
-                  },
-                ),
-                SizedBox(height: 50),
-                // ElevatedButton.icon(
-                //   style: ButtonStyle(
-                //       backgroundColor:
-                //           resolveColor(theme.colorScheme.primaryContainer),
-                //       surfaceTintColor:
-                //           resolveColor(theme.colorScheme.primaryContainer)),
-                //   onPressed: () {
-                //     setState(() {
-                //       findMuscleGroupOrExercise(
-                //           widget.appState, searchQuery, allExercises);
-                //       // _selectedItem = searchQuery;
-                //     });
-                //     Navigator.of(context).pop();
-                //   },
-                //   icon: Icon(
-                //     Icons.add,
-                //     color: theme.colorScheme.primary,
-                //   ),
-                //   label: Text(
-                //     'Add',
-                //     style: textStyle.copyWith(
-                //         color: theme.colorScheme.onBackground),
-                //   ),
-                // ),
-              ],
-            ),
-            actions: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Cancel',
-                  style: textStyle.copyWith(color: theme.colorScheme.primary),
-                ),
-              ),
-              SizedBox(width: 20),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    findMuscleGroupOrExercise(
-                        widget.appState, searchQuery, allExercises);
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Add',
-                  style: textStyle.copyWith(color: theme.colorScheme.primary),
-                ),
-              ),
-              // ElevatedButton.icon(
-              //   style: ButtonStyle(
-              //       backgroundColor:
-              //           resolveColor(theme.colorScheme.primaryContainer),
-              //       surfaceTintColor:
-              //           resolveColor(theme.colorScheme.primaryContainer)),
-              //   onPressed: () {
-              //     Navigator.of(context).pop();
-              //   },
-              //   icon: Icon(
-              //     Icons.close,
-              //     color: theme.colorScheme.primary,
-              //   ),
-              //   label: Text(
-              //     'Cancel',
-              //     style:
-              //         textStyle.copyWith(color: theme.colorScheme.onBackground),
-              //   ),
-              // ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return GestureDetector(
+//           onTap: focusNode.unfocus,
+//           child: AlertDialog(
+//             backgroundColor: theme.colorScheme.background,
+//             surfaceTintColor: theme.colorScheme.background,
+//             title: Text(
+//               searchExercise ? 'Find Exercise' : 'Find Muscle Group',
+//               style: whiteTextStyle,
+//               textAlign: TextAlign.center,
+//             ),
+//             content: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 SizedBox(height: 30),
+//                 TypeAheadField<String>(
+//                   textFieldConfiguration: TextFieldConfiguration(
+//                     focusNode: focusNode,
+//                     style: theme.textTheme.bodyMedium!
+//                         .copyWith(color: theme.colorScheme.onBackground),
+//                     controller: searchController,
+//                     decoration: InputDecoration(
+//                       labelText: 'Search',
+//                       labelStyle: whiteTextStyle.copyWith(
+//                           color:
+//                               theme.colorScheme.onBackground.withOpacity(0.65)),
+//                       floatingLabelStyle: whiteTextStyle.copyWith(
+//                           color:
+//                               theme.colorScheme.onBackground.withOpacity(0.65)),
+//                     ),
+//                   ),
+//                   suggestionsCallback: (pattern) {
+//                     return list.where((item) =>
+//                         item.toLowerCase().contains(pattern.toLowerCase()));
+//                   },
+//                   itemBuilder: (context, suggestion) {
+//                     return ListTile(
+//                       title: Text(
+//                         suggestion,
+//                         style: labelStyle,
+//                       ),
+//                       trailing: Container(
+//                         color: theme.colorScheme.onBackground,
+//                         height: 45,
+//                         width: 45,
+//                         child: ImageContainer(exerciseName: suggestion),
+//                       ),
+//                     );
+//                   },
+//                   onSuggestionSelected: (suggestion) {
+//                     setState(() {
+//                       searchQuery = suggestion;
+//                       searchController.text =
+//                           suggestion; // Update the text field
+//                     });
+//                   },
+//                 ),
+//                 SizedBox(height: 50),
+//                 // ElevatedButton.icon(
+//                 //   style: ButtonStyle(
+//                 //       backgroundColor:
+//                 //           resolveColor(theme.colorScheme.primaryContainer),
+//                 //       surfaceTintColor:
+//                 //           resolveColor(theme.colorScheme.primaryContainer)),
+//                 //   onPressed: () {
+//                 //     setState(() {
+//                 //       findMuscleGroupOrExercise(
+//                 //           widget.appState, searchQuery, allExercises);
+//                 //       // _selectedItem = searchQuery;
+//                 //     });
+//                 //     Navigator.of(context).pop();
+//                 //   },
+//                 //   icon: Icon(
+//                 //     Icons.add,
+//                 //     color: theme.colorScheme.primary,
+//                 //   ),
+//                 //   label: Text(
+//                 //     'Add',
+//                 //     style: textStyle.copyWith(
+//                 //         color: theme.colorScheme.onBackground),
+//                 //   ),
+//                 // ),
+//               ],
+//             ),
+//             actions: [
+//               GestureDetector(
+//                 onTap: () {
+//                   Navigator.of(context).pop();
+//                 },
+//                 child: Text(
+//                   'Cancel',
+//                   style: textStyle.copyWith(color: theme.colorScheme.primary),
+//                 ),
+//               ),
+//               SizedBox(width: 20),
+//               GestureDetector(
+//                 onTap: () {
+//                   setState(() {
+//                     findMuscleGroupOrExercise(
+//                         widget.appState, searchQuery, allExercises);
+//                   });
+//                   Navigator.of(context).pop();
+//                 },
+//                 child: Text(
+//                   'Add',
+//                   style: textStyle.copyWith(color: theme.colorScheme.primary),
+//                 ),
+//               ),
+//               // ElevatedButton.icon(
+//               //   style: ButtonStyle(
+//               //       backgroundColor:
+//               //           resolveColor(theme.colorScheme.primaryContainer),
+//               //       surfaceTintColor:
+//               //           resolveColor(theme.colorScheme.primaryContainer)),
+//               //   onPressed: () {
+//               //     Navigator.of(context).pop();
+//               //   },
+//               //   icon: Icon(
+//               //     Icons.close,
+//               //     color: theme.colorScheme.primary,
+//               //   ),
+//               //   label: Text(
+//               //     'Cancel',
+//               //     style:
+//               //         textStyle.copyWith(color: theme.colorScheme.onBackground),
+//               //   ),
+//               // ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+// }
 
 // ignore: must_be_immutable
 class SplitMuscleGroupCard extends StatefulWidget {
@@ -3158,6 +3158,7 @@ class _SearchExercisesState extends State<SearchExercises>
   late AnimationController _animationController;
   late Animation<Offset> _animation;
   String pattern = '';
+  final ScrollController scrollController = ScrollController();
 
   List<String> filterOptions = [
     'Dumbbell-Only',
@@ -3371,6 +3372,11 @@ class _SearchExercisesState extends State<SearchExercises>
                             child: ElevatedButton.icon(
                               onPressed: () {
                                 setState(() {
+                                  scrollController.animateTo(
+                                    0.0,
+                                    duration: Duration(milliseconds: 500),
+                                    curve: Curves.easeInOut,
+                                  );
                                   if (!isSelected) {
                                     widget.selectedFilterOption = option;
                                   } else {
@@ -3398,6 +3404,11 @@ class _SearchExercisesState extends State<SearchExercises>
                             child: ElevatedButton(
                               onPressed: () {
                                 setState(() {
+                                  scrollController.animateTo(
+                                    0.0,
+                                    duration: Duration(milliseconds: 500),
+                                    curve: Curves.easeInOut,
+                                  );
                                   widget.selectedFilterOption = option;
                                 });
                               },
@@ -3423,11 +3434,11 @@ class _SearchExercisesState extends State<SearchExercises>
                 SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
+                    controller: scrollController,
                     itemCount: searchFilteredExercises.length,
                     itemBuilder: (context, index) {
                       Exercise exercise = searchFilteredExercises[index];
                       return ListTile(
-                          onTap: () {},
                           leading: Container(
                             height: 60,
                             width: 60,
@@ -3456,8 +3467,8 @@ class _SearchExercisesState extends State<SearchExercises>
                                 color: theme.colorScheme.primary),
                             maxLines: 2,
                           ),
-                          trailing: GestureDetector(
-                            onTap: () {
+                          trailing: IconButton(
+                            onPressed: () {
                               appState.addMuscleGroupToSplit(
                                   appState.currentSplit,
                                   widget.dayIndex,
@@ -3481,7 +3492,7 @@ class _SearchExercisesState extends State<SearchExercises>
                               print(
                                   'Added ${exercise.name} to the end of training day ${widget.dayIndex}');
                             },
-                            child: Icon(Icons.add,
+                            icon: Icon(Icons.add,
                                 color: theme.colorScheme.onBackground,
                                 size: 20),
                           ));

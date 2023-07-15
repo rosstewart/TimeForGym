@@ -7,6 +7,8 @@ import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+// import 'package:flutter/scheduler.dart';
+// import 'package:flutter_gif/flutter_gif.dart';
 // import 'package:google_maps_webservice/places.dart';
 // import 'package:flutter/rendering.dart';
 // import 'package:flutter/rendering.dart';
@@ -920,7 +922,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       Split split, int dayIndex, int cardIndex) {
     final muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName =
         split.trainingDays[dayIndex].removeMuscleGroup(cardIndex);
-    final exerciseIndex = split == currentSplit ? splitDayExerciseIndices[dayIndex].removeAt(cardIndex) : editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
+    final exerciseIndex = split == currentSplit
+        ? splitDayExerciseIndices[dayIndex].removeAt(cardIndex)
+        : editModeTempExerciseIndices[dayIndex].removeAt(cardIndex);
     if (split == currentSplit) {
       // If pointers are the same
       storeSplitInSharedPreferences();
@@ -3189,26 +3193,92 @@ int binarySearchExerciseList(List<Exercise> array, String targetName) {
   return -1;
 }
 
-class ImageContainer extends StatelessWidget {
+class ImageContainer extends StatefulWidget {
   ImageContainer({
     super.key,
     required this.exerciseName,
   });
 
   final String exerciseName;
+
+  @override
+  State<ImageContainer> createState() => _ImageContainerState();
+}
+
+class _ImageContainerState extends State<ImageContainer>
+    with TickerProviderStateMixin {
+  // late FlutterGifController controller;
   // bool isImageInitialized = false;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+
+  // //   controller = FlutterGifController(
+  // //   vsync: this,
+  // //   duration: const Duration(milliseconds: 150),
+  // //   reverseDuration: const Duration(milliseconds: 150),
+  // // );
+
+  // // SchedulerBinding.instance?.addPostFrameCallback((_) {
+  // //   controller.repeat(min: 0, max: controller.frameCount.toDouble(), period: const Duration(milliseconds: 1000)); // Start animation playback
+  // // });
+
+  // }
+
+  // bool isImageInitialized = false;
   @override
   Widget build(BuildContext context) {
     try {
       return FutureBuilder(
-        future: checkAssetExists("exercise_pictures/$exerciseName.gif"),
+        future: checkAssetExists(
+            "exercise_pictures/${widget.exerciseName}_m.gif"),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData && snapshot.data == true) {
-              return Image.asset('exercise_pictures/$exerciseName.gif');
+              //       return Image.asset(
+              //   "exercise_pictures/1_experimenting/${widget.exerciseName}_modified2.gif",
+              //   frameBuilder: (context, frame) {
+              //     // Set custom frame duration for each frame
+              //     final frameDuration = const Duration(milliseconds: 200); // Set your desired frame duration here
+
+              //     return Future.delayed(frameDuration, () => frame);
+              //   },
+              // );
+              // return GifImage(
+              //   repeat: ImageRepeat.repeat,
+              //   controller: controller,
+              //   image: AssetImage(
+              //       "exercise_pictures/1_experimenting/${widget.exerciseName}_modified2.gif"),
+              // );
+              return Image.asset(
+                  'exercise_pictures/${widget.exerciseName}_m.gif');
+              //   frameBuilder: (BuildContext context, Widget child, int? frame,
+              //       bool wasSynchronouslyLoaded) {
+              //     // Calculate custom duration based on the desired animation speed
+              //     const frameDuration = Duration(
+              //         milliseconds:
+              //             500); // Set your desired frame duration here
+              //     return AnimatedSwitcher(
+              //       duration: frameDuration,
+              //       switchInCurve: Curves.linear,
+              //       switchOutCurve: Curves.linear,
+              //       layoutBuilder:
+              //           (Widget? currentChild, List<Widget> previousChildren) {
+              //         return Stack(
+              //           alignment: Alignment.center,
+              //           children: <Widget>[
+              //             ...previousChildren,
+              //             if (currentChild != null) currentChild,
+              //           ],
+              //         );
+              //       },
+              //       child: child,
+              //     );
+              //   },
+              // );
             } else {
-              print(('Failed to load $exerciseName image'));
+              print(('Failed to load ${widget.exerciseName} image'));
               return Container();
               // return Text('Failed to load image');
             }
@@ -3274,29 +3344,6 @@ class ImageContainer extends StatelessWidget {
       return Text('Failed to load image');
     }
   }
-
-  // Future<bool> loadImageAsset(BuildContext context) async {
-  //   try {
-  //     await precacheImage(
-  //         AssetImage('exercise_pictures/${exercise.name}.gif'), context);
-  //     return true; // Image loaded successfully
-  //   } catch (error) {
-  //     return false; // Asset not found or error occurred
-  //   }
-  // }
-
-  // Future<ImageProvider<Object>> _loadImage(String imageUrl) async {
-  //   final completer = Completer<ImageProvider<Object>>();
-  //   final response = await http.get(Uri.parse(imageUrl));
-  //   if (response.statusCode == 200) {
-  //     final imageProvider = MemoryImage(response.bodyBytes);
-  //     completer.complete(imageProvider);
-  //   } else {
-  //     completer.completeError(
-  //         'Failed to load image. Status code: ${response.statusCode}');
-  //   }
-  //   return completer.future;
-  // }
 }
 
 class MuscleGroupImageContainer extends StatelessWidget {
