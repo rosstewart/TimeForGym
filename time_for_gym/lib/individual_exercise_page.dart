@@ -65,15 +65,30 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
 
     // if (appState.fromFavorites) {
     //   backIndex = 2;
-    if (appState.fromSplitDayPage) {
+    if (appState.bottomNavigationIndex == 2) {
       backIndex = 7; // Split Day Page
       exercise = appState.currentExerciseFromSplitDayPage;
       musclesWorkedImage = appState.currentMuscleWorkedImageFromSplitDayPage;
-    } else if (appState.fromSearchPage) {
-      backIndex = 8; // Search Page
+    } else if (appState.bottomNavigationIndex == 1) {
+      switch (appState.lastVisitedSearchPage) {
+        case 4:
+          backIndex = 4; // Exercises Page
+          break;
+        case 8:
+          backIndex = 8; // Search Page
+          break;
+        case 10:
+          backIndex = 10; // Search Exercises Page
+          break;
+        default:
+          print(
+              'ERROR - Last visited search page ${appState.lastVisitedSearchPage}');
+          backIndex = 8; // Search Page
+          break;
+      }
       exercise = appState.currentExercise;
       musclesWorkedImage = appState.currentMuscleWorkedImage;
-    } else if (appState.fromGymPage) {
+    } else if (appState.bottomNavigationIndex == 0) {
       backIndex = 9;
       exercise = appState.currentExerciseFromGymPage;
       musclesWorkedImage = appState.currentMuscleWorkedImageFromGymPage;
@@ -198,6 +213,8 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
       icon = Icons.favorite_border;
     }
 
+    ImageContainer imageContainer = ImageContainer(exerciseName: exercise.name);
+
     return GestureDetector(
       //   behavior: HitTestBehavior.opaque, // Handle the tap gesture directly
       onTap: _dismissKeyboard,
@@ -275,53 +292,21 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                           tag: '2',
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => FullScreenPhoto(
-                                            photoTag: '2',
-                                            photo: Image.asset(
-                                              'exercise_pictures/${exercise.name}_m.gif',
-                                              frameBuilder: (BuildContext
-                                                      context,
-                                                  Widget child,
-                                                  int? frame,
-                                                  bool wasSynchronouslyLoaded) {
-                                                // Calculate custom duration based on the desired animation speed
-                                                const frameDuration = Duration(
-                                                    milliseconds:
-                                                        500); // Set your desired frame duration here
-                                                return AnimatedSwitcher(
-                                                  duration: frameDuration,
-                                                  switchInCurve: Curves.linear,
-                                                  switchOutCurve: Curves.linear,
-                                                  layoutBuilder: (Widget?
-                                                          currentChild,
-                                                      List<Widget>
-                                                          previousChildren) {
-                                                    return Stack(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      children: <Widget>[
-                                                        ...previousChildren,
-                                                        if (currentChild !=
-                                                            null)
-                                                          currentChild,
-                                                      ],
-                                                    );
-                                                  },
-                                                  child: child,
-                                                );
-                                              },
-                                            ),
-                                          )));
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return FullScreenPhoto(
+                                  photoTag: '2',
+                                  photo: SizedBox(
+                                      height: MediaQuery.of(context).size.width,
+                                      child: Center(child: imageContainer)),
+                                );
+                              }));
                             },
                             child: Container(
                               color: theme.colorScheme.onBackground,
                               height: 150,
                               width: 150,
-                              child:
-                                  ImageContainer(exerciseName: exercise.name),
+                              child: imageContainer,
                             ),
                           ),
                         ),
@@ -576,8 +561,11 @@ class SimilarExercisesRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-                      child: ImageContainer(
-                          exerciseName: similarExercises[index].name),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: ImageContainer(
+                            exerciseName: similarExercises[index].name),
+                      ),
                       // child: ,
                     ),
                     SizedBox(height: 8),
@@ -1915,6 +1903,7 @@ void _showBottomUpWindow(
   List<TrainingDay> initialSelectedTrainingDays = split.trainingDays
       .where((trainingDay) => trainingDay.exerciseNames.contains(exercise.name))
       .toList();
+  final theme = Theme.of(context);
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -1924,6 +1913,8 @@ void _showBottomUpWindow(
         split: split,
         trainingDays: split.trainingDays,
         onDonePressed: (selectedIndices) {
+          String snackBarWeekdayString = '';
+          int count = 0;
           List<int> unselectedIndices = [0, 1, 2, 3, 4, 5, 6];
           for (int selectedIndex in selectedIndices) {
             unselectedIndices.remove(selectedIndex);
@@ -1948,6 +1939,28 @@ void _showBottomUpWindow(
                 exercise.name);
             print(
                 'Added ${exercise.name} to the end of training day $selectedIndex');
+            snackBarWeekdayString += '${getWeekdayFullName(selectedIndex)}, ';
+            count++;
+          }
+          if (snackBarWeekdayString.isNotEmpty) {
+            snackBarWeekdayString = snackBarWeekdayString.substring(
+                0, snackBarWeekdayString.length - 2);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                width: MediaQuery.of(context).size.width * .8,
+                backgroundColor: theme.colorScheme.onBackground,
+                content: SizedBox(
+                    width: MediaQuery.of(context).size.width * .8,
+                    child: Text(
+                        'Added ${exercise.name} to $snackBarWeekdayString!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: theme.colorScheme.background))),
+                duration: Duration(milliseconds: 1500 + (500 * (count - 1))),
+              ),
+            );
+            snackBarWeekdayString = '';
+            count = 0;
           }
           for (int unselectedIndex in unselectedIndices) {
             if (!initialSelectedTrainingDays
@@ -1962,11 +1975,44 @@ void _showBottomUpWindow(
                     .indexOf(exercise.name));
             print(
                 'Removed ${exercise.name} from training day $unselectedIndex');
+            snackBarWeekdayString += '${getWeekdayFullName(unselectedIndex)}, ';
+            count++;
+          }
+          if (snackBarWeekdayString.isNotEmpty) {
+            snackBarWeekdayString = snackBarWeekdayString.substring(
+                0, snackBarWeekdayString.length - 2);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                width: MediaQuery.of(context).size.width * .8,
+                backgroundColor: theme.colorScheme.onBackground,
+                content: SizedBox(
+                    width: MediaQuery.of(context).size.width * .8,
+                    child: Text(
+                        'Removed ${exercise.name} from $snackBarWeekdayString!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: theme.colorScheme.background))),
+                duration: Duration(milliseconds: 1500 + (500 * (count - 1))),
+              ),
+            );
           }
         },
       );
     },
   );
+}
+
+String getWeekdayFullName(int index) {
+  final weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  return weekdays[index];
 }
 
 class BottomUpWindow extends StatefulWidget {
@@ -2061,7 +2107,7 @@ class _BottomUpWindowState extends State<BottomUpWindow>
     return SlideTransition(
       position: _animation,
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.8,
+        height: MediaQuery.of(context).size.height * 0.6,
         decoration: BoxDecoration(
           color: theme.colorScheme.background,
           borderRadius: BorderRadius.only(

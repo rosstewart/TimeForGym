@@ -2833,6 +2833,21 @@ void addExerciseToSplit(
         case 'Abs':
           subMuscleGroup = 'Upper Abs';
           break;
+        case 'Glutes':
+          // Isolation glute exercise for additional exercises
+          findValidExercise(
+              appState,
+              gym,
+              split.trainingDays[dayIndex].muscleGroups[splitDayCardIndex],
+              ['Glutes', 'Quads'],
+              [3, 0],
+              null,
+              exerciseIndices,
+              dayIndex,
+              splitDayCardIndex,
+              split);
+          print("added exercise index for card $splitDayCardIndex");
+          return;
         default:
           subMuscleGroup =
               split.trainingDays[dayIndex].muscleGroups[splitDayCardIndex];

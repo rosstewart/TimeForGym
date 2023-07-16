@@ -173,10 +173,6 @@ class _GymPageState extends State<GymPage> {
     if (widget.gym != null && widget.gym!.resourcesAvailable.isNotEmpty) {
       resourcesAvailable = Map.from(widget.gym!.resourcesAvailable);
     } else {
-      // for (String resource in resourceKeys) {
-      //   // resourcesAvailable = {};
-      //   resourcesAvailable.putIfAbsent(resource, () => 0);
-      // }
       resourcesAvailable = {};
       widget.gym!.resourcesAvailable = Map.from(resourcesAvailable);
     }
@@ -213,8 +209,6 @@ class _GymPageState extends State<GymPage> {
       chartOpeningTimes = List.filled(7, 0);
       chartOpeningTimes = List.filled(7, 24);
     }
-    // currentlyOpenString =
-    //     getGymStatus(widget.gym!.openingHours, DateTime.now());
     print(currentlyOpenString);
   }
 
@@ -512,7 +506,8 @@ class _GymPageState extends State<GymPage> {
 
     // Open 24 hours or Open -
     String weightedAverageString = '';
-    if (currentlyOpenString.contains('Open ')) {
+    if (currentlyOpenString.contains('Open ') ||
+        widget.gym!.openingHours == null) {
       double currentHourPctCapacity =
           (appState.avgGymCrowdData[currentTime.weekday - 1][currentTime.hour] /
                   13.0) *
@@ -647,6 +642,7 @@ class _GymPageState extends State<GymPage> {
                   ],
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  if (currentlyOpenString.isEmpty) Spacer(),
                   if (widget.gym!.googleMapsRating != null &&
                       widget.gym!.googleMapsRating! > 4.0)
                     Text(
@@ -691,7 +687,7 @@ class _GymPageState extends State<GymPage> {
                       Icon(Icons.star_border,
                           color: theme.colorScheme.primary, size: 14),
                   // There is openingHours data for the gym
-                  if (currentlyOpenString.isNotEmpty) Spacer(),
+                  Spacer(),
                   if (currentlyOpenString.isNotEmpty)
                     if (!currentlyOpenString.contains('-'))
                       Text(currentlyOpenString, style: headlineStyle),
@@ -748,12 +744,14 @@ class _GymPageState extends State<GymPage> {
                         SizedBox(width: 10),
                         ElevatedButton.icon(
                           style: ButtonStyle(
-                              backgroundColor: resolveColor(isSelectedGym
-                                  ? theme.colorScheme.primaryContainer
-                                  : theme.colorScheme.primary),
-                              surfaceTintColor: resolveColor(isSelectedGym
-                                  ? theme.colorScheme.primaryContainer
-                                  : theme.colorScheme.primary)),
+                              backgroundColor: resolveColor(
+                                  (isSelectedGym || appState.userGym != null)
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.primary),
+                              surfaceTintColor: resolveColor(
+                                  (isSelectedGym || appState.userGym != null)
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.primary)),
                           onPressed: () {
                             if (isSelectedGym) {
                               setState(() {
@@ -839,8 +837,11 @@ class _GymPageState extends State<GymPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Current expected occupancy', style: titleStyle),
-                      SizedBox(height: weightedAverageString.isEmpty &&
-                          currentlyOpenString.isNotEmpty ? 10 : 15),
+                      SizedBox(
+                          height: weightedAverageString.isEmpty &&
+                                  currentlyOpenString.isNotEmpty
+                              ? 10
+                              : 15),
                       if (weightedAverageString.isEmpty &&
                           currentlyOpenString.isNotEmpty)
                         Text('Closed',
@@ -2440,17 +2441,18 @@ class _GymCrowdednessChartState extends State<GymCrowdednessChart> {
     }
     return LineChartData(
       extraLinesData: ExtraLinesData(verticalLines: [
-        VerticalLine(
-            // Out of bounds if 11 PM
-            x: (now.hour + (now.hour != 23 ? (now.minute / 60.0) : 0)),
-            dashArray: [8, 10],
-            color: theme.colorScheme.primary,
-            label: VerticalLineLabel(
-                show: true,
-                labelResolver: (p0) => 'Current time',
-                style: labelStyle,
-                alignment:
-                    now.hour > 12 ? Alignment.topLeft : Alignment.topRight))
+        if (now.hour <= maxX && now.hour >= minX)
+          VerticalLine(
+              // Out of bounds if max x
+              x: (now.hour + (now.hour != maxX ? (now.minute / 60.0) : 0)),
+              dashArray: [8, 10],
+              color: theme.colorScheme.primary,
+              label: VerticalLineLabel(
+                  show: true,
+                  labelResolver: (p0) => 'Current time',
+                  style: labelStyle,
+                  alignment:
+                      now.hour > 12 ? Alignment.topLeft : Alignment.topRight))
       ]),
       lineTouchData: LineTouchData(
         enabled: true,

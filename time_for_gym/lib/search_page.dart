@@ -110,22 +110,19 @@ class _SearchPageState extends State<SearchPage> {
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       color: theme.colorScheme.onBackground),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.search,
-                        color: theme.colorScheme.background,
-                      ),
-                      title: Text(
-                        'Search for an exercise',
-                        style: TextStyle(
-                            color: theme.colorScheme.background, fontSize: 16),
-                      ),
-                      onTap: () {
-                        appState.changePage(10);
-                      },
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.search,
+                      color: theme.colorScheme.background,
                     ),
+                    title: Text(
+                      'Search for an exercise',
+                      style: TextStyle(
+                          color: theme.colorScheme.background, fontSize: 16),
+                    ),
+                    onTap: () {
+                      appState.changePage(10);
+                    },
                     // child: TypeAheadField<String>(
                     //   textFieldConfiguration: TextFieldConfiguration(
                     //     style: TextStyle(color: theme.colorScheme.onBackground),

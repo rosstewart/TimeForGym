@@ -632,6 +632,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool fromSplitDayPage = false;
   bool fromSearchPage = false;
   bool fromGymPage = false;
+  int bottomNavigationIndex = 0;
+  int lastVisitedSearchPage = -1;
 
   DatabaseReference databaseRef = FirebaseDatabase.instance.ref();
   Reference cloudStorageRef = FirebaseStorage.instance.ref();
@@ -719,6 +721,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       gym: null,
       isSelectedGym: false,
     ),
+    SearchExercisesPage([]),
   ];
 
   bool isHomePageSearchFieldFocused = false;
@@ -2431,6 +2434,8 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSearchPage = false;
         appState.fromGymPage = false;
         appState.presetSearchPage = 1;
+        appState.lastVisitedSearchPage = appState.pageIndex;
+        appState.lastVisitedSearchPage = 4;
         // if (!isExercisePopUpAdClosed) {
         //   page = YourWidget4(
         //     onClose: () {
@@ -2517,6 +2522,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromGymPage = false;
         _bottomNavigationIndex = 1; // Update navigation bar
         appState.presetSearchPage = 0;
+        appState.lastVisitedSearchPage = 8;
         page = SearchPage();
         break;
       case 9:
@@ -2531,56 +2537,22 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         break;
       case 10:
-      // All exercises
+        // All exercises
         page = SearchExercisesPage(appState.muscleGroups.values
             .toList()
             .expand((innerList) => innerList)
             .toList());
+        appState.presetSearchPage = 3;
+        appState.lastVisitedSearchPage = 10;
         break;
       default:
         throw UnimplementedError('No widget for ${appState.pageIndex}');
     }
+    appState.bottomNavigationIndex = _bottomNavigationIndex;
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
-        // body: _bottomScreens[_currentIndex],
-        body:
-            // body: Column(
-            // children: [
-            // SafeArea(
-            //   child: NavigationRail(
-            //     extended: constraints.maxWidth >= 600,
-            //     destinations: [
-            //       NavigationRailDestination(
-            //         icon: Icon(Icons.home),
-            //         label: Text('Home'),
-            //       ),
-            //       NavigationRailDestination(
-            //         icon: Icon(Icons.favorite),
-            //         label: Text('Favorites'),
-            //       ),
-            //     ],
-            //     selectedIndex: selectedIndex,
-            //     onDestinationSelected: (value) {
-            //       setState(() {
-            //         selectedIndex = value;
-            //       });
-            //     },
-            //   ),
-            // ),
-            // Expanded(
-            // child: SingleChildScrollView(
-
-            // controller: _scrollController,
-            // child: Container(
-            //   height: 826, // Set a specific height value
-            page,
-        // ),
-        // ),
-        // ),
-        // if (appState.pageIndex == 0) appState.bannerAdWidget,
-        //   ],
-        // ),
+        body: page,
         bottomNavigationBar: SizedBox(
           height: 100,
           child: Column(
@@ -2660,6 +2632,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         }
                       }
                       _bottomNavigationIndex = index;
+                      appState.bottomNavigationIndex = _bottomNavigationIndex;
                     });
                   },
                   items: [
@@ -2807,6 +2780,13 @@ class _SwipeBackState extends State<SwipeBack> {
       widget.appState.appPages[widget.index] = GymPage(
           gym: widget.appState.currentGym,
           isSelectedGym: widget.appState.currentGym == widget.appState.userGym);
+    }
+    if (widget.index == 10) {
+      widget.appState.appPages[widget.index] = SearchExercisesPage(widget
+          .appState.muscleGroups.values
+          .toList()
+          .expand((innerList) => innerList)
+          .toList());
     }
     final Widget swipeChild = widget.appState.appPages[widget.index];
     return _isDismissed
