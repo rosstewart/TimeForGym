@@ -363,37 +363,25 @@ class _GymGoalAndDayOfWeekSelectorState
               width: 190,
               child: Column(
                 children: [
-                  Text(
-                    "Select Days to Train",
-                    style: headingStyle,
-                  ),
+                  Text("Select Days to Train", style: headingStyle),
                   SizedBox(height: 20),
                   Container(
                     width: 200,
                     // padding: EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8)),
                     child: Column(
                       children: dayOfWeekOptions.map((dayOfWeekOption) {
                         return CheckboxListTile(
-                          title: Text(
-                            dayOfWeekOption,
-                            style: labelStyle,
-                          ),
+                          title: Text(dayOfWeekOption, style: labelStyle),
                           controlAffinity: ListTileControlAffinity.leading,
                           checkColor: theme.colorScheme.onBackground,
                           activeColor: theme.colorScheme.primary,
                           dense: true,
-                          visualDensity: VisualDensity.compact,
-                          // shape: RoundedRectangleBorder(
-                          //   borderRadius: BorderRadius.circular(8.0),
-                          //   side: BorderSide(
-                          //     color: theme.colorScheme
-                          //         .onBackground, // Set the desired border color
-                          //   ),
-                          // ),
+                          visualDensity: VisualDensity(
+                              horizontal: VisualDensity.minimumDensity,
+                              vertical: VisualDensity.minimumDensity),
                           fillColor: resolveColor(theme.colorScheme.primary),
                           value: selectedDayOfWeekOptions
                               .contains(dayOfWeekOption),
@@ -505,37 +493,62 @@ class _GymGoalAndDayOfWeekSelectorState
         SizedBox(
           height: 30,
         ),
-        ElevatedButton.icon(
-            style: ButtonStyle(
-                backgroundColor:
-                    resolveColor(theme.colorScheme.primaryContainer),
-                surfaceTintColor:
-                    resolveColor(theme.colorScheme.primaryContainer)),
-            onPressed: () {
-              if (selectedDayOfWeekOptions.isEmpty ||
-                  selectedMuscleGroups.length > 6) {
-                setState(() {
-                  isValidatedDayOfWeek = selectedDayOfWeekOptions.isNotEmpty;
-                  isValidatedMuscleGroups = selectedMuscleGroups.length <= 6;
-                });
-              } else {
-                if (!isValidatedDayOfWeek && !isValidatedMuscleGroups) {
-                  setState(() {
-                    isValidatedDayOfWeek = true;
-                    isValidatedMuscleGroups = true;
-                  });
-                }
-                submitSplitOnPressed(appState);
-              }
-            },
-            icon: Icon(
-              Icons.add,
-              color: theme.colorScheme.primary,
-            ),
-            label: Text(
-              "Generate Split",
-              style: textStyle.copyWith(color: theme.colorScheme.onBackground),
-            )),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton.icon(
+                style: ButtonStyle(
+                    backgroundColor: resolveColor(theme.colorScheme.primary),
+                    surfaceTintColor: resolveColor(theme.colorScheme.primary)),
+                onPressed: () {
+                  if (selectedDayOfWeekOptions.isEmpty ||
+                      selectedMuscleGroups.length > 6) {
+                    setState(() {
+                      isValidatedDayOfWeek =
+                          selectedDayOfWeekOptions.isNotEmpty;
+                      isValidatedMuscleGroups =
+                          selectedMuscleGroups.length <= 6;
+                    });
+                  } else {
+                    if (!isValidatedDayOfWeek && !isValidatedMuscleGroups) {
+                      setState(() {
+                        isValidatedDayOfWeek = true;
+                        isValidatedMuscleGroups = true;
+                      });
+                    }
+                    submitSplitOnPressed(appState);
+                  }
+                },
+                icon: Icon(
+                  Icons.add,
+                  color: theme.colorScheme.onBackground,
+                ),
+                label: Text(
+                  "Generate Split",
+                  style:
+                      textStyle.copyWith(color: theme.colorScheme.onBackground),
+                )),
+            ElevatedButton(
+                style: ButtonStyle(
+                    backgroundColor:
+                        resolveColor(theme.colorScheme.primaryContainer),
+                    surfaceTintColor:
+                        resolveColor(theme.colorScheme.primaryContainer)),
+                onPressed: () {
+                  // Generate empty split
+                  equipmentLevel = 2;
+                  selectedDayOfWeekOptions = [];
+                  selectedMuscleGroups = [];
+                  selectedGymGoalOption = "Build Muscle";
+                  submitSplitOnPressed(appState);
+                },
+                child: Text(
+                  "Make Empty Split",
+                  style:
+                      textStyle.copyWith(color: theme.colorScheme.onBackground),
+                )),
+          ],
+        ),
         if (!isValidatedDayOfWeek || !isValidatedMuscleGroups)
           SizedBox(height: 5),
         if (!isValidatedDayOfWeek || !isValidatedMuscleGroups)

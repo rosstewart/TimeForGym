@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>To select a profile picture, the app needs access to your photo library</string>
+    <key>NSCameraUsageDescription</key>
+    <string>To select a profile picture, the app needs access to your camera.</string>
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-4103823838490114~6847480656</string>
     <key>SKAdNetworkItems</key>

@@ -2393,7 +2393,10 @@ class _GymCrowdednessChartState extends State<GymCrowdednessChart> {
             onHorizontalDragUpdate:
                 (_) {}, // Empty callback to prevent horizontal swiping
             child: Container(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
               padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
               child: LineChart(
                 createChartData(
@@ -2487,12 +2490,12 @@ class _GymCrowdednessChartState extends State<GymCrowdednessChart> {
               showTitle: true,
               titleText: getWeekdayFullName(selectedWeekday),
               textStyle: labelStyle,
-              reservedSize: 20),
+              reservedSize: 23),
           leftTitle: AxisTitle(
               showTitle: true,
               titleText: 'Percent Capacity',
               textStyle: labelStyle,
-              reservedSize: 20)),
+              reservedSize: 23)),
       titlesData: FlTitlesData(
         show: true,
         leftTitles: SideTitles(

@@ -1,6 +1,5 @@
 import UIKit
 import Flutter
-import device_info_plus
 import GoogleMobileAds
 
 @UIApplicationMain

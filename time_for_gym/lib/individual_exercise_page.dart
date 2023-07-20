@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:provider/provider.dart';
@@ -92,7 +93,12 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
       backIndex = 9;
       exercise = appState.currentExerciseFromGymPage;
       musclesWorkedImage = appState.currentMuscleWorkedImageFromGymPage;
-    } else {
+    } else if (appState.bottomNavigationIndex == 4) {
+      // Profile page
+      backIndex = 11;
+      exercise = appState.currentExerciseFromProfilePage;
+      musclesWorkedImage = appState.currentMuscleWorkedImageFromProfilePage;
+    }else {
       // From exercises page or bottom icon
       exercise = appState.currentExercise;
       musclesWorkedImage = appState.currentMuscleWorkedImage;
@@ -456,9 +462,20 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                child: StrengthLevelForm(exercise: exercise),
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(height: 20),
+                    StrengthLevelForm(exercise: exercise),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: SizedBox(
+                          height: 350,
+                          child:
+                              UserStrengthChart(exercise.userOneRepMaxHistory)),
+                    ),
+                  ],
+                ),
               ),
               RatingBarWidget(exercise),
               // Column(children: [
@@ -573,7 +590,7 @@ class SimilarExercisesRow extends StatelessWidget {
                       width: 120,
                       child: Text(
                         similarExercises[index].name,
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                         textAlign: TextAlign.center,
                       ),
@@ -709,7 +726,8 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
         widget.exercise.userOneRepMax,
         widget.exercise.splitWeightAndReps,
         widget.exercise.splitWeightPerSet,
-        widget.exercise.splitRepsPerSet);
+        widget.exercise.splitRepsPerSet,
+        widget.exercise.userOneRepMaxHistory);
     print(
         'submitted to firebase: Weight: $weight, Reps: $reps, One rep max: ${widget.exercise.userOneRepMax}');
   }
@@ -775,8 +793,11 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
     final formTextStyle = theme.textTheme.bodyLarge!.copyWith(
       color: theme.colorScheme.onBackground,
     );
-    final labelStyle = theme.textTheme.labelMedium!.copyWith(
+    final labelStyle = theme.textTheme.labelSmall!.copyWith(
       color: theme.colorScheme.onBackground,
+    );
+    final greyLabelStyle = theme.textTheme.labelSmall!.copyWith(
+      color: theme.colorScheme.onBackground.withOpacity(.65),
     );
 
     return Padding(
@@ -815,7 +836,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          labelStyle: labelStyle,
+                          labelStyle: greyLabelStyle,
                           labelText: 'Weight Lifted (lbs)',
                           errorMaxLines: 2,
                         ),
@@ -846,7 +867,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          labelStyle: labelStyle,
+                          labelStyle: greyLabelStyle,
                           labelText: 'Number of Reps',
                           errorMaxLines: 2,
                         ),
@@ -969,7 +990,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                                     textInputAction: TextInputAction.done,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      labelStyle: labelStyle,
+                                      labelStyle: greyLabelStyle,
                                       labelText: 'Weight (lbs)',
                                       errorMaxLines: 2,
                                     ),
@@ -1047,7 +1068,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
                                     textInputAction: TextInputAction.done,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      labelStyle: labelStyle,
+                                      labelStyle: greyLabelStyle,
                                       labelText: 'Number of Reps',
                                       errorMaxLines: 2,
                                     ),
@@ -1206,7 +1227,7 @@ img.Image applyFloodFill(img.Image originalImage, List<String> musclesWorked,
   final highActivationColor = img.ColorInt8.rgba(235, 0, 0, 255);
   final mediumActivationColor = img.ColorInt8.rgba(235, 100, 100, 255);
   final lowActivationColor = img.ColorInt8.rgba(235, 160, 160, 255);
-  final visitedPixels = Set<Pixel>();
+  final visitedPixels = <Pixel>{};
 
   String muscle;
   int activationStrength; // 0 - 3
@@ -1886,7 +1907,8 @@ class _RatingBarWidgetState extends State<RatingBarWidget> {
                   widget.exercise.userOneRepMax,
                   widget.exercise.splitWeightAndReps,
                   widget.exercise.splitWeightPerSet,
-                  widget.exercise.splitRepsPerSet);
+                  widget.exercise.splitRepsPerSet,
+                  widget.exercise.userOneRepMaxHistory);
               _handleSubmitButtonPress(starsToSubmit!);
             }
           },
@@ -1936,7 +1958,9 @@ void _showBottomUpWindow(
                 3,
                 '',
                 exercise.musclesWorked[0],
-                exercise.name);
+                exercise.name,
+                false,
+                exercise.isAccessoryMovement == false ? 180 : 120);
             print(
                 'Added ${exercise.name} to the end of training day $selectedIndex');
             snackBarWeekdayString += '${getWeekdayFullName(selectedIndex)}, ';
@@ -2194,5 +2218,212 @@ class _BottomUpWindowState extends State<BottomUpWindow>
         ),
       ),
     );
+  }
+}
+
+class UserStrengthChart extends StatefulWidget {
+  final Map<int, int> data;
+
+  UserStrengthChart(this.data);
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _UserStrengthChartState createState() => _UserStrengthChartState();
+}
+
+class _UserStrengthChartState extends State<UserStrengthChart> {
+  int selectedWeekday = DateTime.now().weekday - 1;
+  late List<int> keys;
+  int maxY = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    keys = widget.data.keys.toList();
+    for (int weight in widget.data.values) {
+      if (weight > maxY) {
+        maxY = weight;
+      }
+    }
+    if (maxY > 0) {
+      maxY = (maxY * 1.2).toInt();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
+    return Column(
+      children: [
+        Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Your Strength Progression', style: titleStyle)),
+        SizedBox(height: 8),
+        Expanded(
+          child: GestureDetector(
+            onHorizontalDragUpdate:
+                (_) {}, // Empty callback to prevent horizontal swiping
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+              child: LineChart(
+                createChartData(widget.data, keys, maxY),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  LineChartData createChartData(Map<int, int> data, List<int> keys, int maxY) {
+    final theme = Theme.of(context);
+    final labelStyle = TextStyle(color: theme.colorScheme.onBackground);
+    if (data.isEmpty) {
+      return LineChartData(
+          axisTitleData: FlAxisTitleData(
+              topTitle: AxisTitle(
+                  showTitle: true,
+                  titleText: 'No data',
+                  textStyle: labelStyle.copyWith(
+                      fontSize: 16,
+                      color: theme.colorScheme.secondary,
+                      fontWeight: FontWeight.w500),
+                  reservedSize: 15)),
+          lineBarsData: [
+            LineChartBarData(
+              show: true,
+              spots: [FlSpot(100, 0)],
+            )
+          ],
+          maxX: 1,
+          minX: 0,
+          maxY: 1,
+          minY: 0,
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(show: false));
+    }
+    List<int> keys = data.keys.toList();
+    double minX = keys.first.toDouble();
+    final DateTime now = DateTime.now();
+    final DateTime currentDay = DateTime.parse(
+        '${now.year}${now.month > 9 ? now.month : '0${now.month}'}${now.day > 9 ? now.day : '0${now.day}'}');
+    final double maxX = currentDay.millisecondsSinceEpoch.toDouble();
+    final double horizontalLineInterval = maxY > 500 ? 100 : (maxY > 250 ? 50 : (maxY > 100 ? 25 : (maxY > 50 ? 10 : (maxY > 25 ? 5 : (maxY > 10 ? 2 : 1)))));
+    return LineChartData(
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+            return touchedSpots.map((LineBarSpot touchedSpot) {
+              final spot = touchedSpot;
+              final xValue = spot.x.toInt();
+              final String date = formatMilliseconds(xValue);
+              final yValue = spot.y.toInt();
+              return LineTooltipItem(
+                '$date\n$yValue lbs',
+                TextStyle(color: Colors.white),
+              );
+            }).toList();
+          },
+        ),
+      ),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 10,
+        getDrawingHorizontalLine: (value) =>
+            FlLine(color: Colors.white.withOpacity(.07)),
+        getDrawingVerticalLine: (value) =>
+            FlLine(color: Colors.white.withOpacity(.07)),
+        checkToShowVerticalLine: (value) => false,
+        checkToShowHorizontalLine: (value) => value % horizontalLineInterval == 0,
+      ),
+      axisTitleData: FlAxisTitleData(
+          bottomTitle: AxisTitle(
+              showTitle: true,
+              titleText: 'Date',
+              textStyle: labelStyle,
+              reservedSize: 20),
+          leftTitle: AxisTitle(
+              showTitle: true,
+              titleText: 'Calculated One Rep Max (lbs)',
+              textStyle: labelStyle,
+              reservedSize: 25)),
+      titlesData: FlTitlesData(
+        show: true,
+        leftTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 53,
+          getTextStyles: (value) => TextStyle(
+            color: Theme.of(context).colorScheme.onBackground.withOpacity(.65),
+            fontSize: 12,
+          ),
+          getTitles: (value) => value % horizontalLineInterval == 0 ? '${value.toInt()} lbs' : '',
+        ),
+        // Buffer space
+        rightTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 20,
+          checkToShowTitle:
+              (minValue, maxValue, sideTitles, appliedInterval, value) => false,
+        ),
+        bottomTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 22,
+          getTextStyles: (value) => TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onBackground.withOpacity(.8),
+          ),
+          getTitles: (value) {
+            // X value
+            if (minX % 8.64e+7 == value % 8.64e+7) {
+              print(value);
+            }
+            return formatMilliseconds(value.toInt());
+          },
+          checkToShowTitle:
+              // Same timestamp of the day
+              (minValue, maxValue, sideTitles, appliedInterval, value) => 
+                  minValue % 8.64e+7 == value % 8.64e+7,
+                  // value == maxValue ||
+                  // value == minValue,
+          margin: 8,
+        ),
+      ),
+      borderData: FlBorderData(
+          show: true, border: Border.all(color: Colors.white.withOpacity(.07))),
+      minX: minX,
+      maxX: maxX,
+      minY: 0,
+      maxY: (maxY > 0 ? maxY : 100).toDouble(),
+      lineBarsData: [
+        LineChartBarData(
+          spots: List.generate(
+            data.length,
+            (index) {
+              return FlSpot(
+                  keys[index].toDouble(), data[keys[index]]!.toDouble());
+            },
+          ),
+          isCurved: true,
+          colors: [Theme.of(context).colorScheme.primary],
+          barWidth: 4,
+          dotData: FlDotData(show: true),
+          belowBarData: BarAreaData(show: false),
+        ),
+      ],
+    );
+  }
+
+  String formatMilliseconds(int millisecondsSinceEpoch) {
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+    return '${time.month}/${time.day > 9 ? time.day : '0${time.day}'}/${time.year.toString().substring(2)}';
   }
 }

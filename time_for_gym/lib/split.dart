@@ -9,10 +9,12 @@ class TrainingDay {
   List<String> exerciseNames = [];
   List<String> exerciseIdentifiers = [];
   List<String> setNames = [];
+  List<bool> isSupersettedWithLast = [];
   bool isNotRestDay = false;
   int dayOfWeek = -1;
   String splitDay = "Rest Day";
   List<int> setsPerMuscleGroup = [];
+  List<int> restTimeInSeconds = [];
 
   TrainingDay(this.isNotRestDay, this.dayOfWeek);
 
@@ -66,7 +68,7 @@ class TrainingDay {
       "dumbbellLateralRaise", // Shortened
       "cableTricepPushdown" // Shortened
     ], [
-      "Mid/Lower Chest",
+      "Mid Chest/Lower Chest",
       "Upper Chest",
       "",
       "",
@@ -90,7 +92,7 @@ class TrainingDay {
       "overheadTricep" // Lengthened
     ], [
       "Upper Chest",
-      "Lower/Mid Chest",
+      "Lower Chest/Mid Chest",
       "",
       "",
       "Triceps (Lateral & Medial Head)"
@@ -118,7 +120,7 @@ class TrainingDay {
       "upperAbs"
     ], [
       "Lats",
-      "Mid/Upper Back",
+      "Mid Back/Upper Back",
       "Biceps (Brachialis), Forearms",
       "Biceps (Long Head)",
       "",
@@ -144,7 +146,7 @@ class TrainingDay {
       "lowerAbs"
     ], [
       "Lats",
-      "Mid/Upper Back",
+      "Mid Back/Upper Back",
       "Overall Biceps",
       "Biceps (Short Head)",
       "",
@@ -170,7 +172,7 @@ class TrainingDay {
       "legExtension", // Full
       "calf", // Full
     ], [
-      "Glutes & Quads",
+      "Glutes/Quads",
       "",
       "",
       "",
@@ -193,7 +195,7 @@ class TrainingDay {
       "seatedLegCurl", // Full
       "calf", // Full
     ], [
-      "Quads & Glutes",
+      "Quads/Glutes",
       "",
       "",
       "",
@@ -240,7 +242,7 @@ class TrainingDay {
       "hammerCurl",
       "rearDelt",
     ], [
-      "Mid/Lower Chest",
+      "Mid Chest/Lower Chest",
       "Lats",
       "",
       "",
@@ -270,10 +272,10 @@ class TrainingDay {
       "rearDelt",
     ], [
       "Upper Chest",
-      "Mid/Upper Back",
+      "Mid Back/Upper Back",
       "",
       "",
-      "Triceps (Lateral & Medial Head)",
+      "Triceps (Lateral/Medial Head)",
       "Overall Biceps",
       "",
     ], focusedMuscleGroups);
@@ -294,7 +296,7 @@ class TrainingDay {
       "calf", // Full
       "upperAbs"
     ], [
-      "Glutes & Quads",
+      "Glutes/Quads",
       "",
       "",
       "",
@@ -317,7 +319,7 @@ class TrainingDay {
       "calf", // Full
       "lowerAbs"
     ], [
-      "Quads & Glutes",
+      "Quads/Glutes",
       "",
       "",
       "",
@@ -342,9 +344,9 @@ class TrainingDay {
       "cableLateralRaise",
       "regularCurl",
     ], [
-      "Glutes & Quads",
+      "Glutes/Quads",
       "",
-      "Mid/Lower Chest",
+      "Mid Chest/Lower Chest",
       "Lats",
       "",
       "Overall Biceps",
@@ -513,15 +515,15 @@ class TrainingDay {
         // No focused muscle groups parameter as they are already being added in the first
         addMuscleGroups(
             focusedMuscleGroups,
-            List.filled(focusedMuscleGroups.length, ""),
-            List.filled(focusedMuscleGroups.length, ""), []);
+            List.filled(focusedMuscleGroups.length, "", growable: true),
+            List.filled(focusedMuscleGroups.length, "", growable: true), []);
         splitDay = "Focused Muscle Groups";
         break;
       default:
         print("ERROR - PLG");
         return;
     }
-    exerciseNames = List.filled(muscleGroups.length, '');
+    // exerciseNames = List.filled(muscleGroups.length, '', growable: true);
   }
 
   @override
@@ -540,9 +542,11 @@ class TrainingDay {
       'dayOfWeek': dayOfWeek,
       'splitDay': splitDay,
       'setsPerMuscleGroup': setsPerMuscleGroup,
+      'isSupersettedWithLast': isSupersettedWithLast,
       'exerciseIdentifiers': exerciseIdentifiers,
       'setNames': setNames,
       'exerciseNames': exerciseNames,
+      'restTimeInSeconds': restTimeInSeconds,
     };
   }
 
@@ -552,18 +556,30 @@ class TrainingDay {
     dayOfWeek = json['dayOfWeek'] ?? 0;
     splitDay = json['splitDay'] ?? "none";
     setsPerMuscleGroup = List<int>.from(json['setsPerMuscleGroup'] ?? []);
+    isSupersettedWithLast =
+        List<bool>.from(json['isSupersettedWithLast'] ?? []);
+    restTimeInSeconds = List<int>.from(json['restTimeInSeconds'] ?? []);
     exerciseIdentifiers = List<String>.from(json['exerciseIdentifiers'] ?? []);
     setNames = List<String>.from(json['setNames'] ?? []);
     exerciseNames = List<String>.from(json['exerciseNames'] ?? []);
   }
 
-  void insertMuscleGroup(int index, String muscleGroup, int numSets,
-      String identifier, String setName, String exerciseName) {
+  void insertMuscleGroup(
+      int index,
+      String muscleGroup,
+      int numSets,
+      String identifier,
+      String setName,
+      String exerciseName,
+      bool isSuperset,
+      int restTime) {
     muscleGroups.insert(index, muscleGroup);
     exerciseIdentifiers.insert(index, identifier);
     setNames.insert(index, setName);
     setsPerMuscleGroup.insert(index, numSets);
     exerciseNames.insert(index, exerciseName);
+    isSupersettedWithLast.insert(index, isSuperset);
+    restTimeInSeconds.insert(index, restTime);
   }
 
   List<dynamic> removeMuscleGroup(int index) {
@@ -573,6 +589,8 @@ class TrainingDay {
     toReturn.add(exerciseIdentifiers.removeAt(index));
     toReturn.add(setNames.removeAt(index));
     toReturn.add(exerciseNames.removeAt(index));
+    toReturn.add(isSupersettedWithLast.removeAt(index));
+    toReturn.add(restTimeInSeconds.removeAt(index));
     return toReturn;
   }
 
@@ -585,6 +603,8 @@ class TrainingDay {
     this.exerciseIdentifiers,
     this.setNames,
     this.exerciseNames,
+    this.isSupersettedWithLast,
+    this.restTimeInSeconds,
   );
 
   TrainingDay.deepCopy(TrainingDay original)
@@ -596,7 +616,9 @@ class TrainingDay {
             List<int>.from(original.setsPerMuscleGroup),
             List<String>.from(original.exerciseIdentifiers),
             List<String>.from(original.setNames),
-            List<String>.from(original.exerciseNames));
+            List<String>.from(original.exerciseNames),
+            List<bool>.from(original.isSupersettedWithLast),
+            List<int>.from(original.restTimeInSeconds));
 }
 
 class Split {
@@ -645,11 +667,16 @@ class Split {
     }
   }
 
-  void initializeNumSets() {
+  void initializeNumSetsAndSupersets() {
     for (TrainingDay trainingDay in trainingDays) {
       // 3 sets default per muscle group
       trainingDay.setsPerMuscleGroup =
-          List.filled(trainingDay.muscleGroups.length, 3);
+          List.filled(trainingDay.muscleGroups.length, 3, growable: true);
+      trainingDay.isSupersettedWithLast =
+          List.filled(trainingDay.muscleGroups.length, false, growable: true);
+      trainingDay.restTimeInSeconds = [];
+    trainingDay.exerciseNames = List.filled(trainingDay.muscleGroups.length, '', growable: true);
+    trainingDay.restTimeInSeconds = List.filled(trainingDay.muscleGroups.length, 120, growable: true);
     }
   }
 
@@ -941,7 +968,7 @@ class Split {
             print("ERROR - training days per week");
             return;
         }
-        initializeNumSets();
+        initializeNumSetsAndSupersets();
         break;
       case "Build Strength":
         break;

@@ -245,20 +245,32 @@ class _SearchPageState extends State<SearchPage> {
               names: lowerBodyMuscleGroups,
               isExercise: false,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
-              child: Text(
-                "Favorite Exercises",
-                style: titleStyle,
-                textAlign: TextAlign.left,
+            if (appState.favoriteExercises.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+                child: Text(
+                  "Favorite Exercises",
+                  style: titleStyle,
+                  textAlign: TextAlign.left,
+                ),
               ),
-            ),
-            ScrollableButtonRow(
-              names: appState.favoriteExercises
-                  .map((exercise) => exercise.name)
-                  .toList(),
-              isExercise: true,
-            ),
+            if (appState.favoriteExercises.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                child: Text(
+                  "No favorite exercises",
+                  style: theme.textTheme.labelSmall!.copyWith(
+                      color: theme.colorScheme.onBackground.withOpacity(.65)),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            if (appState.favoriteExercises.isNotEmpty)
+              ScrollableButtonRow(
+                names: appState.favoriteExercises
+                    .map((exercise) => exercise.name)
+                    .toList(),
+                isExercise: true,
+              ),
           ],
         ),
       ),

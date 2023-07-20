@@ -1,5 +1,5 @@
 // import 'dart:ffi';
-import 'dart:io';
+// import 'dart:io';
 //import 'dart:js_util';
 // import 'dart:ui';
 import 'dart:convert';
@@ -16,17 +16,19 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:time_for_gym/followers_page.dart';
+import 'package:time_for_gym/profile_page.dart';
 import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 // import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:device_info_plus/device_info_plus.dart';
+// import 'package:device_info_plus/device_info_plus.dart';
 import 'package:connectivity/connectivity.dart';
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
 // import 'package:google_maps_webservice/places.dart';
@@ -47,13 +49,14 @@ import 'package:time_for_gym/search_page.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'package:time_for_gym/auth_page.dart';
 import 'package:time_for_gym/search_exercises_page.dart';
+import 'package:time_for_gym/user.dart';
 
 // import 'package:time_for_gym/split_exercise_index.dart';
 
 // late final FirebaseApp app;
 // late final FirebaseAuth auth;
 late bool isAuthenticated;
-late User currentUser;
+late auth.User authUser;
 
 void main() async {
   // GoogleMapsFlutter.init('YOUR_API_KEY');
@@ -67,13 +70,13 @@ void main() async {
   // auth = FirebaseAuth.instanceFor(app: app);
   // auth.authStateChanges()...
 
-  FirebaseAuth.instance.authStateChanges().listen((User? theUser) {
+  auth.FirebaseAuth.instance.authStateChanges().listen((auth.User? theUser) {
     if (theUser == null) {
       print('User is not previously authenticated');
       isAuthenticated = false;
     } else {
       print('User is previously authenticated');
-      currentUser = theUser;
+      authUser = theUser;
       isAuthenticated = true;
     }
   });
@@ -93,8 +96,6 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
   MyApp({
     super.key,
   });
-
-  // final Color primaryColor = Color.fromRGBO(0, 159, 153, 1);
 
   final int red = 0;
   final int green = 159;
@@ -120,24 +121,6 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
         900: Color.fromRGBO(red, green, blue, 1.0),
       },
     );
-
-//     final textTheme = TextTheme(
-//   displayLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   displayMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   displaySmall: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   headlineLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   headlineMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   headlineSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   titleLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   titleMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   titleSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   bodyLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   bodyMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   bodySmall: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   labelLarge: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   labelMedium: TextStyle(fontFamily: 'Montserrat-Regular'),
-//   labelSmall: TextStyle(fontFamily: 'Montserrat-Regular'),
-// );
 
     Color backgroundColor = Color.fromRGBO(16, 16, 16, 1);
     Color container1 = Color.fromRGBO(30, 30, 30, 1);
@@ -190,15 +173,17 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 
 class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // late SharedPreferences _prefs;
-  String _favoritesString = '';
+  // String _favoritesString = '';
   // String _currentSplitString = '';
-  String _splitDayExerciseIndicesString = '';
+  // String _splitDayExerciseIndicesString = '';
 
   // Google AdMob
   late BannerAd _bannerAd;
   late Widget bannerAdWidget;
 
   late String authUserId;
+  String? authUsername;
+  late User currentUser;
 
   // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
@@ -241,13 +226,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   // User will be initialized when this is called
   Future<void> initEverythingAfterAuthentication() async {
-    authUserId = currentUser
+    authUserId = authUser
         .uid; // Need user id for muscle group exercise user popularity data
+    // authUsername is initialized during sign up, otherwise use user display name
+    authUsername ??= authUser.displayName;
+    currentUser =
+        User(username: authUsername!, email: authUser.email!, uid: authUserId);
+    print('loading $currentUser');
     print('authentication user id: $authUserId');
     initAds();
     // notifyListeners();
     // await initializeUserID(); // Need user id for muscle group exercise user popularity data
     await getDataFromFirestore(); // Need to initialize firestore strings to initialize favorites in initializeMuscleGroups
+    currentUser.initializeData();
     // await initPrefs(); // Need to initialize shared preferences strings to initialize favorites in initializeMuscleGroups
     await initializeMuscleGroups();
     await initGyms();
@@ -262,8 +253,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> getDataFromFirestore() async {
     // Create a reference to the user document
+    // authUsername = 'test';
     DocumentReference userRef =
-        FirebaseFirestore.instance.collection('users').doc(authUserId);
+        FirebaseFirestore.instance.collection('users').doc(authUsername);
 
     // Get the document snapshot
     DocumentSnapshot snapshot = await userRef.get();
@@ -273,14 +265,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       // Get the data as a Map
       Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
 
-      _favoritesString = userData['favorites'] ?? '';
-      _splitDayExerciseIndicesString =
+      currentUser.favoritesString = userData['favorites'] ?? '';
+      currentUser.splitDayExerciseIndicesString =
           userData['splitDayExerciseIndices'] ?? '';
-      userGymId = userData['userGymId'] ?? '';
+      currentUser.userGymId = userData['userGymId'] ?? '';
+      currentUser.profilePictureUrl = userData['profilePictureUrl'] ?? '';
+      currentUser.profilePictureDevicePath =
+          userData['profilePictureDevicePath'] ?? '';
+      currentUser.followers = (userData['followers'] ?? []).cast<String>();
+      currentUser.following = (userData['following'] ?? []).cast<String>();
 
-      String? splitJson = userData['split'];
-      if (splitJson != null) {
-        Map<String, dynamic> splitMap = json.decode(splitJson);
+      currentUser.splitJson = userData['split'];
+      if (currentUser.splitJson != null) {
+        Map<String, dynamic> splitMap = json.decode(currentUser.splitJson!);
         currentSplit = Split.fromJson(splitMap);
         makeNewSplit = false;
         print("initialized split: $currentSplit");
@@ -289,22 +286,27 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       }
       notifyListeners();
     } else {
-      print('User $authUserId not found');
+      print('User $authUsername not found');
     }
   }
 
   void storeDataInFirestore() {
     // Create a reference to the user document
     DocumentReference userRef =
-        FirebaseFirestore.instance.collection('users').doc(authUserId);
+        FirebaseFirestore.instance.collection('users').doc(authUsername);
+    currentUser.splitJson = json.encode(currentSplit?.toJson());
 
     // Create a map of user data
     Map<String, dynamic> userData = {
-      'favorites': _favoritesString,
+      'favorites': currentUser.favoritesString,
       'splitDayExerciseIndices': splitDayExerciseIndices
           .toString(), // TODO? : Store and retrieveas List<List<int>>
-      'split': json.encode(currentSplit.toJson()),
-      'userGymId': userGymId
+      'split': currentUser.splitJson,
+      'userGymId': currentUser.userGymId,
+      'profilePictureUrl': currentUser.profilePictureUrl,
+      'profilePictureDevicePath': currentUser.profilePictureDevicePath,
+      'followers': currentUser.followers,
+      'following': currentUser.following,
     };
 
     // await _prefs.setString('favorites', _favoritesString);
@@ -312,7 +314,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     //     'splitDayExerciseIndices', splitDayExerciseIndices.toString());
     // Set the user data to the document
     userRef
-        .set(userData)
+        .update(userData)
         .then((value) => print('User data stored successfully'))
         .catchError((error) => print('Failed to store user data: $error'));
   }
@@ -351,12 +353,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // print('5 ${databaseRef.child('gymData').once()}');
     gyms = await fetchGymData();
     // Retrieve user gym from shared preferences id string
-    List<Gym> userGymList =
-        gyms.values.where((gym) => gym.placeId == userGymId).toList();
+    // where is used and not first where to avoid error if not in the list
+    List<Gym> userGymList = gyms.values
+        .where((gym) => gym.placeId == currentUser.userGymId)
+        .toList();
     if (userGymList.isNotEmpty) {
       userGym = userGymList[0];
     }
-    print(userGymId);
+    print(currentUser.userGymId.isNotEmpty
+        ? currentUser.userGymId
+        : 'No user gym set');
   }
 
   // Future<void> initPrefs() async {
@@ -397,7 +403,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       favoriteExercisesAsString = favoriteExercisesAsString.substring(
           0, favoriteExercisesAsString.length - 1);
     }
-    _favoritesString = favoriteExercisesAsString;
+    currentUser.favoritesString = favoriteExercisesAsString;
     storeDataInFirestore();
     // await _prefs.setString('favorites', _favoritesString);
   }
@@ -477,28 +483,39 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   var isGymCountInitialized = false;
 
   var currentMuscleGroup = ""; // String
-  var currentExercise = Exercise(
+  Exercise currentExercise = Exercise(
       splitWeightAndReps: [],
       splitWeightPerSet: [],
       splitRepsPerSet: [],
       musclesWorked: [],
-      musclesWorkedActivation: []);
-  var currentExerciseFromSplitDayPage = Exercise(
+      musclesWorkedActivation: [],
+      userOneRepMaxHistory: {});
+  Exercise currentExerciseFromSplitDayPage = Exercise(
       splitWeightAndReps: [],
       splitWeightPerSet: [],
       splitRepsPerSet: [],
       musclesWorked: [],
-      musclesWorkedActivation: []);
-  var currentExerciseFromGymPage = Exercise(
+      musclesWorkedActivation: [],
+      userOneRepMaxHistory: {});
+  Exercise currentExerciseFromGymPage = Exercise(
       splitWeightAndReps: [],
       splitWeightPerSet: [],
       splitRepsPerSet: [],
       musclesWorked: [],
-      musclesWorkedActivation: []);
+      musclesWorkedActivation: [],
+      userOneRepMaxHistory: {});
+  Exercise currentExerciseFromProfilePage = Exercise(
+      splitWeightAndReps: [],
+      splitWeightPerSet: [],
+      splitRepsPerSet: [],
+      musclesWorked: [],
+      musclesWorkedActivation: [],
+      userOneRepMaxHistory: {});
   img.Image? defaultMuscleWorkedImage;
   Image? currentMuscleWorkedImage;
   Image? currentMuscleWorkedImageFromSplitDayPage;
   Image? currentMuscleWorkedImageFromGymPage;
+  Image? currentMuscleWorkedImageFromProfilePage;
 
   Map<String, List<Widget>> gymPhotosMap = {};
 
@@ -632,6 +649,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   bool fromSplitDayPage = false;
   bool fromSearchPage = false;
   bool fromGymPage = false;
+  bool fromProfilePage = false;
   int bottomNavigationIndex = 0;
   int lastVisitedSearchPage = -1;
 
@@ -701,6 +719,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   int presetSearchPage =
       0; // 0 for search page, 1 for muscle group, 2 for exercise
   int presetHomePage = 0;
+  bool defaultProfileFollowersPage = true;
   String searchQuery = '';
 
   List<List<int>> splitDayExerciseIndices = [[], [], [], [], [], [], []];
@@ -722,6 +741,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       isSelectedGym: false,
     ),
     SearchExercisesPage([]),
+    ProfilePage(null),
   ];
 
   bool isHomePageSearchFieldFocused = false;
@@ -742,7 +762,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     [0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 4, 4, 4, 4, 3, 4, 4, 3, 2, 2, 2, 1, 1, 1]
   ];
 
-  String userGymId = '';
+  // String userGymId = '';
   int showAdBeforeExerciseCounter =
       2; // Number of exercises before ad pops up (-1)
 
@@ -756,6 +776,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       for (int j = 0; j < split.trainingDays[i].exerciseNames.length; j++) {
         addExerciseToSplit(this, split.trainingDays[i].exerciseIdentifiers[j],
             userGym, splitDayExerciseIndices, i, j, split);
+
+        // Compound movement, adjust rest time
+        if (split.trainingDays[i].restTimeInSeconds.length > j) {
+          if (muscleGroups[split.trainingDays[i].muscleGroups[j]]![
+                      splitDayExerciseIndices[i][j]]
+                  .isAccessoryMovement ==
+              false) {
+            split.trainingDays[i].restTimeInSeconds[j] = 180;
+          }
+        }
         print('Added exercise to day $i, exercise $j');
       }
     }
@@ -889,9 +919,18 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       int numSets,
       String identifier,
       String setName,
-      String exerciseName) {
+      String exerciseName,
+      bool isSuperset,
+      int restTime) {
     editModeTempSplit.trainingDays[dayIndex].insertMuscleGroup(
-        cardIndex, muscleGroup, numSets, identifier, setName, exerciseName);
+        cardIndex,
+        muscleGroup,
+        numSets,
+        identifier,
+        setName,
+        exerciseName,
+        isSuperset,
+        restTime);
     editModeTempExerciseIndices[dayIndex]
         .insert(cardIndex, muscleGroupExerciseIndex);
     notifyListeners();
@@ -906,9 +945,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       int numSets,
       String identifier,
       String setName,
-      String exerciseName) {
-    split.trainingDays[dayIndex].insertMuscleGroup(
-        cardIndex, muscleGroup, numSets, identifier, setName, exerciseName);
+      String exerciseName,
+      bool isSuperset,
+      int restTime) {
+    split.trainingDays[dayIndex].insertMuscleGroup(cardIndex, muscleGroup,
+        numSets, identifier, setName, exerciseName, isSuperset, restTime);
     if (split == currentSplit) {
       // If pointers are the same
       splitDayExerciseIndices[dayIndex]
@@ -942,7 +983,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[1],
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[2],
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[3],
-      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4]
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[5],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[6],
     ];
   }
 
@@ -959,7 +1002,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[1],
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[2],
       muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[3],
-      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4]
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[4],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[5],
+      muscleGroupAndNumSetsAndIdentifierAndSetAndExerciseName[6],
     ];
   }
 
@@ -1060,6 +1105,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         List<int> userSplitWeightAndReps;
         List<int> userSplitWeightPerSet;
         List<int> userSplitRepsPerSet;
+        Map<int, int> userOneRepMaxHistory;
 
         if (exerciseDataMap[attributes[0]] == null) {
           // No star data or one rep max data for this exercise
@@ -1074,6 +1120,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           userSplitWeightAndReps = [];
           userSplitWeightPerSet = [];
           userSplitRepsPerSet = [];
+          userOneRepMaxHistory = {};
         } else {
           userRatingAndAverageRatingAnd1RMAndWeightAndReps =
               exerciseDataMap[attributes[0]]![0];
@@ -1104,6 +1151,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
             userSplitWeightPerSet = exerciseDataMap[attributes[0]]![1];
             userSplitRepsPerSet = exerciseDataMap[attributes[0]]![2];
           }
+          userOneRepMaxHistory = exerciseDataMap[attributes[0]]![3] ?? {};
         }
         print(
             "${attributes[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[0]} ${userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]} $userOneRepMax $userSplitWeightAndReps");
@@ -1152,9 +1200,14 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                 break;
               case 'Machine':
                 // If machine, wait multiplier will just be how popular the machine is on average
-                waitMultiplier =
-                    userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]! /
-                        5.0; // Always a number 0-5 or 0
+                if (userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]! != 0) {
+                  waitMultiplier =
+                      userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]! /
+                          5.0; // Always a number 0-5 or 0
+                } else {
+                  // No rating
+                  waitMultiplier += 0.5;
+                }
                 break resourceRequiredLoop;
               case 'Preacher Bench':
                 waitMultiplier += 0.3;
@@ -1325,6 +1378,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           splitWeightAndReps: userSplitWeightAndReps,
           splitWeightPerSet: userSplitWeightPerSet,
           splitRepsPerSet: userSplitRepsPerSet,
+          userOneRepMaxHistory: userOneRepMaxHistory,
         );
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
@@ -1353,32 +1407,32 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
 // Function to download and create a container with the image from a URL
-  Future<Uint8List> downloadImageFromUrl(String imageUrl) async {
-    http.Response response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode == 200) {
-      // Uint8List imageBytes = response.bodyBytes;
-      // ImageProvider imageProvider = MemoryImage(imageBytes);
+  // Future<Uint8List> downloadImageFromUrl(String imageUrl) async {
+  //   http.Response response = await http.get(Uri.parse(imageUrl));
+  //   if (response.statusCode == 200) {
+  //     // Uint8List imageBytes = response.bodyBytes;
+  //     // ImageProvider imageProvider = MemoryImage(imageBytes);
 
-      return response.bodyBytes;
+  //     return response.bodyBytes;
 
-      // print("worked $imageUrl");
+  //     // print("worked $imageUrl");
 
-      // return Container(
-      //   decoration: BoxDecoration(
-      //     image: DecorationImage(
-      //       image: imageProvider,
-      //       fit: BoxFit.cover,
-      //     ),
-      //   ),
-      // );
-    } else {
-      print(imageUrl);
-      // print('Failed to load image. Status code: ${response.statusCode}');
-      throw Exception(
-          'Failed to load image. Status code: ${response.statusCode}');
-      // return Container(); // Return an empty container if image loading fails
-    }
-  }
+  //     // return Container(
+  //     //   decoration: BoxDecoration(
+  //     //     image: DecorationImage(
+  //     //       image: imageProvider,
+  //     //       fit: BoxFit.cover,
+  //     //     ),
+  //     //   ),
+  //     // );
+  //   } else {
+  //     print(imageUrl);
+  //     // print('Failed to load image. Status code: ${response.statusCode}');
+  //     throw Exception(
+  //         'Failed to load image. Status code: ${response.statusCode}');
+  //     // return Container(); // Return an empty container if image loading fails
+  //   }
+  // }
 
   Future<void> initializeGymCount() async {
     if (isGymCountInitialized) {
@@ -1424,12 +1478,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void initializeOldFavorites() {
-    if (_favoritesString.isEmpty) {
+    if (currentUser.favoritesString.isEmpty) {
       print("No favorite exercises");
       return;
     }
 
-    List<String> favoriteStrings = _favoritesString.split(",");
+    List<String> favoriteStrings = currentUser.favoritesString.split(",");
 
     for (String favoriteString in favoriteStrings) {
       // For each exercise
@@ -1466,7 +1520,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // splitDayExerciseIndices = [[],[],[],[],[],[],[]];
     // _splitDayExerciseIndicesString = "";
     // return;
-    if (_splitDayExerciseIndicesString.isEmpty) {
+    if (currentUser.splitDayExerciseIndicesString.isEmpty) {
       print("No split exercise index data saved");
       return;
     }
@@ -1498,7 +1552,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     //   return row;
     // }).toList();
 
-    String splitDayExerciseIndicesStringTemp = _splitDayExerciseIndicesString
+    String splitDayExerciseIndicesStringTemp = currentUser
+        .splitDayExerciseIndicesString
         .substring(2); // remove first two square brackets
     List<String> rows = splitDayExerciseIndicesStringTemp.split("[");
     List<List<int>> indices = [];
@@ -1566,18 +1621,18 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void storeUserGymInSharedPreferences() {
     if (userGym == null) {
-      userGymId = '';
+      currentUser.userGymId = '';
       print('ERROR - storing user gym, but user gym is null');
       return;
     }
-    userGymId = userGym!.placeId;
+    currentUser.userGymId = userGym!.placeId;
     storeDataInFirestore();
     // _prefs.setString('userGymId', userGymId);
-    print('stored userGymId $userGymId');
+    print('stored userGymId ${currentUser.userGymId}');
   }
 
   void removeUserGymFromSharedPreferences() {
-    userGymId = '';
+    currentUser.userGymId = '';
     storeDataInFirestore();
     // _prefs.remove('userGymId');
   }
@@ -1633,20 +1688,20 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // print("userID: $userID");
   // }
 
-  Future<String> getDeviceId() async {
-    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    String? deviceId; // Make the variable nullable and assign a default value
+  // Future<String> getDeviceId() async {
+  //   DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  //   String? deviceId; // Make the variable nullable and assign a default value
 
-    if (Platform.isAndroid) {
-      AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
-      deviceId = androidInfo.id;
-    } else if (Platform.isIOS) {
-      IosDeviceInfo iosInfo = await deviceInfoPlugin.iosInfo;
-      deviceId = iosInfo.identifierForVendor;
-    }
+  //   if (Platform.isAndroid) {
+  //     AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
+  //     deviceId = androidInfo.id;
+  //   } else if (Platform.isIOS) {
+  //     IosDeviceInfo iosInfo = await deviceInfoPlugin.iosInfo;
+  //     deviceId = iosInfo.identifierForVendor;
+  //   }
 
-    return deviceId ?? ''; // Return a default value if deviceId is null
-  }
+  //   return deviceId ?? ''; // Return a default value if deviceId is null
+  // }
 
   void submitExercisePopularityDataToFirebase(
       String userID,
@@ -1656,7 +1711,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       int? oneRepMax,
       List<int> splitWeightAndReps,
       List<int> splitWeightPerSet,
-      List<int> splitRepsPerSet) {
+      List<int> splitRepsPerSet,
+      Map<int, int> userOneRepMaxHistory) {
     // String timestamp = DateTime.now().toString();
     ExercisePopularityData data = ExercisePopularityData(
         userID,
@@ -1666,7 +1722,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         oneRepMax,
         splitWeightAndReps,
         splitWeightPerSet,
-        splitRepsPerSet);
+        splitRepsPerSet,
+        userOneRepMaxHistory);
     // Unique child for each exercise name
     databaseRef
         .child('exercisePopularityData')
@@ -1948,6 +2005,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           double? userSplitReps;
           List<int>? userSplitWeightPerSet;
           List<int>? userSplitRepsPerSet;
+          Map<int, int> userOneRepMaxHistory = {};
 
           // String exerciseName;
           String? mainMuscleGroup;
@@ -1984,6 +2042,13 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                 List<dynamic> repsAsObjects =
                     exercisePopularity['splitRepsPerSet'];
                 userSplitRepsPerSet = repsAsObjects.cast<int>();
+              }
+              if (exercisePopularity['userOneRepMaxHistory'] != null) {
+                userOneRepMaxHistory = Map<int, int>.from(
+                    (exercisePopularity['userOneRepMaxHistory']
+                            as Map<dynamic, dynamic>)
+                        .map((key, value) => MapEntry(int.parse(key.toString()),
+                            int.parse(value.toString()))));
               }
             }
             if (exercisePopularity['numStars'] != null) {
@@ -2023,6 +2088,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
                     ],
                     userSplitWeightPerSet,
                     userSplitRepsPerSet,
+                    userOneRepMaxHistory
                   ]);
         });
       } else {
@@ -2085,6 +2151,13 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       currentExerciseFromGymPage = exercise;
       if (defaultMuscleWorkedImage != null) {
         currentMuscleWorkedImageFromGymPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, exercise.musclesWorked,
+                exercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
+    } else if (fromProfilePage) {
+      currentExerciseFromProfilePage = exercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromProfilePage = Image.memory(img.encodePng(
             applyFloodFill(defaultMuscleWorkedImage!, exercise.musclesWorked,
                 exercise.musclesWorkedActivation, imageMuscleLocations)));
       }
@@ -2167,6 +2240,13 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       currentExerciseFromSplitDayPage = newExercise;
       if (defaultMuscleWorkedImage != null) {
         currentMuscleWorkedImageFromSplitDayPage = Image.memory(img.encodePng(
+            applyFloodFill(defaultMuscleWorkedImage!, newExercise.musclesWorked,
+                newExercise.musclesWorkedActivation, imageMuscleLocations)));
+      }
+    } else if (fromProfilePage) {
+      currentExerciseFromProfilePage = newExercise;
+      if (defaultMuscleWorkedImage != null) {
+        currentMuscleWorkedImageFromProfilePage = Image.memory(img.encodePng(
             applyFloodFill(defaultMuscleWorkedImage!, newExercise.musclesWorked,
                 newExercise.musclesWorkedActivation, imageMuscleLocations)));
       }
@@ -2433,6 +2513,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = false;
         appState.fromGymPage = false;
+        appState.fromProfilePage = false;
         appState.presetSearchPage = 1;
         appState.lastVisitedSearchPage = appState.pageIndex;
         appState.lastVisitedSearchPage = 4;
@@ -2454,7 +2535,9 @@ class _MyHomePageState extends State<MyHomePage> {
         // appState.splitDayEditMode = false;
         // Only remembers exercise from search page if an exercise is not looked at from another page
         // if (appState.fromSearchPage) {
-        if (!appState.fromSplitDayPage && !appState.fromGymPage) {
+        if (!appState.fromSplitDayPage &&
+            !appState.fromGymPage &&
+            !appState.fromProfilePage) {
           // Only update if clicking on exercise from search page or exercises page
           appState.presetSearchPage = 2;
         }
@@ -2510,6 +2593,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSplitDayPage = true;
         appState.fromSearchPage = false;
         appState.fromGymPage = false;
+        appState.fromProfilePage = false;
         appState.goStraightToSplitDayPage =
             true; // Go back to the split day page they were last on
         page = SplitDayPage(appState.currentDayIndex);
@@ -2520,6 +2604,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = true;
         appState.fromGymPage = false;
+        appState.fromProfilePage = false;
         _bottomNavigationIndex = 1; // Update navigation bar
         appState.presetSearchPage = 0;
         appState.lastVisitedSearchPage = 8;
@@ -2529,6 +2614,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appState.fromSplitDayPage = false;
         appState.fromSearchPage = false;
         appState.fromGymPage = true;
+        appState.fromProfilePage = false;
         appState.presetHomePage = 1;
         _bottomNavigationIndex = 0; // Update navigation bar
         page = GymPage(
@@ -2544,6 +2630,21 @@ class _MyHomePageState extends State<MyHomePage> {
             .toList());
         appState.presetSearchPage = 3;
         appState.lastVisitedSearchPage = 10;
+        break;
+      case 11:
+        _bottomNavigationIndex = 4; // Update navigation bar
+        appState.fromSplitDayPage = false;
+        appState.fromSearchPage = false;
+        appState.fromGymPage = false;
+        appState.fromProfilePage = true;
+        page = ProfilePage(appState.currentUser);
+        break;
+      case 12:
+        page = FollowersPage(appState.currentUser);
+        break;
+      case 13:
+        _bottomNavigationIndex = 3; // Update navigation bar
+        page = Placeholder();
         break;
       default:
         throw UnimplementedError('No widget for ${appState.pageIndex}');
@@ -2594,7 +2695,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         if (appState.pageIndex == 4 ||
                             (appState.pageIndex == 5 &&
                                 !appState.fromSplitDayPage &&
-                                !appState.fromGymPage) ||
+                                !appState.fromGymPage &&
+                                !appState.fromProfilePage) ||
                             appState.presetSearchPage == 0) {
                           // Exercises page or individual exercise page or other tab, or if search page is preset
                           appState.changePage(8);
@@ -2604,9 +2706,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           appState.splitWeekEditMode = false;
                           appState.fromSplitDayPage = false;
                           appState.fromGymPage = false;
+                          appState.fromProfilePage = false;
                         } else {
                           appState.fromSplitDayPage = false;
                           appState.fromGymPage = false;
+                          appState.fromProfilePage = false;
                           if (appState.presetSearchPage == 1) {
                             appState.changePage(4);
                           } else {
@@ -2630,6 +2734,16 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Changes page to split day with the current day index
                           appState.changePage(7);
                         }
+                      } else if (index == 3) {
+                        appState.toSplitDayReorderMode(false);
+                        appState.changePage(13);
+                        appState.splitDayReorderMode = false;
+                        appState.splitWeekEditMode = false;
+                      } else if (index == 4) {
+                        appState.toSplitDayReorderMode(false);
+                        appState.changePage(11);
+                        appState.splitDayReorderMode = false;
+                        appState.splitWeekEditMode = false;
                       }
                       _bottomNavigationIndex = index;
                       appState.bottomNavigationIndex = _bottomNavigationIndex;
@@ -2647,6 +2761,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     BottomNavigationBarItem(
                       icon: Icon(Icons.list_alt),
                       label: 'Your Split',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.chat),
+                      label: 'Friends',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person),
+                      label: 'Profile',
                     ),
                   ],
                 ),
@@ -2787,6 +2909,10 @@ class _SwipeBackState extends State<SwipeBack> {
           .toList()
           .expand((innerList) => innerList)
           .toList());
+    }
+    if (widget.index == 11) {
+      widget.appState.appPages[widget.index] =
+          ProfilePage(widget.appState.currentUser);
     }
     final Widget swipeChild = widget.appState.appPages[widget.index];
     return _isDismissed

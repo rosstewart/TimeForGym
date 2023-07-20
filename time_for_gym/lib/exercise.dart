@@ -22,6 +22,7 @@ class Exercise implements Comparable<Exercise> {
     required this.splitWeightAndReps,
     required this.splitWeightPerSet,
     required this.splitRepsPerSet,
+    required this.userOneRepMaxHistory,
   });
 
   @override
@@ -58,6 +59,7 @@ class Exercise implements Comparable<Exercise> {
   List<int> splitWeightPerSet = [];
   // Split reps for each set (including top set)
   List<int> splitRepsPerSet = [];
+  Map<int, int> userOneRepMaxHistory = {};
 
   @override
   int compareTo(Exercise other) {
@@ -189,10 +191,10 @@ class ExercisePopularityData {
   List<int> splitWeightAndReps = [];
   List<int> splitWeightPerSet = [];
   List<int> splitRepsPerSet = [];
-
+  Map<int, int> userOneRepMaxHistory = {};
 
   ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup,
-      this.numStars, this.oneRepMax, this.splitWeightAndReps, this.splitWeightPerSet, this.splitRepsPerSet);
+      this.numStars, this.oneRepMax, this.splitWeightAndReps, this.splitWeightPerSet, this.splitRepsPerSet, this.userOneRepMaxHistory);
 
   Map<String, dynamic> toJson() => {
         'userID': userID,
@@ -204,5 +206,6 @@ class ExercisePopularityData {
         if (splitWeightAndReps.length > 1) 'splitReps': splitWeightAndReps[1],
         'splitWeightPerSet': splitWeightPerSet,
         'splitRepsPerSet': splitRepsPerSet,
+        'userOneRepMaxHistory': userOneRepMaxHistory,
       };
 }

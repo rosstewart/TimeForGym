@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 // import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:time_for_gym/main.dart';
@@ -13,11 +14,13 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final TextEditingController _signUpEmailController = TextEditingController();
   final TextEditingController _signUpPasswordController =
       TextEditingController();
-  final TextEditingController _signUpFirstNameController =
+  // final TextEditingController _signUpFirstNameController =
+  //     TextEditingController();
+  final TextEditingController _signUpUsernameController =
       TextEditingController();
   final TextEditingController _logInEmailController = TextEditingController();
   final TextEditingController _logInPasswordController =
@@ -33,7 +36,8 @@ class _AuthPageState extends State<AuthPage> {
   void dispose() {
     _signUpEmailController.dispose();
     _signUpPasswordController.dispose();
-    _signUpFirstNameController.dispose();
+    // _signUpFirstNameController.dispose();
+    _signUpUsernameController.dispose();
     _logInEmailController.dispose();
     _logInPasswordController.dispose();
     super.dispose();
@@ -44,31 +48,59 @@ class _AuthPageState extends State<AuthPage> {
       setState(() {
         _isSigningIn = true;
       });
+      final String username = _signUpUsernameController.text.trim();
 
-      final String email = _signUpEmailController.text.trim();
-      final String password = _signUpPasswordController.text.trim();
-      final String displayName = _signUpFirstNameController.text.trim();
-
-      final UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        // User successfully registered and signed in
-        // Navigate to the next screen or perform any additional operations
-        print('User is successfully registered with email');
-        hideAllErrorText();
-        user.updateDisplayName(displayName);
-        user.sendEmailVerification();
-        currentUser = user;
-        appState.initEverythingAfterAuthentication();
-        widget.setAuthenticationState(() {
-          isAuthenticated = true;
+      if (username.isEmpty) {
+        setState(() {
+          signUpErrorText = 'Username is empty';
+          _isSigningIn = false;
         });
+        return;
+      } else {
+        DocumentReference userRef =
+            FirebaseFirestore.instance.collection('users').doc(username);
+        DocumentSnapshot snapshot = await userRef.get();
+        // Check if the document exists
+        if (snapshot.exists) {
+          // Username already exists
+          setState(() {
+            signUpErrorText = 'Username is taken';
+            _isSigningIn = false;
+          });
+          return;
+        }
+
+        // Username is not taken
+
+        final String email = _signUpEmailController.text.trim();
+        final String password = _signUpPasswordController.text.trim();
+        // final String displayName = _signUpFirstNameController.text.trim();
+
+        final auth.UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        final auth.User? user = userCredential.user;
+
+        if (user != null) {
+          // User successfully registered and signed in
+          // Navigate to the next screen or perform any additional operations
+          print('User is successfully registered with email');
+          hideAllErrorText();
+
+          makeProfileInFirestore(username, user, userRef);
+
+          user.updateDisplayName(username);
+          user.sendEmailVerification();
+          authUser = user;
+          appState.authUsername = username;
+          appState.initEverythingAfterAuthentication();
+          widget.setAuthenticationState(() {
+            isAuthenticated = true;
+          });
+        }
       }
     } catch (e) {
       // Handle registration errors
@@ -85,6 +117,20 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
+  void makeProfileInFirestore(
+      String username, auth.User user, DocumentReference<Object?> userRef) {
+    Map<String, dynamic> userData = {
+      'username': username,
+      'uid': user.uid,
+      'email': user.email,
+    };
+
+    userRef
+        .set(userData)
+        .then((value) => print('User data stored successfully'))
+        .catchError((error) => print('Failed to store user data: $error'));
+  }
+
   Future<void> _login(MyAppState appState) async {
     try {
       setState(() {
@@ -94,20 +140,20 @@ class _AuthPageState extends State<AuthPage> {
       final String email = _logInEmailController.text.trim();
       final String password = _logInPasswordController.text.trim();
 
-      final UserCredential userCredential =
+      final auth.UserCredential userCredential =
           await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final User? user = userCredential.user;
+      final auth.User? user = userCredential.user;
 
       if (user != null) {
         // User successfully signed in
         // Navigate to the next screen or perform any additional operations
         print('User is successfully signed in with email');
         hideAllErrorText();
-        currentUser = user;
+        authUser = user;
         appState.initEverythingAfterAuthentication();
         widget.setAuthenticationState(() {
           isAuthenticated = true;
@@ -280,6 +326,28 @@ class _AuthPageState extends State<AuthPage> {
                                 SizedBox(
                                   height: 20,
                                 ),
+                                // Container(
+                                //   decoration: BoxDecoration(
+                                //       borderRadius: BorderRadius.circular(16),
+                                //       color:
+                                //           theme.colorScheme.primaryContainer),
+                                //   padding: EdgeInsets.fromLTRB(5, 0, 20, 0),
+                                //   child: TextField(
+                                //     style: TextStyle(
+                                //         color: theme.colorScheme.onBackground),
+                                //     controller: _signUpFirstNameController,
+                                //     decoration: InputDecoration(
+                                //       border: InputBorder.none,
+                                //       labelStyle: TextStyle(
+                                //           color: theme.colorScheme.onBackground
+                                //               .withOpacity(.65)),
+                                //       prefixIcon: Icon(Icons.face,
+                                //           color: theme.colorScheme.primary),
+                                //       labelText: 'Name',
+                                //     ),
+                                //   ),
+                                // ),
+                                SizedBox(height: 12.0),
                                 Container(
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(16),
@@ -289,7 +357,7 @@ class _AuthPageState extends State<AuthPage> {
                                   child: TextField(
                                     style: TextStyle(
                                         color: theme.colorScheme.onBackground),
-                                    controller: _signUpFirstNameController,
+                                    controller: _signUpUsernameController,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       labelStyle: TextStyle(
@@ -297,7 +365,7 @@ class _AuthPageState extends State<AuthPage> {
                                               .withOpacity(.65)),
                                       prefixIcon: Icon(Icons.person_outline,
                                           color: theme.colorScheme.primary),
-                                      labelText: 'First Name',
+                                      labelText: 'Username',
                                     ),
                                   ),
                                 ),
@@ -540,12 +608,15 @@ class _AuthPageState extends State<AuthPage> {
                                                                   Navigator.pop(
                                                                       dialogContext);
                                                                   setState(() {
-                                                                    sentResetPasswordLinkIcon = Icon(
-                                                                        Icons
-                                                                            .check,
-                                                                        color: theme
-                                                                            .colorScheme
-                                                                            .primary, size: 16,);
+                                                                    sentResetPasswordLinkIcon =
+                                                                        Icon(
+                                                                      Icons
+                                                                          .check,
+                                                                      color: theme
+                                                                          .colorScheme
+                                                                          .primary,
+                                                                      size: 16,
+                                                                    );
                                                                   });
                                                                 }, (newErrorText) {
                                                                   setDialogState(

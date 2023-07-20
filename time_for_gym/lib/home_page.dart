@@ -69,66 +69,42 @@ class _HomePageState extends State<HomePage> {
                 flex: 15,
               ),
               GestureDetector(
-                onTap: () {
-                  if (widget.setAuthenticationState != null) {
-                    widget.setAuthenticationState!(() {
-                      isAuthenticated = false;
-                    });
-                  }
-                  FirebaseAuth.instance.signOut();
-                  print(isAuthenticated);
+                onTapDown: (tapDownDetails) {
+                  showInfoDropdown(context, tapDownDetails.globalPosition);
                 },
                 child: Icon(
-                  Icons.settings,
-                  color: theme.colorScheme.primary,
+                  Icons.info_outline,
+                  color: theme.colorScheme.onBackground.withOpacity(.65),
                 ),
-              )
+              ),
+              SizedBox(width: 10),
+              GestureDetector(
+                onTapDown: (tapDownDetails) {
+                  showOptionsDropdown(context, tapDownDetails.globalPosition);
+                },
+                child: Icon(
+                  Icons.more_horiz,
+                  color: theme.colorScheme.onBackground.withOpacity(.65),
+                ),
+              ),
             ],
           ),
-
-          // title: Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     RichText(
-          //       text: TextSpan(
-          //         style: TextStyle(),
-          //         children: <TextSpan>[
-          //           TextSpan(
-          //             text: 'Gym',
-          //             style: titleStyle1,
-          //           ),
-          //           TextSpan(
-          //             text: 'Brain',
-          //             style: titleStyle2,
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //     SizedBox(width: 10),
-          //     Icon(Icons.self_improvement_sharp, color: theme.colorScheme.secondary,)
-          //   ],
-          // ),
           backgroundColor: theme.scaffoldBackgroundColor,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(
-              width: MediaQuery.of(context).size.width - 100,
+              // width: MediaQuery.of(context).size.width - 100,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
-                child: Text('Welcome, ${currentUser.displayName ?? ''}',
-                    style: theme.textTheme.titleLarge!
+                child: Text('Hello, ${authUser.displayName ?? ''}',
+                    style: theme.textTheme.headlineSmall!
                         .copyWith(color: theme.colorScheme.onBackground),
                     textAlign: TextAlign.center,
                     maxLines: 1),
               ),
             ),
-            // PageSelectorButton(
-            //   text: "Exercise Library",
-            //   index: 8,
-            //   icon: Icon(Icons.library_books),
-            // ),
             PageSelectorButton(
               text: "Gym Occupancy",
               index: 3,
@@ -147,66 +123,101 @@ class _HomePageState extends State<HomePage> {
             ),
             GymSearchBar(
               textEditingController: _searchTextController,
-              // isFocused: _isSearchFieldFocused,
             ),
           ],
         ),
       ),
     );
   }
+
+  void showOptionsDropdown(BuildContext context, Offset tapPosition) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Sign out',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            title: Text('Sign out', style: labelStyle),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'Sign out') {
+        if (widget.setAuthenticationState != null) {
+          widget.setAuthenticationState!(() {
+            isAuthenticated = false;
+          });
+        }
+        FirebaseAuth.instance.signOut();
+        print(isAuthenticated);
+      }
+    });
+  }
+
+  void showInfoDropdown(BuildContext context, Offset tapPosition) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            title: Text(
+                'Developed by Ross Stewart\nReport issues to rosscstewart10@gmail.com',
+                style: labelStyle.copyWith(
+                    color: theme.colorScheme.onBackground.withOpacity(.65))),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'Sign out') {
+        if (widget.setAuthenticationState != null) {
+          widget.setAuthenticationState!(() {
+            isAuthenticated = false;
+          });
+        }
+        FirebaseAuth.instance.signOut();
+        print(isAuthenticated);
+      }
+    });
+  }
 }
 
-// class BigButton extends StatelessWidget {
-//   const BigButton({
-//     super.key,
-//     required this.text,
-//     required this.index,
-//   });
-
-//   final String text;
-//   final int index;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     var appState = context.watch<MyAppState>();
-//     final theme = Theme.of(context);
-//     final style = theme.textTheme.headlineSmall!.copyWith(
-//       color: theme.colorScheme.onSecondary,
-//     );
-
-//     void togglePressed() {
-//       appState.changePage(index);
-//     }
-
-//     return Padding(
-//       padding: const EdgeInsets.all(30),
-//       child: ElevatedButton(
-//         style: ButtonStyle(
-//           backgroundColor:
-//               MaterialStateProperty.all<Color>(theme.colorScheme.secondary),
-//           // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-//         ),
-//         onPressed: togglePressed,
-//         child: Padding(
-//           padding: const EdgeInsets.all(20),
-//           // child: Text("${wordPair.first} ${wordPair.second}", style: style),
-//           child: Center(
-//             child: Text(
-//               text,
-//               style: style,
-//               textAlign: TextAlign.center,
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// ignore: must_be_immutable
 class GymSearchBar extends StatefulWidget {
   final TextEditingController textEditingController;
-  // final bool isFocused;
 
   GymSearchBar({
     required this.textEditingController,
@@ -248,8 +259,6 @@ class _GymSearchBarState extends State<GymSearchBar> {
       appState.isHomePageSearchFieldFocused = false;
     });
     appState.currentGym = gym;
-
-
 
     // try {
     //   // appState.currentGymPlacesDetailsResponse =
