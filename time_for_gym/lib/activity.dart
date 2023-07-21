@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:time_for_gym/split.dart';
 
 class Activity {
@@ -8,9 +9,16 @@ class Activity {
       required this.description,
       required this.trainingDay,
       required this.millisecondsFromEpoch,
-      required this.totalSecondsDuration,
+      required this.totalMinutesDuration,
       required this.usernamesThatLiked,
-      required this.commentsFromEachUsername});
+      required this.commentsFromEachUsername,
+      required this.pictureUrl,
+      required this.picture});
+
+  @override
+  String toString() {
+    return '$username - $title';
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -19,10 +27,11 @@ class Activity {
       'title': title,
       'description': description,
       'millisecondsFromEpoch': millisecondsFromEpoch,
-      'totalSecondsDuration': totalSecondsDuration,
+      'totalMinutesDuration': totalMinutesDuration,
       'usernamesThatLiked': usernamesThatLiked,
       'commentsFromEachUsername': commentsFromEachUsername,
       'trainingDay': trainingDay?.toJson(),
+      'pictureUrl': pictureUrl,
     };
   }
 
@@ -33,13 +42,16 @@ class Activity {
       title: json['title'],
       description: json['description'],
       millisecondsFromEpoch: json['millisecondsFromEpoch'],
-      totalSecondsDuration: json['totalSecondsDuration'],
+      totalMinutesDuration: json['totalMinutesDuration'],
       usernamesThatLiked: List<String>.from(json['usernamesThatLiked']),
-      commentsFromEachUsername:
-          Map<String, List<String>>.from(json['commentsFromEachUsername']),
+      commentsFromEachUsername: Map<String, List<String>>.from(
+          (json['commentsFromEachUsername'] as Map<dynamic, dynamic>)
+              .map((key, value) => MapEntry(key, value.cast<String>()))),
       trainingDay: json['trainingDay'] != null
           ? TrainingDay.fromJson(json['trainingDay'])
           : null, // Convert JSON to TrainingDay
+      pictureUrl: json['pictureUrl'], // Could be null
+      picture: json['pictureUrl'] != null ? Image.network(json['pictureUrl'], fit: BoxFit.cover): null
     );
   }
 
@@ -49,7 +61,9 @@ class Activity {
   String description;
   TrainingDay? trainingDay;
   int millisecondsFromEpoch;
-  int totalSecondsDuration;
+  int totalMinutesDuration;
   List<String> usernamesThatLiked;
   Map<String, List<String>> commentsFromEachUsername;
+  String? pictureUrl;
+  Widget? picture;
 }

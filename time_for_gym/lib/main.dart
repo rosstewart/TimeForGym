@@ -16,8 +16,11 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/followers_page.dart';
+import 'package:time_for_gym/friends_page.dart';
 import 'package:time_for_gym/profile_page.dart';
+import 'package:time_for_gym/search_friends_page.dart';
 import 'package:time_for_gym/split_day_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -184,6 +187,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   late String authUserId;
   String? authUsername;
   late User currentUser;
+  // TODO - In the future, with more users, getting all of the usernames on initialization will be too slow
+  late List<String> allUsernames;
 
   // final Color onBackground = Color.fromRGBO(17, 75, 95, 1);
 
@@ -252,8 +257,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> getDataFromFirestore() async {
+
+    getAllUsernames();
+
     // Create a reference to the user document
-    // authUsername = 'test';
     DocumentReference userRef =
         FirebaseFirestore.instance.collection('users').doc(authUsername);
 
@@ -276,6 +283,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       currentUser.following = (userData['following'] ?? []).cast<String>();
       currentUser.profileName = userData['profileName'] ?? '';
       currentUser.profileDescription = userData['profileDescription'] ?? '';
+
+      List<dynamic> activityListJson = userData['activities'] ?? [];
+      currentUser.activities = activityListJson.map((e) => Activity.fromJson(json.decode(e))).toList();
+      print(currentUser.activities);
 
       currentUser.splitJson = userData['split'];
       if (currentUser.splitJson != null) {
@@ -311,6 +322,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       'following': currentUser.following,
       'profileName': currentUser.profileName,
       'profileDescription': currentUser.profileDescription,
+      'activities': currentUser.activities.map((e) => json.encode(e.toJson())),
     };
 
     // Set the user data to the document
@@ -319,6 +331,17 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         .then((value) => print('User data stored successfully'))
         .catchError((error) => print('Failed to store user data: $error'));
   }
+
+  Future<void> getAllUsernames() async {
+
+  try {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').get();
+    allUsernames = querySnapshot.docs.map((doc) => doc.id).toList();
+  } catch (e) {
+    allUsernames = [];
+    print('Error getting all usernames: $e');
+  }
+}
 
   Future<void> initializeDefaultMusclesWorkedImage() async {
     final imageData =
@@ -743,6 +766,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     ),
     SearchExercisesPage([]),
     ProfilePage(null),
+    FollowersPage(null),
+    FriendsPage(),
+    SearchFriendsPage(),
   ];
 
   bool isHomePageSearchFieldFocused = false;
@@ -2645,7 +2671,10 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 13:
         _bottomNavigationIndex = 3; // Update navigation bar
-        page = Placeholder();
+        page = FriendsPage();
+        break;
+      case 14:
+        page = SearchFriendsPage();
         break;
       default:
         throw UnimplementedError('No widget for ${appState.pageIndex}');

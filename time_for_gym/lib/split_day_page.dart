@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/services.dart';
+import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -1551,6 +1552,25 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         if (int.parse(reps[0]) <= 30 &&
             (previousOneRepMax == null || newOneRepMax > previousOneRepMax)) {
           // Can update one rep max
+          if (previousOneRepMax != null) {
+            // Make new activity for the user to celebrate their PR
+            appState.currentUser.activities.insert(
+                0,
+                Activity(
+                    username: appState.currentUser.username,
+                    type: 'auto_pr',
+                    title: 'Hit a new PR!',
+                    description:
+                        '${currentExercise.name}: ${int.parse(weights[0])} lbs for ${int.parse(reps[0])} reps',
+                    trainingDay: null,
+                    millisecondsFromEpoch: now.millisecondsSinceEpoch,
+                    totalMinutesDuration: 0,
+                    usernamesThatLiked: [],
+                    commentsFromEachUsername: {},
+                    pictureUrl: null,
+                    picture: null));
+            appState.storeDataInFirestore();
+          }
           currentExercise.userOneRepMax = newOneRepMax;
 
           print('updated one rep max');
@@ -1660,6 +1680,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         // Update one rep max if applicable
         int? previousOneRepMax = currentExercise.userOneRepMax;
         int bestOneRepMaxFromSubmission = -1;
+        int? bestWeight;
+        int? bestReps;
         for (int i = 0; i < numSets; i++) {
           // Check every set if they hit a new calculated one rep max
           int newOneRepMax =
@@ -1668,13 +1690,36 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
               (previousOneRepMax == null || newOneRepMax > previousOneRepMax)) {
             // Can update one rep max
             currentExercise.userOneRepMax = newOneRepMax;
-
             print('updated one rep max');
           }
           if (int.parse(reps[i]) <= 30 &&
               newOneRepMax > bestOneRepMaxFromSubmission) {
             bestOneRepMaxFromSubmission = newOneRepMax;
+            bestWeight = int.parse(weights[i]);
+            bestReps = int.parse(reps[i]);
           }
+        }
+        if (previousOneRepMax != null &&
+            bestOneRepMaxFromSubmission > previousOneRepMax &&
+            bestWeight != null &&
+            bestReps != null) {
+          // Make new activity for the user to celebrate their PR
+          appState.currentUser.activities.insert(
+              0,
+              Activity(
+                  username: appState.currentUser.username,
+                  type: 'auto_pr',
+                  title: 'Hit a new PR on ${currentExercise.name}!',
+                  description:
+                      '$bestWeight lbs for $bestReps reps\nEstimated one-rep max: $bestOneRepMaxFromSubmission lbs',
+                  trainingDay: null,
+                  millisecondsFromEpoch: now.millisecondsSinceEpoch,
+                  totalMinutesDuration: 0,
+                  usernamesThatLiked: [],
+                  commentsFromEachUsername: {},
+                  pictureUrl: null,
+                  picture: null));
+          appState.storeDataInFirestore();
         }
 
         setState(() {
@@ -2604,7 +2649,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                     '${appState.userGym!.name} is currently closed')
                                               SizedBox(
                                                 width: 150,
-                                                child: Text('$expectedWaitTime Minutes',
+                                                child: Text(
+                                                    '$expectedWaitTime Minutes',
                                                     style: labelStyle.copyWith(
                                                         color: int.parse(
                                                                     expectedWaitTime) <
@@ -2625,8 +2671,11 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                     '${appState.userGym!.name} is currently closed')
                                               SizedBox(
                                                 width: 150,
-                                                child: Text(expectedWaitTime,
-                                                    style: greyLabelStyle, textAlign: TextAlign.center,),
+                                                child: Text(
+                                                  expectedWaitTime,
+                                                  style: greyLabelStyle,
+                                                  textAlign: TextAlign.center,
+                                                ),
                                               ),
                                           ],
                                         )

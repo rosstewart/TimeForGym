@@ -2309,6 +2309,7 @@ class _UserStrengthChartState extends State<UserStrengthChart> {
           titlesData: FlTitlesData(show: false));
     }
     List<int> keys = data.keys.toList();
+    keys.sort();
     double minX = keys.first.toDouble();
     final DateTime now = DateTime.now();
     final DateTime currentDay = DateTime.parse(

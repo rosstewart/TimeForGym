@@ -10,57 +10,8 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  // bool isFocused = false;
-
-  late TextEditingController searchController;
-  late FocusNode focusNode;
-  bool isSuggestionsOpen = false;
-  String searchQuery = '';
-
   List<String> muscleGroups = [];
   List<String> exerciseNames = [];
-
-  @override
-  void initState() {
-    super.initState();
-    searchController = TextEditingController();
-    focusNode = FocusNode();
-    focusNode.addListener(() {
-      if (!focusNode.hasFocus) {
-        setState(() {
-          isSuggestionsOpen = false;
-        });
-      }
-    });
-    //   widget.focusNode.addListener(() {
-    // setState(() {
-    //   isFocused = widget.focusNode.hasFocus;
-    // });
-// });
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    focusNode.dispose();
-    super.dispose();
-  }
-
-  void openSuggestions() {
-    if (!isSuggestionsOpen) {
-      setState(() {
-        isSuggestionsOpen = true;
-      });
-    }
-  }
-
-  void closeSuggestions() {
-    if (isSuggestionsOpen) {
-      setState(() {
-        isSuggestionsOpen = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,19 +34,9 @@ class _SearchPageState extends State<SearchPage> {
     upperBodyMuscleGroups.removeRange(7, 11);
     List<String> lowerBodyMuscleGroups = muscleGroups.getRange(7, 11).toList();
 
-    // IconData icon;
-    // if (appState.favorites.contains(pair)) {
-    //   icon = Icons.favorite;
-    // } else {
-    //   icon = Icons.favorite_border;
-    // }
-
     return GestureDetector(
       onTap: () {
-        closeSuggestions();
-        // if (!isSuggestionsOpen) {
-        FocusScope.of(context).requestFocus(FocusNode());
-        // }
+        FocusScope.of(context).unfocus();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -218,9 +159,7 @@ class _SearchPageState extends State<SearchPage> {
         body: ListView(
           // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 20,
-            ),
+            SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
               child: Text(
@@ -245,7 +184,7 @@ class _SearchPageState extends State<SearchPage> {
               names: lowerBodyMuscleGroups,
               isExercise: false,
             ),
-            if (appState.favoriteExercises.isNotEmpty)
+            // if (appState.favoriteExercises.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
                 child: Text(

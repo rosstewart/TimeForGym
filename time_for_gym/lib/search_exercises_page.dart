@@ -3,9 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/main.dart';
 
-// ignore: must_be_immutable
 class SearchExercisesPage extends StatefulWidget {
-  List<Exercise> allExercises;
+  final List<Exercise> allExercises;
 
   SearchExercisesPage(this.allExercises);
 
@@ -151,7 +150,9 @@ class _SearchExercisesPageState extends State<SearchExercisesPage> {
                   onTap: () {
                     appState.changePage(8);
                   },
-                  child: Text('Cancel', style: labelStyle),
+                  child: Container(
+                      decoration: BoxDecoration(),
+                      child: Text('Cancel', style: labelStyle)),
                 ),
               ],
             ),

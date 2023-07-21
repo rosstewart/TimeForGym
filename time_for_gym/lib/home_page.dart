@@ -80,7 +80,8 @@ class _HomePageState extends State<HomePage> {
               SizedBox(width: 10),
               GestureDetector(
                 onTapDown: (tapDownDetails) {
-                  showOptionsDropdown(context, tapDownDetails.globalPosition);
+                  showOptionsDropdown(
+                      context, tapDownDetails.globalPosition, appState);
                 },
                 child: Icon(
                   Icons.more_horiz,
@@ -99,7 +100,7 @@ class _HomePageState extends State<HomePage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
                 child: Text(
-                    'Hello, ${appState.currentUser.profileName.isNotEmpty ? appState.currentUser.profileName : (authUser.displayName ?? '')}',
+                    'Hello, ${appState.currentUser.profileName.isNotEmpty ? appState.currentUser.profileName : (appState.currentUser.username)}',
                     style: theme.textTheme.headlineSmall!
                         .copyWith(color: theme.colorScheme.onBackground),
                     textAlign: TextAlign.center,
@@ -131,7 +132,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showOptionsDropdown(BuildContext context, Offset tapPosition) {
+  void showOptionsDropdown(
+      BuildContext context, Offset tapPosition, MyAppState appState) {
     final theme = Theme.of(context);
     final labelStyle =
         TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
@@ -166,6 +168,28 @@ class _HomePageState extends State<HomePage> {
             isAuthenticated = false;
           });
         }
+        appState.currentSplit = null;
+        appState.makeNewSplit = true;
+        appState.editModeTempSplit = null;
+        appState.editModeTempExerciseIndices = null;
+        appState.splitDayExerciseIndices = [[], [], [], [], [], [], []];
+        appState.goStraightToSplitDayPage = false;
+        appState.hasSubmittedData = false;
+        appState.isInitializing = true;
+        appState.isHomePageSearchFieldFocused = false;
+        appState.lastVisitedSearchPage = 8;
+        appState.userGym = null;
+        appState.showAdBeforeExerciseCounter = 2;
+        appState.presetHomePage = 0;
+        appState.presetSearchPage = 0;
+        appState.muscleGroups = {};
+        appState.favoriteExercises = [];
+        appState.pageIndex = 0;
+        appState.gymCount = -1;
+        appState.maxCapacity = 200;
+        appState.areMuscleGroupsInitialized = false;
+        appState.isGymCountInitialized = false;
+
         FirebaseAuth.instance.signOut();
         print(isAuthenticated);
       }

@@ -115,7 +115,7 @@ class User {
     }
 
     if (pickedFile == null) {
-      return null; // Exit when no image is selected
+      return null; // Exit when no image is selected or camera doesn't work
     }
 
     // print('savedPath: $profilePictureDevicePath, pickedFile.path: ${pickedFile.path}');
