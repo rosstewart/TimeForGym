@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/split.dart';
@@ -52,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final bodyStyle = theme.textTheme.bodyMedium!
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+        .copyWith(color: theme.colorScheme.onBackground);
     final greyLabelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
@@ -100,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(width: 50),
+                  SizedBox(width: 30),
                   Column(
                     children: [
                       GestureDetector(
@@ -140,11 +142,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Text('Your Name', style: bodyStyle),
                     ],
                   ),
-                  Spacer(flex: 3),
+                  Spacer(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
                     child: GestureDetector(
@@ -167,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  Spacer(),
+                  SizedBox(width: 30),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
                     child: GestureDetector(
@@ -190,18 +190,46 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 50),
+                  SizedBox(width: 30),
                 ],
               ),
+              if (widget.user!.profileName.isNotEmpty) SizedBox(height: 10),
+              if (widget.user!.profileName.isNotEmpty)
+                SizedBox(
+                  width: MediaQuery.of(context).size.width - 60,
+                  child: Text(widget.user!.profileName,
+                      maxLines: 1, style: bodyStyle),
+                ),
+              if (widget.user!.profileDescription.isNotEmpty)
+                SizedBox(height: 10),
+              if (widget.user!.profileDescription.isNotEmpty)
+                SizedBox(
+                  width: MediaQuery.of(context).size.width - 60,
+                  child: Text(widget.user!.profileDescription,
+                      maxLines: 3, style: greyLabelStyle),
+                ),
               SizedBox(height: 10),
-              SizedBox(
-                width: MediaQuery.of(context).size.width - 100,
-                child: Text(
-                    'DescriptionwirugheiruaeoifcjeirhgeuhfeugeigweoifgoueygveiruhfiuehargueuyDescriptionwirugheiruaeoifcjeirhgeuhfeugeigweoifgoueygveiruhfiuehargueuyDescriptionwirugheiruaeoifcjeirhgeuhfeugeigweoifgoueygveiruhfiuehargueuyDescriptionwirugheiruaeoifcjeirhgeuhfeugeigweoifgoueygveiruhfiuehargueuy',
-                    maxLines: 3,
-                    style: greyLabelStyle),
-              ),
-              SizedBox(height: 10),
+              Center(
+                  child: TextButton(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              resolveColor(theme.colorScheme.primaryContainer),
+                          surfaceTintColor:
+                              resolveColor(theme.colorScheme.primaryContainer)),
+                      onPressed: () {
+                        _showEditProfile(
+                            context,
+                            appState,
+                            widget.user!.profileName,
+                            widget.user!.profileDescription,
+                            widget.user!,
+                            setState);
+                      },
+                      child: Text(
+                        'Edit Profile',
+                        style: labelStyle,
+                      ))),
+              SizedBox(height: 3),
               TabBar(
                 unselectedLabelColor: theme.colorScheme.onBackground,
                 tabs: [
@@ -228,7 +256,25 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Expanded(
                 child: TabBarView(children: [
-                  Text('t'),
+                  Column(
+                    children: [
+                      SizedBox(height: 20),
+                      TextButton(
+                          style: ButtonStyle(
+                              backgroundColor: resolveColor(
+                                  theme.colorScheme.primaryContainer),
+                              surfaceTintColor: resolveColor(
+                                  theme.colorScheme.primaryContainer)),
+                          onPressed: () {
+                            _showAddManualActivity(
+                                context, appState, widget.user!);
+                          },
+                          child: Text(
+                            'Add Manual Activity',
+                            style: labelStyle,
+                          ))
+                    ],
+                  ),
                   SplitPreview(widget.user!.splitJson != null
                       ? Split.fromJson(json.decode(widget.user!.splitJson!))
                       : null)
@@ -333,16 +379,9 @@ class _SplitPreviewState extends State<SplitPreview> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground);
-    final bodyStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final labelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final greyLabelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     if (widget.split == null) {
       return Column(children: [
@@ -360,7 +399,7 @@ class _SplitPreviewState extends State<SplitPreview> {
           decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(15)),
-          height: 350,
+          height: 325,
           child: PageView(
               controller: _pageController,
               onPageChanged: (int index) {
@@ -416,8 +455,6 @@ class SplitPreviewCard extends StatelessWidget {
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground);
-    final bodyStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.8));
     final greyLabelStyle = theme.textTheme.labelSmall!
@@ -459,9 +496,19 @@ class SplitPreviewCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.swap_vert, color: theme.colorScheme.onBackground.withOpacity(.8), size: 16,),
+                          Icon(
+                            Icons.swap_vert,
+                            color:
+                                theme.colorScheme.onBackground.withOpacity(.8),
+                            size: 16,
+                          ),
                           Text(' Superset ', style: labelStyle),
-                          Icon(Icons.swap_vert, color: theme.colorScheme.onBackground.withOpacity(.8), size: 16,),
+                          Icon(
+                            Icons.swap_vert,
+                            color:
+                                theme.colorScheme.onBackground.withOpacity(.8),
+                            size: 16,
+                          ),
                         ],
                       ),
                     ListTile(
@@ -521,5 +568,595 @@ class SplitPreviewCard extends StatelessWidget {
   void toExercise(MyAppState appState, Exercise exercise) {
     appState.currentExerciseFromProfilePage = exercise;
     appState.changePageToExercise(exercise);
+  }
+}
+
+void _showEditProfile(
+    BuildContext context,
+    MyAppState appState,
+    String previousName,
+    String previousDescription,
+    User user,
+    StateSetter setProfilePageState) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return EditProfileWindow(appState, previousName, previousDescription,
+          user, setProfilePageState);
+    },
+  );
+}
+
+class EditProfileWindow extends StatefulWidget {
+  final MyAppState appState;
+  final String previousName;
+  final String previousDescription;
+  final User user;
+  final StateSetter setProfilePageState;
+
+  EditProfileWindow(this.appState, this.previousName, this.previousDescription,
+      this.user, this.setProfilePageState);
+
+  @override
+  _EditProfileWindowState createState() => _EditProfileWindowState();
+}
+
+class _EditProfileWindowState extends State<EditProfileWindow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+
+  String? errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+    _nameController = TextEditingController(text: widget.previousName);
+    _descriptionController =
+        TextEditingController(text: widget.previousDescription);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MyAppState appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final bodyStyle = theme.textTheme.bodyMedium!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.4,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Text('Cancel',
+                              style: TextStyle(
+                                  color: theme.colorScheme.onBackground)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    SizedBox(width: 16),
+                    SizedBox(width: 92, child: Text('Name', style: bodyStyle)),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: theme.colorScheme.primaryContainer),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: TextField(
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(0.65),
+                                    size: 20),
+                                onPressed: () {
+                                  _nameController.clear();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    SizedBox(width: 16),
+                    SizedBox(
+                        width: 92,
+                        child: Text('Description', style: bodyStyle)),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: theme.colorScheme.primaryContainer),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: TextField(
+                            maxLines: 2,
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground,
+                                fontSize: 12),
+                            controller: _descriptionController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(0.65),
+                                    size: 20),
+                                onPressed: () {
+                                  _descriptionController.clear();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                  ],
+                ),
+                SizedBox(height: 30),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_nameController.text.length > 30) {
+                        setState(() {
+                          errorText = 'Name is over 30 characters';
+                        });
+                        return;
+                      }
+                      print(_descriptionController.text.length);
+                      if (_descriptionController.text.length > 155) {
+                        setState(() {
+                          errorText = 'Description is over 155 characters';
+                        });
+                        return;
+                      }
+                      widget.setProfilePageState(() {
+                        widget.user.profileName = _nameController.text;
+                        widget.user.profileDescription =
+                            _descriptionController.text;
+                      });
+                      appState.storeDataInFirestore();
+                      Navigator.of(context).pop();
+                    },
+                    style: ButtonStyle(
+                        backgroundColor:
+                            resolveColor(theme.colorScheme.primary),
+                        surfaceTintColor:
+                            resolveColor(theme.colorScheme.primary)),
+                    child: Text('Done', style: labelStyle),
+                  ),
+                ),
+                if (errorText != null) SizedBox(height: 5),
+                if (errorText != null)
+                  Center(
+                    child: Text(errorText!,
+                        style: labelStyle.copyWith(
+                            color: theme.colorScheme.secondary)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void _showAddManualActivity(
+    BuildContext context, MyAppState appState, User user) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return ManualActivityWindow(appState, user);
+    },
+  );
+}
+
+class ManualActivityWindow extends StatefulWidget {
+  final MyAppState appState;
+  final User user;
+
+  ManualActivityWindow(this.appState, this.user);
+
+  @override
+  _ManualActivityWindowState createState() => _ManualActivityWindowState();
+}
+
+class _ManualActivityWindowState extends State<ManualActivityWindow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+  late TextEditingController _liftTitleController = TextEditingController();
+  late TextEditingController _liftDescriptionController =
+      TextEditingController();
+  late TextEditingController _liftHoursController = TextEditingController();
+  late TextEditingController _liftMinutesController = TextEditingController();
+
+  String? errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MyAppState appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final bodyStyle = theme.textTheme.bodyMedium!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final greyLabelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Text('Cancel',
+                              style: TextStyle(
+                                  color: theme.colorScheme.onBackground)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Text('Add Manual Activity',
+                      style: theme.textTheme.titleSmall!
+                          .copyWith(color: theme.colorScheme.onBackground)),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    SizedBox(width: 16),
+                    SizedBox(width: 92, child: Text('Title', style: bodyStyle)),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: theme.colorScheme.primaryContainer),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: TextField(
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground),
+                            controller: _liftTitleController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(0.65),
+                                    size: 20),
+                                onPressed: () {
+                                  _liftTitleController.clear();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    SizedBox(width: 16),
+                    SizedBox(
+                        width: 92,
+                        child: Text('Description', style: bodyStyle)),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: theme.colorScheme.primaryContainer),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                          child: TextField(
+                            maxLines: 2,
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground,
+                                fontSize: 12),
+                            controller: _liftDescriptionController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(0.65),
+                                    size: 20),
+                                onPressed: () {
+                                  _liftDescriptionController.clear();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    SizedBox(width: 16),
+                    SizedBox(
+                        width: 92, child: Text('Duration', style: bodyStyle)),
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            Container(
+                              width: 50,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: theme.colorScheme.primaryContainer),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                child: TextField(
+                                  maxLength: 2,
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onBackground,
+                                      fontSize: 12),
+                                  controller: _liftHoursController,
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      counterText: '',
+                                      labelText: '00',
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.never,
+                                      labelStyle: greyLabelStyle.copyWith(
+                                          color: theme.colorScheme.onBackground
+                                              .withOpacity(.4))),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 3),
+                            Text('Hours',
+                                style: greyLabelStyle.copyWith(fontSize: 9)),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Text(' : ',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(.65),
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500)),
+                            SizedBox(height: 17),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Container(
+                              width: 50,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: theme.colorScheme.primaryContainer),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                child: TextField(
+                                  maxLength: 2,
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onBackground,
+                                      fontSize: 12),
+                                  controller: _liftMinutesController,
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      counterText: '',
+                                      labelText: '00',
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.never,
+                                      labelStyle: greyLabelStyle.copyWith(
+                                          color: theme.colorScheme.onBackground
+                                              .withOpacity(.4))),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 3),
+                            Text('Minutes',
+                                style: greyLabelStyle.copyWith(fontSize: 9)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: 16),
+                  ],
+                ),
+                SizedBox(height: 30),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_liftTitleController.text.isEmpty) {
+                        setState(() {
+                          errorText = 'Please enter a title';
+                        });
+                        return;
+                      }
+                      if (_liftTitleController.text.length > 150) {
+                        setState(() {
+                          errorText = 'Please enter a shorter title';
+                        });
+                        return;
+                      }
+                      if (_liftDescriptionController.text.length > 500) {
+                        setState(() {
+                          errorText = 'Description is too long';
+                        });
+                        return;
+                      }
+                      int hours, minutes;
+                      if (_liftHoursController.text.isEmpty) {
+                        hours = 0;
+                      } else {
+                        hours = int.parse(_liftHoursController.text);
+                      }
+                      if (_liftMinutesController.text.isEmpty) {
+                        minutes = 0;
+                      } else {
+                        minutes = int.parse(_liftMinutesController.text);
+                      }
+                      if (minutes < 0 || minutes > 60 || hours < 0) {
+                        setState(() {
+                          errorText = 'Badly formatted duration';
+                        });
+                        return;
+                      }
+                      widget.user.activities.insert(
+                          0,
+                          Activity(
+                              username: widget.user.username,
+                              type: 'Manual',
+                              title: _liftTitleController.text,
+                              description: _liftDescriptionController.text,
+                              trainingDay: null,
+                              millisecondsFromEpoch:
+                                  DateTime.now().millisecondsSinceEpoch,
+                              totalSecondsDuration: minutes * 60,
+                              usernamesThatLiked: [],
+                              commentsFromEachUsername: {}));
+                      appState.storeDataInFirestore();
+                      Navigator.of(context).pop();
+                    },
+                    style: ButtonStyle(
+                        backgroundColor:
+                            resolveColor(theme.colorScheme.primary),
+                        surfaceTintColor:
+                            resolveColor(theme.colorScheme.primary)),
+                    child: Text('Done', style: labelStyle),
+                  ),
+                ),
+                if (errorText != null) SizedBox(height: 5),
+                if (errorText != null)
+                  Center(
+                    child: Text(errorText!,
+                        style: labelStyle.copyWith(
+                            color: theme.colorScheme.secondary)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -98,7 +98,8 @@ class _HomePageState extends State<HomePage> {
               // width: MediaQuery.of(context).size.width - 100,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
-                child: Text('Hello, ${authUser.displayName ?? ''}',
+                child: Text(
+                    'Hello, ${appState.currentUser.profileName.isNotEmpty ? appState.currentUser.profileName : (authUser.displayName ?? '')}',
                     style: theme.textTheme.headlineSmall!
                         .copyWith(color: theme.colorScheme.onBackground),
                     textAlign: TextAlign.center,

@@ -274,6 +274,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
           userData['profilePictureDevicePath'] ?? '';
       currentUser.followers = (userData['followers'] ?? []).cast<String>();
       currentUser.following = (userData['following'] ?? []).cast<String>();
+      currentUser.profileName = userData['profileName'] ?? '';
+      currentUser.profileDescription = userData['profileDescription'] ?? '';
 
       currentUser.splitJson = userData['split'];
       if (currentUser.splitJson != null) {
@@ -307,11 +309,10 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       'profilePictureDevicePath': currentUser.profilePictureDevicePath,
       'followers': currentUser.followers,
       'following': currentUser.following,
+      'profileName': currentUser.profileName,
+      'profileDescription': currentUser.profileDescription,
     };
 
-    // await _prefs.setString('favorites', _favoritesString);
-    // await _prefs.setString(
-    //     'splitDayExerciseIndices', splitDayExerciseIndices.toString());
     // Set the user data to the document
     userRef
         .update(userData)

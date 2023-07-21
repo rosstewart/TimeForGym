@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:flutter/material.dart';
+
+import 'activity.dart';
 
 class User {
   User(
@@ -14,7 +15,9 @@ class User {
       required this.uid,
       this.favoritesString = '',
       this.splitDayExerciseIndicesString = '',
-      this.userGymId = '',});
+      this.userGymId = '',
+      this.profileName = '',
+      this.profileDescription = ''});
   // required this.authUser
 
   void initializeData() async {
@@ -100,35 +103,6 @@ class User {
     }
   }
 
-  // Future<ImageProvider?> getProfilePicture() async {
-  //   if (profilePicture != null) {
-  //     return profilePicture;
-  //   }
-  //   if (profilePictureUrl != null) {
-  //     profilePicture = NetworkImage(profilePictureUrl!);
-  //     return profilePicture;
-  //   }
-  //   try {
-  //     final Reference storageRef = FirebaseStorage.instance
-  //         .ref()
-  //         .child('userPhotos')
-  //         .child(username)
-  //         .child('profilePicture.jpg');
-  //     final images = (await storageRef.listAll()).items;
-  //     if (images.isNotEmpty) {
-  //       profilePictureUrl = await images[0].getDownloadURL();
-  //       if (profilePictureUrl != null) {
-  //         profilePicture = NetworkImage(profilePictureUrl!);
-  //         return profilePicture;
-  //       }
-  //     }
-  //     print('Error - No profile picture in storage');
-  //   } catch (error) {
-  //     print("Error loading profile picture - $error");
-  //   }
-  //   return null;
-  // }
-
   Future<ImageProvider?> setProfilePicture(bool fromGallery,
       StateSetter setProfilePageState, List<bool> isProfilePicLoading) async {
     XFile? pickedFile;
@@ -161,37 +135,6 @@ class User {
         .child('userPhotos')
         .child(username)
         .child('profilePicture.jpg');
-
-// final Directory pickedFileDirectory = Directory(pickedFile.path).parent;
-// final String tempPath = '${pickedFileDirectory.path}/gym_brain_profile_compressed.jpg';
-//     // String tempPath = (await getTemporaryDirectory()).path;
-//     const int targetFileSizeInBytes =
-//         1024 * 1024; // Target file size in bytes (e.g., 1MB)
-//     int quality =
-//         100; // Start at highest quality in case image is already low-quality
-
-//     int compressedFileSizeInBytes = 0;
-//     XFile? compressedFile;
-
-//     while (compressedFileSizeInBytes < targetFileSizeInBytes) {
-//       compressedFile = await FlutterImageCompress.compressAndGetFile(
-//         pickedFile.path,
-//         tempPath,
-//         quality: quality,
-//       );
-
-//       compressedFileSizeInBytes = (await compressedFile?.length()) ?? 0;
-//       quality -= 5; // Decrease quality level by 5 for each iteration
-//       if (quality < 0) {
-//         break; // Stop compressing if the quality level becomes negative
-//       }
-//       print(quality);
-//     }
-
-//     final file = File(tempPath);
-//     final uploadTask = storageRef.putFile(file);
-//     // Clean up the temporary compressed file
-//     file.delete();
 
     final uploadTask = storageRef.putFile(File(pickedFile.path));
     final snapshot = await uploadTask; //.whenComplete(() {});
@@ -228,6 +171,8 @@ class User {
   }
 
   String username;
+  String profileName;
+  String profileDescription;
   String email;
   String uid;
   String favoritesString;
@@ -240,6 +185,7 @@ class User {
   String? profilePictureUrl;
   String? profilePictureDevicePath;
   ImageProvider? profilePicture;
+  List<Activity> activities = [];
 
   final ImagePicker _picker = ImagePicker();
 }
