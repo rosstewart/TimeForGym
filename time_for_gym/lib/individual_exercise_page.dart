@@ -89,16 +89,21 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
       }
       exercise = appState.currentExercise;
       musclesWorkedImage = appState.currentMuscleWorkedImage;
-    } else if (appState.bottomNavigationIndex == 0) {
+    } else if (appState.bottomNavigationIndex == 3) {
       backIndex = 9;
       exercise = appState.currentExerciseFromGymPage;
       musclesWorkedImage = appState.currentMuscleWorkedImageFromGymPage;
+    } else if (appState.bottomNavigationIndex == 0) {
+      // Profile page
+      backIndex = 13;
+      exercise = appState.currentExerciseFromFriendsPage;
+      musclesWorkedImage = appState.currentMuscleWorkedImageFromFriendsPage;
     } else if (appState.bottomNavigationIndex == 4) {
       // Profile page
       backIndex = 11;
       exercise = appState.currentExerciseFromProfilePage;
       musclesWorkedImage = appState.currentMuscleWorkedImageFromProfilePage;
-    }else {
+    } else {
       // From exercises page or bottom icon
       exercise = appState.currentExercise;
       musclesWorkedImage = appState.currentMuscleWorkedImage;
@@ -225,6 +230,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
       //   behavior: HitTestBehavior.opaque, // Handle the tap gesture directly
       onTap: _dismissKeyboard,
       child: SwipeBack(
+        swipe: true,
         appState: appState,
         index: backIndex,
         child: DefaultTabController(
@@ -719,7 +725,7 @@ class _StrengthLevelFormState extends State<StrengthLevelForm> {
     widget.exercise.userOneRepMax =
         calculateOneRepMax(int.parse(weight), int.parse(reps));
     appState.submitExercisePopularityDataToFirebase(
-        appState.authUserId,
+        appState.currentUser.username,
         widget.exercise.name,
         widget.exercise.mainMuscleGroup,
         widget.exercise.userRating,
@@ -1900,7 +1906,7 @@ class _RatingBarWidgetState extends State<RatingBarWidget> {
             if (!_isSubmitButtonPressed &&
                 widget.exercise.userRating != starsToSubmit) {
               appState.submitExercisePopularityDataToFirebase(
-                  appState.authUserId,
+                  appState.currentUser.username,
                   widget.exercise.name,
                   widget.exercise.mainMuscleGroup,
                   starsToSubmit,
@@ -2315,7 +2321,13 @@ class _UserStrengthChartState extends State<UserStrengthChart> {
     final DateTime currentDay = DateTime.parse(
         '${now.year}${now.month > 9 ? now.month : '0${now.month}'}${now.day > 9 ? now.day : '0${now.day}'}');
     final double maxX = currentDay.millisecondsSinceEpoch.toDouble();
-    final double horizontalLineInterval = maxY > 500 ? 100 : (maxY > 250 ? 50 : (maxY > 100 ? 25 : (maxY > 50 ? 10 : (maxY > 25 ? 5 : (maxY > 10 ? 2 : 1)))));
+    final double horizontalLineInterval = maxY > 500
+        ? 100
+        : (maxY > 250
+            ? 50
+            : (maxY > 100
+                ? 25
+                : (maxY > 50 ? 10 : (maxY > 25 ? 5 : (maxY > 10 ? 2 : 1)))));
     return LineChartData(
       lineTouchData: LineTouchData(
         enabled: true,
@@ -2344,7 +2356,8 @@ class _UserStrengthChartState extends State<UserStrengthChart> {
         getDrawingVerticalLine: (value) =>
             FlLine(color: Colors.white.withOpacity(.07)),
         checkToShowVerticalLine: (value) => false,
-        checkToShowHorizontalLine: (value) => value % horizontalLineInterval == 0,
+        checkToShowHorizontalLine: (value) =>
+            value % horizontalLineInterval == 0,
       ),
       axisTitleData: FlAxisTitleData(
           bottomTitle: AxisTitle(
@@ -2366,7 +2379,8 @@ class _UserStrengthChartState extends State<UserStrengthChart> {
             color: Theme.of(context).colorScheme.onBackground.withOpacity(.65),
             fontSize: 12,
           ),
-          getTitles: (value) => value % horizontalLineInterval == 0 ? '${value.toInt()} lbs' : '',
+          getTitles: (value) =>
+              value % horizontalLineInterval == 0 ? '${value.toInt()} lbs' : '',
         ),
         // Buffer space
         rightTitles: SideTitles(
@@ -2391,10 +2405,10 @@ class _UserStrengthChartState extends State<UserStrengthChart> {
           },
           checkToShowTitle:
               // Same timestamp of the day
-              (minValue, maxValue, sideTitles, appliedInterval, value) => 
+              (minValue, maxValue, sideTitles, appliedInterval, value) =>
                   minValue % 8.64e+7 == value % 8.64e+7,
-                  // value == maxValue ||
-                  // value == minValue,
+          // value == maxValue ||
+          // value == minValue,
           margin: 8,
         ),
       ),

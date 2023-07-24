@@ -3,21 +3,61 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dots_indicator/dots_indicator.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/exercise.dart';
+import 'package:time_for_gym/friends_page.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/user.dart';
 
+// class MaySwipeBack extends StatelessWidget {
+//   final bool fromBottomNavBar;
+//   final MyAppState appState;
+//   final Widget child;
+//   MaySwipeBack(this.fromBottomNavBar, this.appState, this.child);
+//   @override
+//   Widget build(BuildContext context) {
+//     int? index = fromBottomNavBar
+//         ? (appState.userProfileStackFromOwnProfile.isNotEmpty ? 12 : null)
+//         : (appState.userProfileStack.length <= 1 ? 14 : 16);
+//     return SwipeBack(
+//         swipe: index != null,
+//         appState: appState,
+//         index: index ?? 0,
+//         child: child);
+//   }
+// }
+
+class OtherUserProfilePage extends StatefulWidget {
+  final User? user;
+  final bool fromBottomNavBar;
+  OtherUserProfilePage(this.user, this.fromBottomNavBar);
+  @override
+  State<OtherUserProfilePage> createState() => _OtherUserProfilePageState();
+}
+
+class _OtherUserProfilePageState extends State<OtherUserProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return ProfilePage(widget.user, widget.fromBottomNavBar, false, null);
+  }
+}
+
 class ProfilePage extends StatefulWidget {
   final User? user;
-  ProfilePage(this.user);
+  final bool fromBottomNavBar;
+  final bool isOwnUser;
+  final StateSetter? setAuthenticationState;
+  ProfilePage(this.user, this.fromBottomNavBar, this.isOwnUser,
+      this.setAuthenticationState);
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
@@ -43,14 +83,20 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _dismissKeyboard(MyAppState appState) {
-    FocusScope.of(context).unfocus();
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.user == null) {
       return Placeholder();
+    }
+    if (profilePictureProvider != widget.user!.profilePicture) {
+      if (widget.user!.profilePictureUrl != null) {
+        // Retrieve from storage
+        widget.user!.profilePicture =
+            NetworkImage(widget.user!.profilePictureUrl!);
+        profilePictureProvider = widget.user!.profilePicture;
+      } else {
+        profilePictureProvider = null;
+      }
     }
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
@@ -63,41 +109,101 @@ class _ProfilePageState extends State<ProfilePage> {
     final greyLabelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
+    bool doTitleFlex = widget.fromBottomNavBar
+        ? (appState.userProfileStackFromOwnProfile.isNotEmpty ? true : false)
+        : (appState.userProfileStack.length <= 1 ? true : true);
+    int titleFlexTopLeft = doTitleFlex ? 4 : 3;
+    int titleFlexTopRight = doTitleFlex ? 7 : 2;
+    // int titleFlexBottom = doTitleFlex ? 5 : 1;
+
     return GestureDetector(
       onTap: () {
-        _dismissKeyboard(appState);
+        FocusScope.of(context).unfocus();
       },
+      // child: SwipeBack(
+      // swipe: appState.userProfileStackFromOwnProfile.isNotEmpty,
+      // swipe: widget.fromBottomNavBar
+      //     ? (appState.userProfileStackFromOwnProfile.isNotEmpty
+      //         ? true
+      //         : false)
+      //     : (appState.userProfileStack.length <= 1 ? true : true),
+      // appState: appState,
+      // index: widget.fromBottomNavBar
+      //     ? (appState.userProfileStackFromOwnProfile.isNotEmpty ? 12 : 0)
+      //     : (appState.userProfileStack.length <= 1 ? 14 : 16),
+      // index: appState.userProfileStackFromOwnProfile.isNotEmpty ? 12 : 0,
       child: DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
           appBar: AppBar(
-            title: Column(
+            leading: widget.fromBottomNavBar
+                ? (appState.userProfileStackFromOwnProfile.isNotEmpty
+                    ? Back(appState: appState, index: 12)
+                    : null)
+                : (appState.userProfileStack.length <= 1
+                    ? (appState.lastFriendsOrFriendsSearch
+                        ? Back(appState: appState, index: 13)
+                        : Back(appState: appState, index: 14))
+                    : Back(appState: appState, index: 16)),
+            leadingWidth: 70,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                  Spacer(flex: titleFlexTopLeft),
                 Text(widget.user!.username, style: titleStyle),
-                if (widget.user!.userGymId.isNotEmpty)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Goes to ', style: greyLabelStyle),
-                      GestureDetector(
-                        onTap: () {
-                          appState.currentGym =
-                              appState.gyms[widget.user!.userGymId]!;
-                          appState.changePage(9);
-                          // GymPage(gym: appState.currentGym, isSelectedGym: appState.userGym == appState.gyms[widget.user!.userGymId]!);
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(),
-                          child: Text(
-                              appState.gyms[widget.user!.userGymId]!.name,
-                              style: labelStyle.copyWith(
-                                  color: theme.colorScheme.primary)),
-                        ),
-                      ),
-                    ],
+                  Spacer(flex: titleFlexTopRight),
+                if (widget.setAuthenticationState != null &&
+                    appState.currentUser == widget.user)
+                  GestureDetector(
+                    onTapDown: (tapDownDetails) {
+                      showInfoDropdown(context, tapDownDetails.globalPosition);
+                    },
+                    child: Icon(
+                      Icons.info_outline,
+                      color: theme.colorScheme.onBackground.withOpacity(.65),
+                    ),
+                  ),
+                if (widget.setAuthenticationState != null &&
+                    appState.currentUser == widget.user)
+                  SizedBox(width: 10),
+                if (widget.setAuthenticationState != null &&
+                    appState.currentUser == widget.user)
+                  GestureDetector(
+                    onTapDown: (tapDownDetails) {
+                      showOptionsDropdown(
+                          context, tapDownDetails.globalPosition, appState);
+                    },
+                    child: Icon(
+                      Icons.more_horiz,
+                      color: theme.colorScheme.onBackground.withOpacity(.65),
+                    ),
                   ),
               ],
             ),
+            // if (widget.user!.userGymId.isNotEmpty)
+            //   Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Spacer(),
+            //       Text('Goes to ', style: greyLabelStyle),
+            //       GestureDetector(
+            //         onTap: () {
+            //           appState.currentGym =
+            //               appState.gyms[widget.user!.userGymId]!;
+            //           appState.changePage(9);
+            //           // GymPage(gym: appState.currentGym, isSelectedGym: appState.userGym == appState.gyms[widget.user!.userGymId]!);
+            //         },
+            //         child: Container(
+            //           decoration: BoxDecoration(),
+            //           child: Text(
+            //               appState.gyms[widget.user!.userGymId]!.name,
+            //               style: labelStyle.copyWith(
+            //                   color: theme.colorScheme.primary)),
+            //         ),
+            //       ),
+            //       Spacer(flex: titleFlexBottom),
+            //     ],
+            //   ),
             backgroundColor: theme.scaffoldBackgroundColor,
           ),
           body: Column(
@@ -125,8 +231,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                       color: theme.colorScheme.onBackground,
                                     )
                                   : (profilePictureProvider == null
-                                      ? Icon(Icons.person,
-                                          color: theme.colorScheme.onBackground)
+                                      ? Icon(
+                                          Icons.person,
+                                          color: theme.colorScheme.onBackground,
+                                          size: 40,
+                                        )
                                       : null),
                             ),
                             // if (user.profilePicture != null)
@@ -154,8 +263,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
                     child: GestureDetector(
                       onTap: () {
-                        appState.defaultProfileFollowersPage = true;
-                        appState.changePage(12);
+                        widget.fromBottomNavBar
+                            ? appState.defaultProfilePageFollowersPage = true
+                            : appState.defaultFriendsPageFollowersPage = true;
+                        appState.changePage(widget.fromBottomNavBar ? 12 : 16);
                       },
                       child: Container(
                         decoration: BoxDecoration(),
@@ -177,8 +288,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
                     child: GestureDetector(
                       onTap: () {
-                        appState.defaultProfileFollowersPage = false;
-                        appState.changePage(12);
+                        widget.fromBottomNavBar
+                            ? appState.defaultProfilePageFollowersPage = false
+                            : appState.defaultFriendsPageFollowersPage = false;
+                        appState.changePage(widget.fromBottomNavBar ? 12 : 16);
                       },
                       child: Container(
                         decoration: BoxDecoration(),
@@ -198,22 +311,52 @@ class _ProfilePageState extends State<ProfilePage> {
                   SizedBox(width: 30),
                 ],
               ),
-              if (widget.user!.profileName.isNotEmpty) SizedBox(height: 10),
+              if (widget.user!.profileName.isNotEmpty) SizedBox(height: 5),
               if (widget.user!.profileName.isNotEmpty)
                 SizedBox(
                   width: MediaQuery.of(context).size.width - 60,
                   child: Text(widget.user!.profileName,
                       maxLines: 1, style: bodyStyle),
                 ),
+              if (widget.user!.userGymId.isNotEmpty)
+                SizedBox(height: widget.user!.profileName.isEmpty ? 10 : 5),
+              if (widget.user!.userGymId.isNotEmpty)
+                SizedBox(
+                  width: MediaQuery.of(context).size.width - 60,
+                  child: Row(
+                    children: [
+                      Text('Goes to ',
+                          style: greyLabelStyle.copyWith(fontSize: 10)),
+                      GestureDetector(
+                        onTap: () {
+                          appState.currentGym =
+                              appState.gyms[widget.user!.userGymId]!;
+                          appState.changePage(9);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Text(
+                              appState.gyms[widget.user!.userGymId]!.name,
+                              style: labelStyle.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (widget.user!.profileDescription.isNotEmpty)
-                SizedBox(height: 10),
+                SizedBox(height: 5),
               if (widget.user!.profileDescription.isNotEmpty)
                 SizedBox(
                   width: MediaQuery.of(context).size.width - 60,
                   child: Text(widget.user!.profileDescription,
-                      maxLines: 3, style: greyLabelStyle),
+                      maxLines: 3,
+                      style: labelStyle.copyWith(
+                          color:
+                              theme.colorScheme.onBackground.withOpacity(.9))),
                 ),
-              if (appState.currentUser == widget.user) SizedBox(height: 10),
+              SizedBox(height: 10),
               if (appState.currentUser == widget.user)
                 Center(
                     child: TextButton(
@@ -235,6 +378,80 @@ class _ProfilePageState extends State<ProfilePage> {
                           'Edit Profile',
                           style: labelStyle,
                         ))),
+              if (appState.currentUser != widget.user)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!appState.currentUser.following
+                        .contains(widget.user!.username))
+                      ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor:
+                                resolveColor(theme.colorScheme.primary),
+                            surfaceTintColor:
+                                resolveColor(theme.colorScheme.primary)),
+                        onPressed: () async {
+                          bool success = await appState.currentUser
+                              .followUser(widget.user!.username, widget.user!);
+                          if (success) {
+                            setState(() {});
+                          }
+                        },
+                        child: Text(
+                          'Follow',
+                          style: labelStyle,
+                        ),
+                      ),
+                    if (appState.currentUser.following
+                        .contains(widget.user!.username))
+                      ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer),
+                            surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer)),
+                        onPressed: () async {
+                          bool success = await appState.currentUser
+                              .unfollowUser(
+                                  widget.user!.username, widget.user!);
+                          if (success) {
+                            setState(() {
+                              widget.user!.followers;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'Unfollow',
+                          style: labelStyle,
+                        ),
+                      ),
+                    // Friends
+                    if (appState.currentUser.following
+                            .contains(widget.user!.username) &&
+                        appState.currentUser.followers
+                            .contains(widget.user!.username))
+                      SizedBox(width: 20),
+                    if (appState.currentUser.following
+                            .contains(widget.user!.username) &&
+                        appState.currentUser.followers
+                            .contains(widget.user!.username))
+                      ElevatedButton.icon(
+                        style: ButtonStyle(
+                            backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer),
+                            surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer)),
+                        onPressed: () async {
+                          print('Nudge ${widget.user!.username}');
+                        },
+                        icon: Icon(Icons.fitness_center, size: 20),
+                        label: Text(
+                          'Nudge',
+                          style: labelStyle,
+                        ),
+                      ),
+                  ],
+                ),
               SizedBox(height: 3),
               TabBar(
                 unselectedLabelColor: theme.colorScheme.onBackground,
@@ -243,18 +460,28 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                        Icon(Icons.history, size: 20),
+                        Icon(Icons.history, size: 16),
                         SizedBox(width: 10),
-                        Text('Activities')
+                        Text('Activities', style: labelStyle)
                       ])),
                   // Only if not current user's profile
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.list_alt, size: 20),
+                        Icon(Icons.list_alt, size: 16),
                         SizedBox(width: 10),
-                        Text('Split')
+                        Text('Split', style: labelStyle)
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.favorite, size: 12),
+                        SizedBox(width: 7),
+                        Text('Favorites', style: labelStyle)
                       ],
                     ),
                   ),
@@ -288,19 +515,182 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(height: 20),
                         for (int i = 0; i < widget.user!.activities.length; i++)
                           ActivityPreviewCard(widget.user!,
-                              widget.user!.activities[i], i, setState),
+                              widget.user!.activities[i], i, setState, null),
                       ],
                     ),
                   ),
                   SplitPreview(widget.user!.splitJson != null
                       ? Split.fromJson(json.decode(widget.user!.splitJson!))
-                      : null)
+                      : null),
+                  ListView.builder(
+                    itemCount: widget.user!.favoritesString.split(',').length,
+                    itemBuilder: (context, index) {
+                      if (widget.user!.favoritesString.isEmpty) {
+                        return ListTile(
+                          title: Text('No favorite exercises',
+                              style: greyLabelStyle,
+                              textAlign: TextAlign.center),
+                        );
+                      }
+                      final List<String> temps =
+                          widget.user!.favoritesString.split(',');
+                      List<String> temp2 = temps[index].split('=');
+                      Exercise exercise = appState.muscleGroups[temp2[1]]!
+                          .firstWhere((element) => element.name == temp2[0]);
+                      return ListTile(
+                          onTap: () {
+                            appState.fromProfilePage = true;
+                            appState.changePageToExercise(exercise);
+                          },
+                          leading: Container(
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: theme.colorScheme.onBackground),
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.0),
+                              child:
+                                  ImageContainer(exerciseName: exercise.name),
+                            ),
+                          ),
+                          title: Row(children: [
+                            SizedBox(
+                              width: 200,
+                              child: Text(
+                                exercise.name,
+                                style: labelStyle,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ]),
+                          subtitle: Row(
+                            children: [
+                              Text(
+                                '${exercise.mainMuscleGroup} ',
+                                style: labelStyle.copyWith(
+                                    color: theme.colorScheme.primary),
+                              ),
+                              if (exercise.mainMuscleGroup !=
+                                  exercise.musclesWorked[0])
+                                Text(
+                                  '(${exercise.musclesWorked[0]})',
+                                  style: labelStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(.65)),
+                                ),
+                            ],
+                          ));
+                    },
+                  ),
                 ]),
               ),
             ],
           ),
         ),
       ),
+      // ),
+    );
+  }
+
+  void showOptionsDropdown(
+      BuildContext context, Offset tapPosition, MyAppState appState) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Sign out',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            title: Text('Sign out', style: labelStyle),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'Sign out') {
+        if (widget.setAuthenticationState != null) {
+          widget.setAuthenticationState!(() {
+            isAuthenticated = false;
+            // appState.currentUser = null;
+            appState.currentSplit = null;
+            appState.makeNewSplit = true;
+            appState.editModeTempSplit = null;
+            appState.editModeTempExerciseIndices = null;
+            appState.splitDayExerciseIndices = [[], [], [], [], [], [], []];
+            appState.goStraightToSplitDayPage = false;
+            appState.hasSubmittedData = false;
+            appState.isInitializing = true;
+            appState.isHomePageSearchFieldFocused = false;
+            appState.lastVisitedSearchPage = 8;
+            appState.userGym = null;
+            appState.showAdBeforeExerciseCounter = 2;
+            appState.presetHomePage = 0;
+            appState.presetSearchPage = 0;
+            appState.muscleGroups = {};
+            appState.favoriteExercises = [];
+            appState.pageIndex = 13;
+            appState.gymCount = -1;
+            appState.maxCapacity = 200;
+            appState.areMuscleGroupsInitialized = false;
+            appState.isGymCountInitialized = false;
+            appState.userProfileStack = [];
+            appState.userProfileStackFromOwnProfile = [];
+          });
+        }
+
+        auth.FirebaseAuth.instance.signOut();
+        print(isAuthenticated);
+      }
+    });
+  }
+
+  void showInfoDropdown(BuildContext context, Offset tapPosition) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            title: Text(
+                'Developed by Ross Stewart\nReport issues to rosscstewart10@gmail.com',
+                style: labelStyle.copyWith(
+                    color: theme.colorScheme.onBackground.withOpacity(.65))),
+          ),
+        ),
+      ],
     );
   }
 
@@ -583,7 +973,8 @@ class SplitPreviewCard extends StatelessWidget {
   }
 
   void toExercise(MyAppState appState, Exercise exercise) {
-    appState.currentExerciseFromProfilePage = exercise;
+    appState.fromProfilePage = true;
+    // appState.currentExerciseFromProfilePage = exercise;
     appState.changePageToExercise(exercise);
   }
 }
@@ -848,11 +1239,10 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _animation;
-  late TextEditingController _liftTitleController = TextEditingController();
-  late TextEditingController _liftDescriptionController =
-      TextEditingController();
-  late TextEditingController _liftHoursController = TextEditingController();
-  late TextEditingController _liftMinutesController = TextEditingController();
+  late TextEditingController _liftTitleController;
+  TextEditingController _liftDescriptionController = TextEditingController();
+  TextEditingController _liftHoursController = TextEditingController();
+  TextEditingController _liftMinutesController = TextEditingController();
 
   String? errorText;
   String? imageErrorText;
@@ -879,6 +1269,15 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
       ),
     );
     _animationController.forward();
+    int hour = DateTime.fromMillisecondsSinceEpoch(millisecondsFromEpoch).hour;
+    _liftTitleController = TextEditingController(
+        text: (hour < 4 || hour >= 23)
+            ? 'Midnight workout'
+            : (hour < 12
+                ? 'Morning workout'
+                : (hour < 18
+                    ? 'Afternoon workout'
+                    : (hour < 21 ? 'Evening workout' : 'Night workout'))));
   }
 
   @override
@@ -955,8 +1354,8 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
                                 color: theme.colorScheme.onBackground),
                             controller: _liftTitleController,
                             decoration: InputDecoration(
-                              labelText: 'What did you do for your workout?',
-                              labelStyle: greyLabelStyle,
+                              // labelText: 'What did you do for your workout?',
+                              // labelStyle: greyLabelStyle,
                               border: InputBorder.none,
                               suffixIcon: IconButton(
                                 icon: Icon(Icons.clear,
@@ -996,7 +1395,7 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
                                 fontSize: 12),
                             controller: _liftDescriptionController,
                             decoration: InputDecoration(
-                              labelText: 'How did it go?',
+                              labelText: 'What did you do? How did it go?',
                               labelStyle: greyLabelStyle,
                               border: InputBorder.none,
                               suffixIcon: IconButton(
@@ -1313,9 +1712,10 @@ class ActivityPreviewCard extends StatefulWidget {
   final Activity activity;
   final int activityIndex;
   final StateSetter setProfilePageState;
+  final List<ActivityWithAuthorIndex>? friendsPageAllActivities;
 
-  ActivityPreviewCard(
-      this.author, this.activity, this.activityIndex, this.setProfilePageState);
+  ActivityPreviewCard(this.author, this.activity, this.activityIndex,
+      this.setProfilePageState, this.friendsPageAllActivities);
 
   @override
   State<ActivityPreviewCard> createState() => _ActivityPreviewCardState();
@@ -1347,13 +1747,85 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     'December'
   ];
 
+  void tryChangePageToOwnProfile(MyAppState appState) {
+    if (appState.bottomNavigationIndex == 4) {
+      print('Nothing happens');
+    } else {
+      if (appState.userProfileStackFromOwnProfile.isNotEmpty) {
+        if (appState.savedBottomProfileIndex == 2) {
+          appState.changePage(17);
+        } else if (appState.savedBottomProfileIndex == 1) {
+          appState.changePage(12);
+        } else {
+          print('ERROR - bottom page index');
+          appState.changePage(11);
+          appState.userProfileStackFromOwnProfile.clear();
+        }
+      } else {
+        if (appState.savedBottomProfileIndex == 2) {
+          print('ERROR - bottom page index');
+          appState.changePage(11);
+        } else if (appState.savedBottomProfileIndex == 1) {
+          appState.changePage(12);
+        } else {
+          appState.changePage(11);
+        }
+      }
+      appState.bottomNavigationIndex = 4;
+    }
+  }
+
+  Future<User?> getUserDataFromFirestore(
+      String username, MyAppState appState) async {
+    try {
+      User visitedUser = appState.visitedUsers.firstWhere(
+          (element) => element.username == username,
+          orElse: () => User(username: '', email: '', uid: ''));
+      if (visitedUser.username.isNotEmpty) {
+        return visitedUser;
+      }
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(username);
+      DocumentSnapshot snapshot = await userRef.get();
+      if (snapshot.exists) {
+        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+        User newUser = User(
+            username: username,
+            email: userData['email'] ?? '',
+            uid: userData['uid'] ?? '',
+            userGymId: userData['userGymId'] ?? '',
+            favoritesString: userData['favoritesString'] ?? '',
+            profileName: userData['profileName'] ?? '',
+            profileDescription: userData['profileDescription'] ?? '');
+        newUser.profilePictureUrl =
+            userData['profilePictureUrl']; // Could be null
+        newUser.followers = (userData['followers'] ?? []).cast<String>();
+        newUser.following = (userData['following'] ?? []).cast<String>();
+        List<dynamic> activityListJson = userData['activities'] ?? [];
+        newUser.activities = activityListJson
+            .map((e) => Activity.fromJson(json.decode(e)))
+            .toList();
+        newUser.splitJson = userData['split']; // Could be null
+        newUser.initializeProfilePicData();
+        appState.visitedUsers.add(newUser);
+        return newUser;
+      } else {
+        print('User $username not found');
+        return null;
+      }
+    } catch (e) {
+      print('ERROR - User $username not found: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground);
-    final bodyStyle = theme.textTheme.bodyMedium!
+    final bodyStyle = theme.textTheme.bodyLarge!
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.8));
@@ -1393,8 +1865,20 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     return Column(
       children: [
         GestureDetector(
-          onTap: () {
-            print('View ${widget.author}\'s profile');
+          onTap: () async {
+            if (appState.pageIndex == 13) {
+              // print('View ${widget.author}\'s profile');
+              if (widget.author == appState.currentUser) {
+                tryChangePageToOwnProfile(appState);
+                return;
+              }
+              User? newUser = await getUserDataFromFirestore(
+                  widget.author.username, appState);
+              if (newUser != null) {
+                appState.userProfileStack.add(newUser);
+                appState.changePage(15);
+              }
+            }
           },
           child: Container(
             decoration: BoxDecoration(),
@@ -1404,13 +1888,12 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                 Row(
                   children: [
                     CircleAvatar(
-                      radius: 12,
-                      backgroundImage: widget.author.profilePicture,
-                      child: widget.author.profilePicture == null
-                          ? Icon(Icons.person,
-                              color: theme.colorScheme.onBackground)
-                          : null,
-                    ),
+                        radius: 12,
+                        backgroundImage: widget.author.profilePicture,
+                        child: widget.author.profilePicture == null
+                            ? Icon(Icons.person,
+                                color: theme.colorScheme.onBackground, size: 14)
+                            : null),
                     SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
@@ -1440,7 +1923,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
           child: Container(
             decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
@@ -1551,7 +2034,15 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                                               theme.colorScheme.onBackground)),
                               SizedBox(height: 3),
                               GestureDetector(
-                                onTap: () {},
+                                onTap: () {
+                                  _showLikes(
+                                      context,
+                                      appState,
+                                      widget.author,
+                                      widget.activity,
+                                      widget.activityIndex,
+                                      setState);
+                                },
                                 child: Container(
                                   decoration: BoxDecoration(),
                                   child: Text(
@@ -1611,7 +2102,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
             SizedBox(width: 15),
           ],
         ),
-        SizedBox(height: 30),
+        SizedBox(height: 25),
       ],
     );
   }
@@ -1654,11 +2145,16 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
       ],
     ).then((value) async {
       if (value == 'Delete post') {
+        bool error = false;
         int millisecondsFromEpochOfActivity =
             widget.activity.millisecondsFromEpoch;
         String titleOfActivity = widget.activity.title;
         widget.setProfilePageState(() {
-          widget.author.activities.removeAt(widget.activityIndex);
+          final activity =
+              widget.author.activities.removeAt(widget.activityIndex);
+          // Remove from friends page if applicable
+          widget.friendsPageAllActivities
+              ?.removeWhere((element) => activity == element.activity);
         });
         DocumentReference authorRef = FirebaseFirestore.instance
             .collection('users')
@@ -1671,7 +2167,8 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
           print(
               '${widget.author} removed post at index ${widget.activityIndex}');
         }).catchError((error) {
-          print('Failed to update likes: $error');
+          print('Failed to delete post: $error');
+          error = true;
         });
 
         try {
@@ -1688,20 +2185,22 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
           print('Error deleting activity photo $e');
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            width: MediaQuery.of(context).size.width * .8,
-            backgroundColor: theme.colorScheme.onBackground,
-            content: SizedBox(
-                width: MediaQuery.of(context).size.width * .8,
-                child: Text(
-                    'Deleted post \'${titleOfActivity.length > 20 ? '${titleOfActivity.substring(0, 20)}...' : titleOfActivity}\'',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: theme.colorScheme.background))),
-            duration: Duration(milliseconds: 1500),
-          ),
-        );
+        if (!error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              width: MediaQuery.of(context).size.width * .8,
+              backgroundColor: theme.colorScheme.onBackground,
+              content: SizedBox(
+                  width: MediaQuery.of(context).size.width * .8,
+                  child: Text(
+                      'Deleted post \'${titleOfActivity.length > 20 ? '${titleOfActivity.substring(0, 20)}...' : titleOfActivity}\'',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: theme.colorScheme.background))),
+              duration: Duration(milliseconds: 1500),
+            ),
+          );
+        }
       }
     });
   }
@@ -1739,7 +2238,7 @@ class _CommentsWindowState extends State<CommentsWindow>
   late Animation<Offset> _animation;
   late TextEditingController _addCommentController = TextEditingController();
 
-  String? errorText;
+  List<User> usersThatCommented = [];
 
   @override
   void initState() {
@@ -1781,6 +2280,10 @@ class _CommentsWindowState extends State<CommentsWindow>
 
     List<String> usernamesThatCommented =
         widget.activity.commentsFromEachUsername.keys.toList();
+
+    if (usersThatCommented.isEmpty) {
+      getAllCommentUserData(usernamesThatCommented, appState);
+    }
 
     return SlideTransition(
       position: _animation,
@@ -1915,6 +2418,11 @@ class _CommentsWindowState extends State<CommentsWindow>
                         List<String> commentsFromUsername = widget.activity
                                 .commentsFromEachUsername[commentUsername] ??
                             [];
+                        // Empty user will have blank profile picture
+                        User commentUser = usersThatCommented.firstWhere(
+                            (element) => element.username == commentUsername,
+                            orElse: () =>
+                                User(username: '', uid: '', email: ''));
                         return Column(
                           children: [
                             for (int j = 0;
@@ -1930,10 +2438,40 @@ class _CommentsWindowState extends State<CommentsWindow>
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
+                                    CircleAvatar(
+                                      radius: 7,
+                                      backgroundImage:
+                                          commentUser.profilePicture,
+                                      //  widget.author.username ==
+                                      //         commentUsername
+                                      //     ? widget.author.profilePicture
+                                      //     : null,
+                                      child: commentUser.profilePicture == null
+                                          ? Icon(Icons.person,
+                                              color: theme
+                                                  .colorScheme.onBackground,
+                                              size: 9)
+                                          : null,
+                                      // widget.author.username ==
+                                      //         commentUsername
+                                      //     ? (widget.author.profilePicture ==
+                                      //             null
+                                      //         ? Icon(Icons.person,
+                                      //             color: theme
+                                      //                 .colorScheme.onBackground,
+                                      //             size: 9)
+                                      //         : null)
+                                      //     : Icon(Icons.person,
+                                      //         color: theme
+                                      //             .colorScheme.onBackground,
+                                      //         size: 9),
+                                    ),
+                                    SizedBox(width: 5),
                                     Text(
                                       commentUsername,
                                       style: labelMediumStyle,
                                     ),
+                                    Spacer(),
                                     if (appState.currentUser == widget.author)
                                       GestureDetector(
                                         onTap: () {
@@ -1983,8 +2521,12 @@ class _CommentsWindowState extends State<CommentsWindow>
                                       )
                                   ],
                                 ),
-                                subtitle: Text(commentsFromUsername[j],
-                                    style: greyLabelStyle, maxLines: 5),
+                                subtitle: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(19, 0, 0, 0),
+                                  child: Text(commentsFromUsername[j],
+                                      style: greyLabelStyle, maxLines: 5),
+                                ),
                               ),
                           ],
                         );
@@ -1997,5 +2539,343 @@ class _CommentsWindowState extends State<CommentsWindow>
         ),
       ),
     );
+  }
+
+  void getAllCommentUserData(
+      List<String> usernamesThatCommented, MyAppState appState) async {
+    for (String commentUsername in usernamesThatCommented) {
+      User? commentUser = await getCommentUserData(commentUsername, appState);
+      if (commentUser != null) {
+        usersThatCommented.add(commentUser);
+      }
+    }
+    setState(() {});
+  }
+
+  Future<User?> getCommentUserData(
+      String commentUsername, MyAppState appState) async {
+    User? commentUser;
+    if (commentUsername == appState.currentUser.username) {
+      commentUser = appState.currentUser;
+    } else {
+      commentUser = await getUserDataFromFirestore(commentUsername, appState);
+    }
+    return commentUser;
+  }
+
+  Future<User?> getUserDataFromFirestore(
+      String username, MyAppState appState) async {
+    try {
+      User visitedUser = appState.visitedUsers.firstWhere(
+          (element) => element.username == username,
+          orElse: () => User(username: '', email: '', uid: ''));
+      if (visitedUser.username.isNotEmpty) {
+        return visitedUser;
+      }
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(username);
+      DocumentSnapshot snapshot = await userRef.get();
+      if (snapshot.exists) {
+        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+        User newUser = User(
+            username: username,
+            email: userData['email'] ?? '',
+            uid: userData['uid'] ?? '',
+            userGymId: userData['userGymId'] ?? '',
+            favoritesString: userData['favoritesString'] ?? '',
+            profileName: userData['profileName'] ?? '',
+            profileDescription: userData['profileDescription'] ?? '');
+        newUser.profilePictureUrl =
+            userData['profilePictureUrl']; // Could be null
+        newUser.followers = (userData['followers'] ?? []).cast<String>();
+        newUser.following = (userData['following'] ?? []).cast<String>();
+        List<dynamic> activityListJson = userData['activities'] ?? [];
+        newUser.activities = activityListJson
+            .map((e) => Activity.fromJson(json.decode(e)))
+            .toList();
+        newUser.splitJson = userData['split']; // Could be null
+        newUser.initializeProfilePicData();
+        appState.visitedUsers.add(newUser);
+        return newUser;
+      } else {
+        print('User $username not found');
+        return null;
+      }
+    } catch (e) {
+      print('ERROR - User $username not found: $e');
+      return null;
+    }
+  }
+}
+
+void _showLikes(BuildContext context, MyAppState appState, User author,
+    Activity activity, int activityIndex, StateSetter setActivityPreviewState) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return LikesWindow(
+          appState, author, activity, activityIndex, setActivityPreviewState);
+    },
+  );
+}
+
+class LikesWindow extends StatefulWidget {
+  final MyAppState appState;
+  final User author;
+  final Activity activity;
+  final int activityIndex;
+  final StateSetter setActivityPreviewState;
+
+  LikesWindow(this.appState, this.author, this.activity, this.activityIndex,
+      this.setActivityPreviewState);
+
+  @override
+  _LikesWindowState createState() => _LikesWindowState();
+}
+
+class _LikesWindowState extends State<LikesWindow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+
+  List<User> usersThatLiked = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MyAppState appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final labelMediumStyle = theme.textTheme.labelMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final greyLabelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+
+    List<String> usernamesThatLiked = widget.activity.usernamesThatLiked;
+
+    if (usersThatLiked.isEmpty) {
+      getAllLikesUserData(usernamesThatLiked, appState);
+    }
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Text('Cancel',
+                              style: TextStyle(
+                                  color: theme.colorScheme.onBackground)),
+                        ),
+                      ),
+                      Spacer(flex: 7),
+                      Text('Likes',
+                          style: theme.textTheme.titleSmall!
+                              .copyWith(color: theme.colorScheme.onBackground)),
+                      Spacer(flex: 10),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 30),
+                if (usernamesThatLiked.isEmpty)
+                  Center(
+                    child: Text(
+                      'No likes yet',
+                      style: greyLabelStyle,
+                    ),
+                  ),
+                if (usernamesThatLiked.isNotEmpty)
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: usernamesThatLiked.length,
+                      itemBuilder: (context, index) {
+                        String likesUsername = usernamesThatLiked[index];
+                        // Empty user will have blank profile picture
+                        User likesUser = usersThatLiked.firstWhere(
+                            (element) => element.username == likesUsername,
+                            orElse: () =>
+                                User(username: '', uid: '', email: ''));
+                        return ListTile(
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                          title: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              CircleAvatar(
+                                radius: 7,
+                                backgroundImage: likesUser.profilePicture,
+                                child: likesUser.profilePicture == null
+                                    ? Icon(Icons.person,
+                                        color: theme.colorScheme.onBackground,
+                                        size: 9)
+                                    : null,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                likesUsername,
+                                style: labelMediumStyle,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void getAllLikesUserData(
+      List<String> usernamesThatLiked, MyAppState appState) async {
+    for (String commentUsername in usernamesThatLiked) {
+      User? likesUser = await getLikesUserData(commentUsername, appState);
+      if (likesUser != null) {
+        usersThatLiked.add(likesUser);
+      }
+    }
+    setState(() {});
+  }
+
+  Future<User?> getLikesUserData(
+      String likesUsername, MyAppState appState) async {
+    User? likesUser;
+    if (likesUsername == appState.currentUser.username) {
+      likesUser = appState.currentUser;
+    } else {
+      likesUser = await getUserDataFromFirestore(likesUsername, appState);
+    }
+    return likesUser;
+  }
+
+  Future<User?> getUserDataFromFirestore(
+      String username, MyAppState appState) async {
+    try {
+      User visitedUser = appState.visitedUsers.firstWhere(
+          (element) => element.username == username,
+          orElse: () => User(username: '', email: '', uid: ''));
+      if (visitedUser.username.isNotEmpty) {
+        return visitedUser;
+      }
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(username);
+      DocumentSnapshot snapshot = await userRef.get();
+      if (snapshot.exists) {
+        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+        User newUser = User(
+            username: username,
+            email: userData['email'] ?? '',
+            uid: userData['uid'] ?? '',
+            userGymId: userData['userGymId'] ?? '',
+            favoritesString: userData['favoritesString'] ?? '',
+            profileName: userData['profileName'] ?? '',
+            profileDescription: userData['profileDescription'] ?? '');
+        newUser.profilePictureUrl =
+            userData['profilePictureUrl']; // Could be null
+        newUser.followers = (userData['followers'] ?? []).cast<String>();
+        newUser.following = (userData['following'] ?? []).cast<String>();
+        List<dynamic> activityListJson = userData['activities'] ?? [];
+        newUser.activities = activityListJson
+            .map((e) => Activity.fromJson(json.decode(e)))
+            .toList();
+        newUser.splitJson = userData['split']; // Could be null
+        newUser.initializeProfilePicData();
+        appState.visitedUsers.add(newUser);
+        return newUser;
+      } else {
+        print('User $username not found');
+        return null;
+      }
+    } catch (e) {
+      print('ERROR - User $username not found: $e');
+      return null;
+    }
+  }
+}
+
+
+
+Future<void> sendNotification(String recipientToken, String senderUsername) async {
+  // Replace YOUR_FCM_SERVER_KEY with your actual FCM server key from the Firebase console
+  const String serverKey = '2983018103981223317';
+
+  // Construct the FCM notification payload
+  final Map<String, dynamic> notification = {
+    'title': 'Nudge from $senderUsername',
+    'body': 'You have been nudged to go to the gym!',
+    'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+  };
+
+  // Construct the FCM request body
+  final Map<String, dynamic> requestBody = {
+    'to': recipientToken,
+    'notification': notification,
+    'priority': 'high', // Set the priority to high for time-sensitive notifications
+  };
+
+  // Send the FCM request
+  final response = await http.post(
+    Uri.parse('https://fcm.googleapis.com/fcm/send'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'key=$serverKey',
+    },
+    body: jsonEncode(requestBody),
+  );
+
+  if (response.statusCode == 200) {
+    print('Notification sent successfully.');
+  } else {
+    print('Failed to send notification. Status code: ${response.statusCode}');
   }
 }

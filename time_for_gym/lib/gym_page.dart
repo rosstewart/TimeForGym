@@ -621,6 +621,7 @@ class _GymPageState extends State<GymPage> {
         FocusScope.of(context).unfocus();
       },
       child: SwipeBack(
+        swipe: true,
         appState: appState,
         index: backIndex,
         child: Scaffold(
@@ -633,12 +634,17 @@ class _GymPageState extends State<GymPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Spacer(flex: 3),
-                    Text(
-                      widget.gym!.name,
-                      style: titleStyle,
+                    Spacer(flex: 1),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width - 120),
+                      child: Text(
+                        widget.gym!.name,
+                        style: titleStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    Spacer(flex: 5),
+                    Spacer(flex: 2),
                   ],
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.start, children: [
@@ -885,12 +891,42 @@ class _GymPageState extends State<GymPage> {
                                 ],
                               ),
                             ),
+                            if (widget.gym!.placeId ==
+                                'ChIJ4dr6hsa22YgR42TJ1LneeRU')
+                              Spacer(),
+                            // Herbert wellness center
+                            if (widget.gym!.placeId ==
+                                'ChIJ4dr6hsa22YgR42TJ1LneeRU')
+                              ElevatedButton.icon(
+                                  style: ButtonStyle(
+                                    backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer,
+                                    ),
+                                    surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    appState.changePage(3);
+                                  },
+                                  icon: Icon(Icons.people, size: 16),
+                                  label: Text('Live occupancy',
+                                      style: labelStyle)),
                           ],
                         ),
                     ],
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 20),
+                Center(
+                  child: SizedBox(
+                    height: 400,
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    child: GymCrowdednessChart(appState.avgGymCrowdData,
+                        chartOpeningTimes, chartClosingTimes),
+                  ),
+                ),
+                SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
                   child: Column(
@@ -1510,15 +1546,6 @@ class _GymPageState extends State<GymPage> {
                           ),
                         ),
                     ],
-                  ),
-                ),
-                SizedBox(height: 30),
-                Center(
-                  child: SizedBox(
-                    height: 400,
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    child: GymCrowdednessChart(appState.avgGymCrowdData,
-                        chartOpeningTimes, chartClosingTimes),
                   ),
                 ),
                 SizedBox(

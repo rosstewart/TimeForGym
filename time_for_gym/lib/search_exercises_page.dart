@@ -84,6 +84,7 @@ class _SearchExercisesPageState extends State<SearchExercisesPage> {
     }
 
     return SwipeBack(
+      swipe: true,
       appState: appState,
       index: 8, // Search page
       child: GestureDetector(

@@ -2,8 +2,11 @@
 
 // import 'package:flutter/gestures.dart';
 
+// import 'dart:isolate';
+
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 // import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/services.dart';
@@ -98,8 +101,12 @@ class _SplitDayPageState extends State<SplitDayPage> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
 
-    final GymOpeningHours gymOpeningHours =
-        GymOpeningHours(appState.userGym!.openingHours!);
+    final GymOpeningHours? gymOpeningHours;
+    if (appState.userGym != null && appState.userGym!.openingHours != null) {
+      gymOpeningHours = GymOpeningHours(appState.userGym!.openingHours!);
+    } else {
+      gymOpeningHours = null;
+    }
 
     Split split;
     List<List<int>> exerciseIndices;
@@ -181,6 +188,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
     return GestureDetector(
       onTap: _dismissKeyboard, // Handle tap gesture
       child: SwipeBack(
+        swipe: true,
         appState: appState,
         index: 6,
         child: Scaffold(
@@ -339,6 +347,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                     // if (muscleGroupCards.length >
                     //     1) // If 0 or 1 muscle groups, no option to reorder
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton.icon(
@@ -390,6 +399,16 @@ class _SplitDayPageState extends State<SplitDayPage> {
                               style: theme.textTheme.labelSmall!.copyWith(
                                   color: theme.colorScheme.onBackground),
                             )),
+                        IconButton(
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            onPressed: () {
+                              scheduleNotificationAndStartTimer();
+                            },
+                            icon: Icon(Icons.play_arrow, size: 30)),
                       ],
                     ),
                   //   ],
@@ -1228,7 +1247,7 @@ class SplitMuscleGroupCard extends StatefulWidget {
   int exerciseIndex = 0;
   final int dayIndex;
   final bool addSupersetOption;
-  GymOpeningHours gymOpeningHours;
+  GymOpeningHours? gymOpeningHours;
 
   int getSplitDayCardIndex() {
     return splitDayCardIndex;
@@ -2032,7 +2051,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                   similarExercises.length,
                   (index) {
                     String expectedWaitTime;
-                    if (appState.userGym == null) {
+                    if (appState.userGym == null ||
+                        widget.gymOpeningHours == null) {
                       expectedWaitTime = '';
                     } else {
                       String currentlyOpenString;
@@ -2049,7 +2069,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                             .toStringAsFixed(0);
                       } else {
                         currentlyOpenString =
-                            widget.gymOpeningHours.getCurrentlyOpenString();
+                            widget.gymOpeningHours!.getCurrentlyOpenString();
                         // 'Open - ...' or 'Open 24 hours'
                         if (currentlyOpenString.startsWith('Open ')) {
                           // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
@@ -2336,7 +2356,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         previousReps[0].isNotEmpty);
 
     String expectedWaitTime;
-    if (appState.userGym == null) {
+    if (appState.userGym == null || widget.gymOpeningHours == null) {
       expectedWaitTime = 'No gym selected';
     } else {
       String currentlyOpenString;
@@ -2351,7 +2371,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                 percentCapacity)
             .toStringAsFixed(0);
       } else {
-        currentlyOpenString = widget.gymOpeningHours.getCurrentlyOpenString();
+        currentlyOpenString = widget.gymOpeningHours!.getCurrentlyOpenString();
         // 'Open - ...' or 'Open 24 hours'
         if (currentlyOpenString.startsWith('Open ')) {
           // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
@@ -4530,3 +4550,35 @@ class _SearchExercisesState extends State<SearchExercises>
     );
   }
 }
+
+// void startTimer() {
+//   ReceivePort receivePort = ReceivePort();
+//   Isolate.spawn(timerLogic, receivePort.sendPort);
+// }
+
+// void timerLogic(SendPort sendPort) {
+//   Timer.periodic(Duration(minutes: 3), (timer) {
+//     // Here, you can update the notification to show the remaining time
+//     // and handle any other timer-related logic.
+//     // For updating the notification, you can use the flutter_local_notifications package.
+//   });
+// }
+
+// Future<void> handleNotificationAction(String? action) async {
+//   if (action == 'start_action') {
+//     // Start the timer logic here.
+//   } else if (action == 'stop_action') {
+//     // Stop the timer logic here.
+//   }
+// }
+
+// // Inside your main function or where you set up the local notification plugin:
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
+// // Initialize the plugin and other setup code...
+
+// // Set up the notification plugin's onDidReceiveLocalNotification event handler:
+// flutterLocalNotificationsPlugin.initialize(
+//   // ...,
+//   onSelectNotification: handleNotificationAction,
+// );

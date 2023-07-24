@@ -105,6 +105,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     return SwipeBack(
       appState: appState,
       index: 8,
+      swipe: true,
       child: Scaffold(
         appBar: AppBar(
           leading: Back(appState: appState, index: 8),

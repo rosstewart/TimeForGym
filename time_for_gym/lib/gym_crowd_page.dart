@@ -31,19 +31,20 @@ class _GymCrowdPageState extends State<GymCrowdPage> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: SwipeBack(
-          appState: appState,
-          index: 0,
-          child: Scaffold(
-        appBar: AppBar(
-          leading: Back(appState: appState, index: 0),
-          leadingWidth: 70,
-          title: Text(
-            "Gym Occupancy",
-            style: titleStyle,
+        swipe: true,
+        appState: appState,
+        index: 9,
+        child: Scaffold(
+          appBar: AppBar(
+            leading: Back(appState: appState, index: 9),
+            leadingWidth: 70,
+            title: Text(
+              "Gym Occupancy",
+              style: titleStyle,
+            ),
+            backgroundColor: theme.scaffoldBackgroundColor,
           ),
-          backgroundColor: theme.scaffoldBackgroundColor,
-        ),
-        body: ListView(
+          body: ListView(
             children: [
               SizedBox(height: 30),
               // Padding(
@@ -87,13 +88,13 @@ class _GymCrowdPageState extends State<GymCrowdPage> {
 // Define a data model for the occupancy data
 class OccupancyData {
   int currentOccupancy;
-  String timestamp;
+  int millisecondsFromEpoch;
 
-  OccupancyData(this.currentOccupancy, this.timestamp);
+  OccupancyData(this.currentOccupancy, this.millisecondsFromEpoch);
 
   Map<String, dynamic> toJson() => {
         'currentOccupancy': currentOccupancy,
-        'timestamp': timestamp,
+        'timestamp': millisecondsFromEpoch,
       };
 }
 
@@ -197,7 +198,10 @@ class _OccupancyFormState extends State<OccupancyForm> {
                     }
                   }
                 },
-                label: Icon(Icons.send, color: theme.colorScheme.primary,),
+                label: Icon(
+                  Icons.send,
+                  color: theme.colorScheme.primary,
+                ),
                 icon: Text(
                   'Submit',
                   style: TextStyle(color: theme.colorScheme.onBackground),

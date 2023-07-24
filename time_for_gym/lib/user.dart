@@ -20,7 +20,7 @@ class User {
       this.profileDescription = ''});
   // required this.authUser
 
-  void initializeData() async {
+  void initializeProfilePicData() async {
     // Initialize profile picture
     if (profilePicture == null && profilePictureUrl != null) {
       // Retrieve from storage
@@ -33,17 +33,23 @@ class User {
     return username;
   }
 
-  void removeFollowerInFirebase(String otherUsername) async {
+  Future<bool> removeFollowerInFirebase(String otherUsername) async {
     // Create a reference to the user document
     DocumentReference userRef =
         FirebaseFirestore.instance.collection('users').doc(username);
     DocumentReference otherUserRef =
         FirebaseFirestore.instance.collection('users').doc(otherUsername);
+    bool error = false;
 
-    userRef
-        .update({'followers': followers})
-        .then((value) => print('Updated followers'))
-        .catchError((error) => print('Failed to update followers: $error'));
+    await userRef.update({'followers': followers}).then((value) {
+      print('Updated followers');
+    }).catchError((error) {
+      print('Failed to update followers: $error');
+      error = true;
+    });
+    if (error == true) {
+      return false;
+    }
 
     // Get the document snapshot
     DocumentSnapshot snapshot = await otherUserRef.get();
@@ -57,28 +63,42 @@ class User {
       List<dynamic> otherFollowingAsObjects = otherUserData['following'] ?? [];
       List<String> otherFollowing = otherFollowingAsObjects.cast<String>();
       otherFollowing.remove(username);
-      otherUserRef
-          .update({'followers': otherFollowing})
-          .then((value) =>
-              print('Updated other user\'s ($otherUsername) following'))
-          .catchError((error) =>
-              print('Failed to update other user\'s following: $error'));
+      await otherUserRef.update({'followers': otherFollowing}).then((value) {
+        print('Updated other user\'s ($otherUsername) following');
+      }).catchError((error) {
+        print('Failed to update other user\'s following: $error');
+        error = true;
+      });
+      if (error == true) {
+        return false;
+      } else {
+        return true;
+      }
     } else {
       print('ERROR - Other user $otherUsername does not exist');
+      return false;
     }
   }
 
-  void updateFollowingInFirebase(String otherUsername, bool follow) async {
+  Future<bool> updateFollowingInFirebase(
+      String otherUsername, bool follow, User other) async {
     // Create a reference to the user document
     DocumentReference userRef =
         FirebaseFirestore.instance.collection('users').doc(username);
     DocumentReference otherUserRef =
         FirebaseFirestore.instance.collection('users').doc(otherUsername);
+    bool error = false;
 
-    userRef
-        .update({'following': following})
-        .then((value) => print('Updated following'))
-        .catchError((error) => print('Failed to update following: $error'));
+    await userRef.update({'following': following}).then((value) {
+      print('Updated following');
+    }).catchError((error) {
+      print('Failed to update following: $error');
+      error = true;
+    });
+
+    if (error == true) {
+      return false;
+    }
 
     // Get the document snapshot
     DocumentSnapshot snapshot = await otherUserRef.get();
@@ -92,14 +112,24 @@ class User {
       List<dynamic> otherFollowersAsObjects = otherUserData['followers'] ?? [];
       List<String> otherFollowers = otherFollowersAsObjects.cast<String>();
       follow ? otherFollowers.add(username) : otherFollowers.remove(username);
-      otherUserRef
-          .update({'followers': otherFollowers})
-          .then((value) =>
-              print('Updated other user\'s ($otherUsername) followers'))
-          .catchError((error) =>
-              print('Failed to update other user\'s followers: $error'));
+      await otherUserRef.update({'followers': otherFollowers}).then((value) {
+        print('Updated other user\'s ($otherUsername) followers');
+      }).catchError((error) {
+        print('Failed to update other user\'s followers: $error');
+        error = true;
+      });
+      if (error == true) {
+        return false;
+      } else {
+        // Update memory of other user & profile screen without redownloading from firebase
+        follow
+            ? other.followers.add(username)
+            : other.followers.remove(username);
+        return true;
+      }
     } else {
       print('ERROR - Other user $otherUsername does not exist');
+      return false;
     }
   }
 
@@ -156,18 +186,18 @@ class User {
     }
   }
 
-  void followUser(String otherUID) {
-    following.add(otherUID);
-    updateFollowingInFirebase(otherUID, true);
+  Future<bool> followUser(String otherUsername, User other) async {
+    following.add(otherUsername);
+    return await updateFollowingInFirebase(otherUsername, true, other);
   }
 
-  void unfollowUser(String otherUID) {
-    following.remove(otherUID);
-    updateFollowingInFirebase(otherUID, false);
+  Future<bool> unfollowUser(String otherUsername, User other) async {
+    following.remove(otherUsername);
+    return await updateFollowingInFirebase(otherUsername, false, other);
   }
 
-  void removeFromFollowers(int index) {
-    removeFollowerInFirebase(followers.removeAt(index));
+  Future<bool> removeFromFollowers(int index) async {
+    return await removeFollowerInFirebase(followers.removeAt(index));
   }
 
   String username;

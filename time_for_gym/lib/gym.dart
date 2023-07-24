@@ -19,7 +19,8 @@ class Gym implements Comparable<Gym> {
       required this.openingHours,
       required this.gymUrl,
       required this.internationalPhoneNumber,
-      required this.priceLevel});
+      required this.priceLevel,
+      required this.usernamesThatSelected});
 
   @override
   String toString() {
@@ -134,6 +135,7 @@ class Gym implements Comparable<Gym> {
   List<String>? openingHours;
   String? internationalPhoneNumber;
   int? priceLevel; // 0-3
+  List<String> usernamesThatSelected;
 }
 
 class GymData {
@@ -150,6 +152,7 @@ class GymData {
   List<String>? openingHours;
   String? internationalPhoneNumber;
   int? priceLevel; // 0-3
+  List<String> usernamesThatSelected;
 
   GymData(
       this.name,
@@ -164,7 +167,8 @@ class GymData {
       this.gymUrl,
       this.openingHours,
       this.internationalPhoneNumber,
-      this.priceLevel);
+      this.priceLevel,
+      this.usernamesThatSelected);
 
   Map<String, dynamic> toJson() => {
         'name': name,
@@ -180,5 +184,6 @@ class GymData {
         'openingHours': openingHours,
         'internationalPhoneNumber': internationalPhoneNumber,
         'priceLevel': priceLevel,
+        'usernamesThatSelected': usernamesThatSelected,
       };
 }

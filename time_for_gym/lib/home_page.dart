@@ -1,10 +1,11 @@
 // import 'dart:async';
 
 // import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 // import 'package:google_maps_webservice/places.dart';
 import 'package:provider/provider.dart';
+import 'package:time_for_gym/gym_page.dart';
 // import 'package:provider/provider.dart';
 import 'package:time_for_gym/main.dart';
 // import 'package:flutter/services.dart' show rootBundle;
@@ -17,14 +18,17 @@ import 'package:time_for_gym/gym.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatefulWidget {
-  final StateSetter? setAuthenticationState;
-  HomePage(this.setAuthenticationState);
+  // final StateSetter? setAuthenticationState;
+  // HomePage(this.setAuthenticationState);
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   // final FocusNode _gymSearchFocusNode = FocusNode();
+  String? currentlyOpenString;
+  String weightedAverageString = '';
+  DateTime currentTime = DateTime.now();
   final TextEditingController _searchTextController = TextEditingController();
 
   void _dismissKeyboard(MyAppState appState) {
@@ -33,18 +37,73 @@ class _HomePageState extends State<HomePage> {
     appState.isHomePageSearchFieldFocused = false;
   }
 
+  void _handleGymSubmit(Gym gym, MyAppState appState) async {
+    appState.loadGymPhotos(gym.placeId);
+
+    setState(() {
+      appState.isHomePageSearchFieldFocused = false;
+    });
+
+    appState.currentGym = gym;
+    // Change to gym page
+    appState.changePage(9);
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>(); // Listening to MyAppState
     // var pair = appState.current;
     final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final titleStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
 
-    // IconData icon;
-    // if (appState.favorites.contains(pair)) {
-    //   icon = Icons.favorite;
-    // } else {
-    //   icon = Icons.favorite_border;
-    // }
+    // Open 24 hours or Open -
+    if (currentlyOpenString == null) {
+      if (appState.userGym == null || appState.userGym!.openingHours == null) {
+        currentlyOpenString = '';
+      } else {
+        final GymOpeningHours gymOpeningHours =
+            GymOpeningHours(appState.userGym!.openingHours!);
+        currentlyOpenString = gymOpeningHours.getCurrentlyOpenString();
+      }
+      if (currentlyOpenString!.contains('Open ') ||
+          (appState.userGym != null &&
+              appState.userGym!.openingHours == null)) {
+        double currentHourPctCapacity =
+            (appState.avgGymCrowdData[currentTime.weekday - 1]
+                        [currentTime.hour] /
+                    13.0) *
+                100;
+        double nextHourPctCapacity;
+        if (currentTime.hour + 1 == 24) {
+          // Next day, 12 AM
+          nextHourPctCapacity =
+              (appState.avgGymCrowdData[currentTime.weekday % 7][0] / 13.0) *
+                  100;
+        } else {
+          nextHourPctCapacity =
+              (appState.avgGymCrowdData[currentTime.weekday - 1]
+                          [currentTime.hour + 1] /
+                      13.0) *
+                  100;
+        }
+        double weight = currentTime.minute /
+            60.0; // Calculate the weight based on the current minute (0 to 1)
+        double weightedAverage = currentHourPctCapacity * (1 - weight) +
+            nextHourPctCapacity * weight; // Calculate the weighted average
+        weightedAverageString = '${weightedAverage.toInt()}%';
+      }
+    }
+    currentlyOpenString ??= '';
+
+    final headlineStyle = theme.textTheme.titleSmall!.copyWith(
+        color: currentlyOpenString!.startsWith('Closed')
+            ? theme.colorScheme.secondary
+            : theme.colorScheme.primary);
+    final subHeadlineStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     return GestureDetector(
       onTap: () {
@@ -52,77 +111,169 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Spacer(
-                flex: 16,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                child: SizedBox(
-                  height: 50,
-                  child: Image.asset('assets/images/gym_brain_logo.png'),
-                ),
-              ),
-              Spacer(
-                flex: 15,
-              ),
+          title: appState.userGym != null
+              ?
+              //  ElevatedButton(
+              //     style: ButtonStyle(
+              //       backgroundColor: resolveColor(
+              //         theme.colorScheme.primaryContainer,
+              //       ),
+              //       surfaceTintColor: resolveColor(
+              //         theme.colorScheme.primaryContainer,
+              //       ),
+              //     ),
+              //     onPressed: () {},
+              //     child: SizedBox(
+              //       height: 100,
               GestureDetector(
-                onTapDown: (tapDownDetails) {
-                  showInfoDropdown(context, tapDownDetails.globalPosition);
-                },
-                child: Icon(
-                  Icons.info_outline,
-                  color: theme.colorScheme.onBackground.withOpacity(.65),
-                ),
-              ),
-              SizedBox(width: 10),
-              GestureDetector(
-                onTapDown: (tapDownDetails) {
-                  showOptionsDropdown(
-                      context, tapDownDetails.globalPosition, appState);
-                },
-                child: Icon(
-                  Icons.more_horiz,
-                  color: theme.colorScheme.onBackground.withOpacity(.65),
-                ),
-              ),
-            ],
-          ),
+                  onTap: () {
+                    _handleGymSubmit(appState.userGym!, appState);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(),
+                    child: Column(
+                      children: [
+                        Text(
+                          appState.userGym!.name,
+                          style: titleStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        if (currentlyOpenString != null)
+                          SizedBox(
+                            width: 200,
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // There is openingHours data for the gym
+                                  if (currentlyOpenString!.isNotEmpty)
+                                    if (!currentlyOpenString!.contains('-'))
+                                      Text(currentlyOpenString!,
+                                          style: headlineStyle,
+                                          textAlign: TextAlign.center),
+                                  if (currentlyOpenString!.isNotEmpty)
+                                    if (currentlyOpenString!.contains('-'))
+                                      Text(currentlyOpenString!.split('-')[0],
+                                          style: headlineStyle,
+                                          textAlign: TextAlign.center),
+                                  if (currentlyOpenString!.isNotEmpty)
+                                    if (currentlyOpenString!.contains('-'))
+                                      Text(
+                                          '-${currentlyOpenString!.split('-')[1]}',
+                                          style: subHeadlineStyle,
+                                          textAlign: TextAlign.center),
+                                ]),
+                          ),
+                        if (weightedAverageString.isNotEmpty ||
+                            (currentlyOpenString != null &&
+                                currentlyOpenString!.isEmpty))
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CustomCircularProgressIndicator(
+                                  percentCapacity: double.parse(
+                                          weightedAverageString.substring(
+                                              0,
+                                              weightedAverageString.length -
+                                                  1)) /
+                                      100.0,
+                                  strokeWidth: 2,
+                                  size: 15.0),
+                              SizedBox(width: 10),
+                              Text('Estimated $weightedAverageString capacity',
+                                  style: labelStyle),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                )
+              //   ),
+              // )
+              : null,
+          // title: Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     Spacer(
+          //       flex: 23,
+          //     ),
+          //     Padding(
+          //       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+          //       child: SizedBox(
+          //         height: 50,
+          //         child: Image.asset('assets/images/gym_brain_logo.png'),
+          //       ),
+          //     ),
+          //     Spacer(
+          //       flex: 15,
+          //     ),
+          //     GestureDetector(
+          //       onTapDown: (tapDownDetails) {
+          //         showInfoDropdown(context, tapDownDetails.globalPosition);
+          //       },
+          //       child: Icon(
+          //         Icons.info_outline,
+          //         color: theme.colorScheme.onBackground.withOpacity(.65),
+          //       ),
+          //     ),
+          //     SizedBox(width: 10),
+          //     GestureDetector(
+          //       onTapDown: (tapDownDetails) {
+          //         showOptionsDropdown(
+          //             context, tapDownDetails.globalPosition, appState);
+          //       },
+          //       child: Icon(
+          //         Icons.more_horiz,
+          //         color: theme.colorScheme.onBackground.withOpacity(.65),
+          //       ),
+          //     ),
+          //   ],
+          // ),
           backgroundColor: theme.scaffoldBackgroundColor,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            // SizedBox(
+            //   // width: MediaQuery.of(context).size.width - 100,
+            //   child: Padding(
+            //     padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
+            //     child: Text(
+            //         'Hello, ${appState.currentUser.profileName.isNotEmpty ? appState.currentUser.profileName : (appState.currentUser.username)}',
+            //         style: theme.textTheme.headlineSmall!
+            //             .copyWith(color: theme.colorScheme.onBackground),
+            //         textAlign: TextAlign.center,
+            //         maxLines: 1),
+            //   ),
+            // ),
+            // PageSelectorButton(
+            //   text: "Gym Occupancy",
+            //   index: 3,
+            //   icon: Icon(Icons.people),
+            // ),
             SizedBox(
-              // width: MediaQuery.of(context).size.width - 100,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 30, 0, 10),
-                child: Text(
-                    'Hello, ${appState.currentUser.profileName.isNotEmpty ? appState.currentUser.profileName : (appState.currentUser.username)}',
-                    style: theme.textTheme.headlineSmall!
-                        .copyWith(color: theme.colorScheme.onBackground),
-                    textAlign: TextAlign.center,
-                    maxLines: 1),
+              height: 100,
+            ),
+            SizedBox(
+              width: 350,
+              child: Column(
+                children: [
+                  Text('Search Gyms near',
+                      style: theme.textTheme.titleMedium!
+                          .copyWith(color: theme.colorScheme.onBackground),
+                      textAlign: TextAlign.center),
+                  Text('Coral Gables, FL',
+                      style: theme.textTheme.headlineSmall!
+                          .copyWith(color: theme.colorScheme.onBackground),
+                      textAlign: TextAlign.center),
+                ],
               ),
-            ),
-            PageSelectorButton(
-              text: "Gym Occupancy",
-              index: 3,
-              icon: Icon(Icons.people),
-            ),
-            SizedBox(
-              height: 50,
-            ),
-            Text(
-              'Search Gyms near Coral Gables, FL',
-              style: theme.textTheme.titleMedium!
-                  .copyWith(color: theme.colorScheme.onBackground),
             ),
             SizedBox(
               height: 10,
             ),
+
             GymSearchBar(
               textEditingController: _searchTextController,
             ),
@@ -132,113 +283,116 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showOptionsDropdown(
-      BuildContext context, Offset tapPosition, MyAppState appState) {
-    final theme = Theme.of(context);
-    final labelStyle =
-        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+  // void showOptionsDropdown(
+  //     BuildContext context, Offset tapPosition, MyAppState appState) {
+  //   final theme = Theme.of(context);
+  //   final labelStyle =
+  //       TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
 
-    showMenu<String>(
-      color: theme.colorScheme.primaryContainer,
-      surfaceTintColor: theme.colorScheme.primaryContainer,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        tapPosition.dx,
-        tapPosition.dy,
-        tapPosition.dx + 1,
-        tapPosition.dy + 1,
-      ),
-      items: [
-        PopupMenuItem(
-          padding: EdgeInsets.zero,
-          value: 'Sign out',
-          child: ListTile(
-            visualDensity: VisualDensity(
-                vertical: VisualDensity.minimumDensity,
-                horizontal: VisualDensity.minimumDensity),
-            dense: true,
-            title: Text('Sign out', style: labelStyle),
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'Sign out') {
-        if (widget.setAuthenticationState != null) {
-          widget.setAuthenticationState!(() {
-            isAuthenticated = false;
-          });
-        }
-        appState.currentSplit = null;
-        appState.makeNewSplit = true;
-        appState.editModeTempSplit = null;
-        appState.editModeTempExerciseIndices = null;
-        appState.splitDayExerciseIndices = [[], [], [], [], [], [], []];
-        appState.goStraightToSplitDayPage = false;
-        appState.hasSubmittedData = false;
-        appState.isInitializing = true;
-        appState.isHomePageSearchFieldFocused = false;
-        appState.lastVisitedSearchPage = 8;
-        appState.userGym = null;
-        appState.showAdBeforeExerciseCounter = 2;
-        appState.presetHomePage = 0;
-        appState.presetSearchPage = 0;
-        appState.muscleGroups = {};
-        appState.favoriteExercises = [];
-        appState.pageIndex = 0;
-        appState.gymCount = -1;
-        appState.maxCapacity = 200;
-        appState.areMuscleGroupsInitialized = false;
-        appState.isGymCountInitialized = false;
+  //   showMenu<String>(
+  //     color: theme.colorScheme.primaryContainer,
+  //     surfaceTintColor: theme.colorScheme.primaryContainer,
+  //     context: context,
+  //     position: RelativeRect.fromLTRB(
+  //       tapPosition.dx,
+  //       tapPosition.dy,
+  //       tapPosition.dx + 1,
+  //       tapPosition.dy + 1,
+  //     ),
+  //     items: [
+  //       PopupMenuItem(
+  //         padding: EdgeInsets.zero,
+  //         value: 'Sign out',
+  //         child: ListTile(
+  //           visualDensity: VisualDensity(
+  //               vertical: VisualDensity.minimumDensity,
+  //               horizontal: VisualDensity.minimumDensity),
+  //           dense: true,
+  //           title: Text('Sign out', style: labelStyle),
+  //         ),
+  //       ),
+  //     ],
+  //   ).then((value) {
+  //     if (value == 'Sign out') {
+  //       if (widget.setAuthenticationState != null) {
+  //         widget.setAuthenticationState!(() {
+  //           isAuthenticated = false;
+  //           // appState.currentUser = null;
+  //           appState.currentSplit = null;
+  //           appState.makeNewSplit = true;
+  //           appState.editModeTempSplit = null;
+  //           appState.editModeTempExerciseIndices = null;
+  //           appState.splitDayExerciseIndices = [[], [], [], [], [], [], []];
+  //           appState.goStraightToSplitDayPage = false;
+  //           appState.hasSubmittedData = false;
+  //           appState.isInitializing = true;
+  //           appState.isHomePageSearchFieldFocused = false;
+  //           appState.lastVisitedSearchPage = 8;
+  //           appState.userGym = null;
+  //           appState.showAdBeforeExerciseCounter = 2;
+  //           appState.presetHomePage = 0;
+  //           appState.presetSearchPage = 0;
+  //           appState.muscleGroups = {};
+  //           appState.favoriteExercises = [];
+  //           appState.pageIndex = 13;
+  //           appState.gymCount = -1;
+  //           appState.maxCapacity = 200;
+  //           appState.areMuscleGroupsInitialized = false;
+  //           appState.isGymCountInitialized = false;
+  //           appState.userProfileStack = [];
+  //           appState.userProfileStackFromOwnProfile = [];
+  //         });
+  //       }
 
-        FirebaseAuth.instance.signOut();
-        print(isAuthenticated);
-      }
-    });
-  }
+  //       FirebaseAuth.instance.signOut();
+  //       print(isAuthenticated);
+  //     }
+  //   });
+  // }
 
-  void showInfoDropdown(BuildContext context, Offset tapPosition) {
-    final theme = Theme.of(context);
-    final labelStyle =
-        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+  // void showInfoDropdown(BuildContext context, Offset tapPosition) {
+  //   final theme = Theme.of(context);
+  //   final labelStyle =
+  //       TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
 
-    showMenu<String>(
-      color: theme.colorScheme.primaryContainer,
-      surfaceTintColor: theme.colorScheme.primaryContainer,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        tapPosition.dx,
-        tapPosition.dy,
-        tapPosition.dx + 1,
-        tapPosition.dy + 1,
-      ),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          padding: EdgeInsets.zero,
-          child: ListTile(
-            visualDensity: VisualDensity(
-                vertical: VisualDensity.minimumDensity,
-                horizontal: VisualDensity.minimumDensity),
-            dense: true,
-            title: Text(
-                'Developed by Ross Stewart\nReport issues to rosscstewart10@gmail.com',
-                style: labelStyle.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(.65))),
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'Sign out') {
-        if (widget.setAuthenticationState != null) {
-          widget.setAuthenticationState!(() {
-            isAuthenticated = false;
-          });
-        }
-        FirebaseAuth.instance.signOut();
-        print(isAuthenticated);
-      }
-    });
-  }
+  //   showMenu<String>(
+  //     color: theme.colorScheme.primaryContainer,
+  //     surfaceTintColor: theme.colorScheme.primaryContainer,
+  //     context: context,
+  //     position: RelativeRect.fromLTRB(
+  //       tapPosition.dx,
+  //       tapPosition.dy,
+  //       tapPosition.dx + 1,
+  //       tapPosition.dy + 1,
+  //     ),
+  //     items: [
+  //       PopupMenuItem(
+  //         enabled: false,
+  //         padding: EdgeInsets.zero,
+  //         child: ListTile(
+  //           visualDensity: VisualDensity(
+  //               vertical: VisualDensity.minimumDensity,
+  //               horizontal: VisualDensity.minimumDensity),
+  //           dense: true,
+  //           title: Text(
+  //               'Developed by Ross Stewart\nReport issues to rosscstewart10@gmail.com',
+  //               style: labelStyle.copyWith(
+  //                   color: theme.colorScheme.onBackground.withOpacity(.65))),
+  //         ),
+  //       ),
+  //     ],
+  //   ).then((value) {
+  //     if (value == 'Sign out') {
+  //       if (widget.setAuthenticationState != null) {
+  //         widget.setAuthenticationState!(() {
+  //           isAuthenticated = false;
+  //         });
+  //       }
+  //       FirebaseAuth.instance.signOut();
+  //       print(isAuthenticated);
+  //     }
+  //   });
+  // }
 }
 
 class GymSearchBar extends StatefulWidget {
@@ -487,7 +641,7 @@ class _GymSearchBarState extends State<GymSearchBar> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
+                ElevatedButton.icon(
                   style: ButtonStyle(
                     backgroundColor: resolveColor(
                       theme.colorScheme.primaryContainer,
@@ -499,7 +653,8 @@ class _GymSearchBarState extends State<GymSearchBar> {
                   onPressed: () {
                     _handleGymSubmit(appState.userGym!, appState);
                   },
-                  child: Text('Your Gym', style: bodyLargeTheme),
+                  icon: Icon(Icons.fitness_center, size: 20),
+                  label: Text('Your Gym', style: bodyLargeTheme),
                 ),
                 SizedBox(
                   width: 5,
@@ -591,7 +746,7 @@ class _GymSearchBarState extends State<GymSearchBar> {
                 height: 5,
               ),
               SizedBox(
-                height: 265,
+                height: 350,
                 child: ListView.builder(
                   itemCount: searchResults.length,
                   itemBuilder: (context, index) {

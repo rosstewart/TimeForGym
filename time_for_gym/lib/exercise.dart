@@ -185,7 +185,7 @@ class Exercise implements Comparable<Exercise> {
 }
 
 class ExercisePopularityData {
-  String userID, exerciseName, mainMuscleGroup;
+  String username, exerciseName, mainMuscleGroup;
   double? numStars;
   int? oneRepMax;
   List<int> splitWeightAndReps = [];
@@ -193,11 +193,11 @@ class ExercisePopularityData {
   List<int> splitRepsPerSet = [];
   Map<int, int> userOneRepMaxHistory = {};
 
-  ExercisePopularityData(this.userID, this.exerciseName, this.mainMuscleGroup,
+  ExercisePopularityData(this.username, this.exerciseName, this.mainMuscleGroup,
       this.numStars, this.oneRepMax, this.splitWeightAndReps, this.splitWeightPerSet, this.splitRepsPerSet, this.userOneRepMaxHistory);
 
   Map<String, dynamic> toJson() => {
-        'userID': userID,
+        'username': username,
         'exerciseName': exerciseName,
         'mainMuscleGroup': mainMuscleGroup,
         'numStars': numStars,

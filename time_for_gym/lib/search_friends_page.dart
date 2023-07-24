@@ -1,7 +1,13 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:time_for_gym/exercise.dart';
+import 'package:time_for_gym/activity.dart';
+// import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/main.dart';
+// import 'package:time_for_gym/split.dart';
+import 'package:time_for_gym/user.dart';
 
 // ignore: must_be_immutable
 class SearchFriendsPage extends StatefulWidget {
@@ -13,13 +19,14 @@ class _SearchFriendsPageState extends State<SearchFriendsPage> {
   String pattern = '';
 
   final TextEditingController searchController = TextEditingController();
-  final ScrollController scrollController = ScrollController();
+  // final ScrollController scrollController = ScrollController();
   final searchFocusNode = FocusNode();
+  bool showSearchError = false;
 
   @override
   void dispose() {
     searchController.dispose();
-    scrollController.dispose();
+    // scrollController.dispose();
     searchFocusNode.dispose();
     super.dispose();
   }
@@ -38,10 +45,12 @@ class _SearchFriendsPageState extends State<SearchFriendsPage> {
               element.toLowerCase().contains(pattern.toLowerCase()))
           .toList();
     } else {
-      filteredUsernames = [];
+      // Friends
+      filteredUsernames = appState.currentUser.following.where((element) => appState.currentUser.followers.contains(element)).toList();
     }
 
     return SwipeBack(
+      swipe: true,
       appState: appState,
       index: 13,
       child: GestureDetector(
@@ -121,18 +130,49 @@ class _SearchFriendsPageState extends State<SearchFriendsPage> {
               SizedBox(height: 10),
               Expanded(
                 child: ListView.builder(
-                  controller: scrollController,
+                  // controller: scrollController,
                   itemCount: filteredUsernames.length,
                   itemBuilder: (context, index) {
                     String username = filteredUsernames[index];
-                    return ListTile(
-                      onTap: () {},
-                      title: Text(
-                        username,
-                        style: labelStyle,
-                        maxLines: 2,
-                      ),
+                    // Empty user will have blank profile picture
+                    User user = appState.visitedUsers.firstWhere(
+                      (element) => element.username == username,
+                      orElse: () => User(username: '', email: '', uid: ''),
                     );
+                    return ListTile(
+                        onTap: () async {
+                          User? newUser = await getUserDataFromFirestore(
+                              username, appState);
+                          if (newUser != null) {
+                            setState(() {
+                              showSearchError = false;
+                            });
+                            appState.userProfileStack.add(newUser);
+                            appState.changePage(15);
+                          } else {
+                            setState(() {
+                              showSearchError = true;
+                            });
+                          }
+                        },
+                        leading: CircleAvatar(
+                            radius: 12,
+                            backgroundImage: user.profilePicture,
+                            child: user.profilePicture == null
+                                ? Icon(Icons.person,
+                                    color: theme.colorScheme.onBackground,
+                                    size: 14)
+                                : null),
+                        title: Text(
+                          username,
+                          style: labelStyle,
+                          maxLines: 2,
+                        ),
+                        subtitle: showSearchError
+                            ? Text('Something went wrong, please try again',
+                                style: labelStyle.copyWith(
+                                    color: theme.colorScheme.secondary))
+                            : null);
                   },
                 ),
               ),
@@ -141,5 +181,50 @@ class _SearchFriendsPageState extends State<SearchFriendsPage> {
         ),
       ),
     );
+  }
+
+  Future<User?> getUserDataFromFirestore(
+      String username, MyAppState appState) async {
+    try {
+      User visitedUser = appState.visitedUsers.firstWhere(
+          (element) => element.username == username,
+          orElse: () => User(username: '', email: '', uid: ''));
+      if (visitedUser.username.isNotEmpty) {
+        return visitedUser;
+      }
+
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(username);
+      DocumentSnapshot snapshot = await userRef.get();
+      if (snapshot.exists) {
+        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+        User newUser = User(
+            username: username,
+            email: userData['email'] ?? '',
+            uid: userData['uid'] ?? '',
+            userGymId: userData['userGymId'] ?? '',
+            favoritesString: userData['favoritesString'] ?? '',
+            profileName: userData['profileName'] ?? '',
+            profileDescription: userData['profileDescription'] ?? '');
+        newUser.profilePictureUrl =
+            userData['profilePictureUrl']; // Could be null
+        newUser.followers = (userData['followers'] ?? []).cast<String>();
+        newUser.following = (userData['following'] ?? []).cast<String>();
+        List<dynamic> activityListJson = userData['activities'] ?? [];
+        newUser.activities = activityListJson
+            .map((e) => Activity.fromJson(json.decode(e)))
+            .toList();
+        newUser.splitJson = userData['split']; // Could be null
+        newUser.initializeProfilePicData();
+        appState.visitedUsers.add(newUser);
+        return newUser;
+      } else {
+        print('User $username not found');
+        return null;
+      }
+    } catch (e) {
+      print('ERROR - User $username not found: $e');
+      return null;
+    }
   }
 }
