@@ -426,30 +426,30 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     // Friends
-                    if (appState.currentUser.following
-                            .contains(widget.user!.username) &&
-                        appState.currentUser.followers
-                            .contains(widget.user!.username))
-                      SizedBox(width: 20),
-                    if (appState.currentUser.following
-                            .contains(widget.user!.username) &&
-                        appState.currentUser.followers
-                            .contains(widget.user!.username))
-                      ElevatedButton.icon(
-                        style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                                theme.colorScheme.primaryContainer),
-                            surfaceTintColor: resolveColor(
-                                theme.colorScheme.primaryContainer)),
-                        onPressed: () async {
-                          print('Nudge ${widget.user!.username}');
-                        },
-                        icon: Icon(Icons.fitness_center, size: 20),
-                        label: Text(
-                          'Nudge',
-                          style: labelStyle,
-                        ),
-                      ),
+                    // if (appState.currentUser.following
+                    //         .contains(widget.user!.username) &&
+                    //     appState.currentUser.followers
+                    //         .contains(widget.user!.username))
+                    //   SizedBox(width: 20),
+                    // if (appState.currentUser.following
+                    //         .contains(widget.user!.username) &&
+                    //     appState.currentUser.followers
+                    //         .contains(widget.user!.username))
+                    //   ElevatedButton.icon(
+                    //     style: ButtonStyle(
+                    //         backgroundColor: resolveColor(
+                    //             theme.colorScheme.primaryContainer),
+                    //         surfaceTintColor: resolveColor(
+                    //             theme.colorScheme.primaryContainer)),
+                    //     onPressed: () async {
+                    //       print('Nudge ${widget.user!.username}');
+                    //     },
+                    //     icon: Icon(Icons.fitness_center, size: 20),
+                    //     label: Text(
+                    //       'Nudge',
+                    //       style: labelStyle,
+                    //     ),
+                    //   ),
                   ],
                 ),
               SizedBox(height: 3),
@@ -513,9 +513,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                 style: labelStyle,
                               )),
                         SizedBox(height: 20),
-                        for (int i = 0; i < widget.user!.activities.length; i++)
-                          ActivityPreviewCard(widget.user!,
-                              widget.user!.activities[i], i, setState, null),
+                        if (appState.currentUser == widget.user ||
+                            (!widget.user!.onlyFriendsCanViewPosts ||
+                                (appState.currentUser.following
+                                        .contains(widget.user!.username) &&
+                                    widget.user!.following.contains(
+                                        appState.currentUser.username))))
+                          for (int i = 0;
+                              i < widget.user!.activities.length;
+                              i++)
+                            ActivityPreviewCard(widget.user!,
+                                widget.user!.activities[i], i, setState, null)
+                        else
+                          Text(
+                              'Only ${widget.user!.username}\'s friends can view their posts\n(Make sure you both follow each other)',
+                              style: greyLabelStyle,
+                              textAlign: TextAlign.center)
                       ],
                     ),
                   ),
@@ -662,8 +675,10 @@ class _ProfilePageState extends State<ProfilePage> {
             appState.userProfileStack = [];
             appState.userProfileStackFromOwnProfile = [];
             appState.activeWorkout = null;
+            appState.activeWorkoutBannerPageController = PageController();
             appState.areMuscleGroupImagesInitialized = {};
             appState.prefs.clear();
+            appState.visitedUsers = [];
           });
         }
 
@@ -1029,7 +1044,7 @@ class _EditProfileWindowState extends State<EditProfileWindow>
   late Animation<Offset> _animation;
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
-
+  bool onlyFriendsCanViewPosts = false;
   String? errorText;
 
   @override
@@ -1068,13 +1083,15 @@ class _EditProfileWindowState extends State<EditProfileWindow>
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
+    final greyLabelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     return SlideTransition(
       position: _animation,
       child: GestureDetector(
         onTap: FocusScope.of(context).unfocus,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.4,
+          height: MediaQuery.of(context).size.height * 0.55,
           decoration: BoxDecoration(
             color: theme.colorScheme.background,
             borderRadius: BorderRadius.only(
@@ -1177,7 +1194,94 @@ class _EditProfileWindowState extends State<EditProfileWindow>
                     SizedBox(width: 16),
                   ],
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
+                Center(
+                    child: Text(
+                  'Who can view your activities?',
+                  style:
+                      bodyStyle.copyWith(color: theme.colorScheme.onBackground),
+                )),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          if (onlyFriendsCanViewPosts) {
+                            setState(() {
+                              onlyFriendsCanViewPosts = false;
+                            });
+                          }
+                        },
+                        style: ButtonStyle(
+                            backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer),
+                            surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer)),
+                        icon: Icon(
+                            !onlyFriendsCanViewPosts
+                                ? Icons.people
+                                : Icons.people_outline,
+                            size: !onlyFriendsCanViewPosts ? null : 18,
+                            color: !onlyFriendsCanViewPosts
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onBackground
+                                    .withOpacity(.65)),
+                        label: Text('Your followers',
+                            style: !onlyFriendsCanViewPosts
+                                ? bodyStyle.copyWith(
+                                    color: theme.colorScheme.onBackground)
+                                : greyLabelStyle),
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              if (!onlyFriendsCanViewPosts) {
+                                setState(() {
+                                  onlyFriendsCanViewPosts = true;
+                                });
+                              }
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            icon: Icon(
+                                onlyFriendsCanViewPosts
+                                    ? Icons.emoji_people
+                                    : Icons.emoji_people_outlined,
+                                size: onlyFriendsCanViewPosts ? null : 18,
+                                color: onlyFriendsCanViewPosts
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onBackground
+                                        .withOpacity(.65)),
+                            label: Text(
+                              'Your friends',
+                              style: onlyFriendsCanViewPosts
+                                  ? bodyStyle.copyWith(
+                                      color: theme.colorScheme.onBackground)
+                                  : greyLabelStyle,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          '(Mutual Followers)',
+                          style: greyLabelStyle,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
@@ -1198,6 +1302,8 @@ class _EditProfileWindowState extends State<EditProfileWindow>
                         widget.user.profileName = _nameController.text;
                         widget.user.profileDescription =
                             _descriptionController.text;
+                        widget.user.onlyFriendsCanViewPosts =
+                            onlyFriendsCanViewPosts;
                       });
                       appState.storeDataInFirestore();
                       Navigator.of(context).pop();
@@ -1264,6 +1370,9 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
   String? pickedFilePath;
   String? activityPictureUrl;
   Widget? activityPicture;
+  late String yourFollowersOrFriends;
+  late List<String> postOptions; // = ['Your followers', 'Only you'];
+  late String selectedPostOption; // = 'Your followers';
 
   @override
   void initState() {
@@ -1291,6 +1400,11 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
                 : (hour < 18
                     ? 'Afternoon workout'
                     : (hour < 21 ? 'Evening workout' : 'Night workout'))));
+
+    yourFollowersOrFriends =
+        widget.user.onlyFriendsCanViewPosts ? 'Your friends' : 'Your followers';
+    postOptions = [yourFollowersOrFriends, 'Only you'];
+    selectedPostOption = yourFollowersOrFriends;
   }
 
   @override
@@ -1315,7 +1429,7 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
       child: GestureDetector(
         onTap: FocusScope.of(context).unfocus,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.6,
+          height: MediaQuery.of(context).size.height * 0.8,
           decoration: BoxDecoration(
             color: theme.colorScheme.background,
             borderRadius: BorderRadius.only(
@@ -1522,7 +1636,7 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
                     SizedBox(width: 16),
                   ],
                 ),
-                SizedBox(height: 15),
+                SizedBox(height: 20),
                 Center(
                   child: Text(
                     'Add a photo',
@@ -1576,7 +1690,73 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.secondary)),
                   ),
-                SizedBox(height: 15),
+                SizedBox(height: 20),
+                Center(
+                    child: Text(
+                  'Who can view your activity?',
+                  style:
+                      bodyStyle.copyWith(color: theme.colorScheme.onBackground),
+                )),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ...postOptions.map((option) {
+                      bool isSelected = option == selectedPostOption;
+                      if (isSelected) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                          child: ElevatedButton.icon(
+                            onPressed: () {},
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            icon: Icon(
+                                option == 'Only you'
+                                    ? Icons.person_off
+                                    : Icons.people,
+                                color: theme.colorScheme.primary),
+                            label: Text(
+                              option,
+                              style: bodyStyle.copyWith(
+                                  color: theme.colorScheme.onBackground),
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                selectedPostOption = option;
+                              });
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: resolveColor(
+                                    theme.colorScheme.primaryContainer),
+                                surfaceTintColor: resolveColor(
+                                    theme.colorScheme.primaryContainer)),
+                            icon: Icon(
+                                option == 'Only you'
+                                    ? Icons.person_off_outlined
+                                    : Icons.people_outline,
+                                size: 18,
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(.65)),
+                            label: Text(
+                              option,
+                              style: greyLabelStyle,
+                            ),
+                          ),
+                        );
+                      }
+                    }).toList(),
+                  ],
+                ),
+                SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
@@ -1681,9 +1861,10 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
               commentsFromEachUsername: {},
               pictureUrl: activityPictureUrl,
               picture: activityPicture,
-              private: false,
+              private: selectedPostOption == 'Only you',
               prsHit: null,
-              gym: appState.userGym?.name));
+              gym: appState.userGym?.name,
+              repRanges: []));
     });
     appState.storeDataInFirestore();
   }
@@ -1796,50 +1977,6 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     }
   }
 
-  Future<User?> getUserDataFromFirestore(
-      String username, MyAppState appState) async {
-    try {
-      User visitedUser = appState.visitedUsers.firstWhere(
-          (element) => element.username == username,
-          orElse: () => User(username: '', email: '', uid: ''));
-      if (visitedUser.username.isNotEmpty) {
-        return visitedUser;
-      }
-      DocumentReference userRef =
-          FirebaseFirestore.instance.collection('users').doc(username);
-      DocumentSnapshot snapshot = await userRef.get();
-      if (snapshot.exists) {
-        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
-        User newUser = User(
-            username: username,
-            email: userData['email'] ?? '',
-            uid: userData['uid'] ?? '',
-            userGymId: userData['userGymId'] ?? '',
-            favoritesString: userData['favoritesString'] ?? '',
-            profileName: userData['profileName'] ?? '',
-            profileDescription: userData['profileDescription'] ?? '');
-        newUser.profilePictureUrl =
-            userData['profilePictureUrl']; // Could be null
-        newUser.followers = (userData['followers'] ?? []).cast<String>();
-        newUser.following = (userData['following'] ?? []).cast<String>();
-        List<dynamic> activityListJson = userData['activities'] ?? [];
-        newUser.activities = activityListJson
-            .map((e) => Activity.fromJson(json.decode(e)))
-            .toList();
-        newUser.splitJson = userData['split']; // Could be null
-        newUser.initializeProfilePicData();
-        appState.visitedUsers.add(newUser);
-        return newUser;
-      } else {
-        print('User $username not found');
-        return null;
-      }
-    } catch (e) {
-      print('ERROR - User $username not found: $e');
-      return null;
-    }
-  }
-
   bool isDayBefore(DateTime timeOfPost, DateTime now) {
     if (now.day != 1) {
       return timeOfPost.day == now.day - 1 &&
@@ -1912,7 +2049,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     DateTime timeOfPost = DateTime.fromMillisecondsSinceEpoch(
         widget.activity.millisecondsFromEpoch);
     DateTime now = DateTime.now();
-    Duration timeDifference = now.difference(timeOfPost);
+    // Duration timeDifference = now.difference(timeOfPost);
     String timeDifferenceString;
     // if (timeDifference.inSeconds < 60) {
     //   timeDifferenceString =
@@ -2053,6 +2190,45 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                           .copyWith(color: theme.colorScheme.onBackground),
                     ),
                   ),
+                  if (widget.activity.private == true) SizedBox(height: 3),
+                  if (widget.activity.private == true)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                      child: Container(
+                        decoration: BoxDecoration(),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.lock_person_outlined,
+                                color: theme.colorScheme.onBackground
+                                    .withOpacity(.65),
+                                size: 14),
+                            SizedBox(width: 5),
+                            Text('Private',
+                                style: greyLabelStyle.copyWith(fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (widget.activity.gym != null)
+                    SizedBox(height: widget.activity.private == true ? 5 : 3),
+                  if (widget.activity.gym != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                      child: Container(
+                        decoration: BoxDecoration(),
+                        child: Row(
+                          children: [
+                            Text('At ',
+                                style: greyLabelStyle.copyWith(fontSize: 10)),
+                            Text(widget.activity.gym!,
+                                style: labelStyle.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                    ),
                   SizedBox(height: 5),
                   if (widget.activity.description.isNotEmpty)
                     Padding(
@@ -2062,7 +2238,8 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                     ),
                   if (widget.activity.trainingDay != null) SizedBox(height: 10),
                   if (widget.activity.trainingDay != null)
-                    TrainingDayPreviewCard(widget.activity.trainingDay!),
+                    TrainingDayPreviewCard(widget.activity.trainingDay!,
+                        widget.activity.repRanges),
                   if (widget.activity.pictureUrl != null ||
                       (widget.activity.prsHit != null &&
                           widget.activity.prsHit!.isNotEmpty))
@@ -2076,7 +2253,14 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 0),
-                          Text('New PRs Hit', style: bodyStyle),
+                          Row(
+                            children: [
+                              Text('New PRs Hit', style: bodyStyle),
+                              SizedBox(width: 5),
+                              Icon(Icons.emoji_events,
+                                  size: 20, color: Colors.amber[300]),
+                            ],
+                          ),
                           SizedBox(height: 5),
                           for (int i = 0;
                               i < widget.activity.prsHit!.length;
@@ -2087,7 +2271,8 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                       ),
                     ),
                   if (widget.activity.prsHit != null &&
-                      widget.activity.prsHit!.isNotEmpty)
+                      widget.activity.prsHit!.isNotEmpty &&
+                      widget.activity.pictureUrl != null)
                     SizedBox(height: 20),
                   if (widget.activity.pictureUrl != null)
                     Hero(
@@ -2270,7 +2455,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
             Spacer(),
             if (widget.activity.totalMinutesDuration > 0)
               Text(
-                '${widget.activity.totalMinutesDuration ~/ 60} hour${widget.activity.totalMinutesDuration ~/ 60 == 1 ? '' : 's'}, ${widget.activity.totalMinutesDuration % 60} minute${widget.activity.totalMinutesDuration % 60 == 1 ? '' : 's'}',
+                '${widget.activity.totalMinutesDuration ~/ 60 != 0 ? '${widget.activity.totalMinutesDuration ~/ 60} hour${widget.activity.totalMinutesDuration ~/ 60 == 1 ? '' : 's'}, ' : ''}${widget.activity.totalMinutesDuration % 60} minute${widget.activity.totalMinutesDuration % 60 == 1 ? '' : 's'}',
                 style: greyLabelStyle,
               ),
             SizedBox(width: 10),
@@ -2382,13 +2567,12 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
 
 class TrainingDayPreviewCard extends StatelessWidget {
   final TrainingDay trainingDay;
-  TrainingDayPreviewCard(this.trainingDay);
+  final List<String?> repRanges;
+  TrainingDayPreviewCard(this.trainingDay, this.repRanges);
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.8));
     final greyLabelStyle = theme.textTheme.labelSmall!
@@ -2471,9 +2655,20 @@ class TrainingDayPreviewCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  trailing: Text(
-                    '${trainingDay.setsPerMuscleGroup[index]} sets',
-                    style: greyLabelStyle,
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('${trainingDay.setsPerMuscleGroup[index]} sets',
+                          style: greyLabelStyle),
+                      if (repRanges.isNotEmpty &&
+                          repRanges.length > index &&
+                          repRanges[index] != null)
+                        SizedBox(height: 3),
+                      if (repRanges.isNotEmpty &&
+                          repRanges.length > index &&
+                          repRanges[index] != null)
+                        Text('${repRanges[index]}', style: greyLabelStyle),
+                    ],
                   ),
                 ),
               ],
@@ -2847,50 +3042,6 @@ class _CommentsWindowState extends State<CommentsWindow>
     }
     return commentUser;
   }
-
-  Future<User?> getUserDataFromFirestore(
-      String username, MyAppState appState) async {
-    try {
-      User visitedUser = appState.visitedUsers.firstWhere(
-          (element) => element.username == username,
-          orElse: () => User(username: '', email: '', uid: ''));
-      if (visitedUser.username.isNotEmpty) {
-        return visitedUser;
-      }
-      DocumentReference userRef =
-          FirebaseFirestore.instance.collection('users').doc(username);
-      DocumentSnapshot snapshot = await userRef.get();
-      if (snapshot.exists) {
-        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
-        User newUser = User(
-            username: username,
-            email: userData['email'] ?? '',
-            uid: userData['uid'] ?? '',
-            userGymId: userData['userGymId'] ?? '',
-            favoritesString: userData['favoritesString'] ?? '',
-            profileName: userData['profileName'] ?? '',
-            profileDescription: userData['profileDescription'] ?? '');
-        newUser.profilePictureUrl =
-            userData['profilePictureUrl']; // Could be null
-        newUser.followers = (userData['followers'] ?? []).cast<String>();
-        newUser.following = (userData['following'] ?? []).cast<String>();
-        List<dynamic> activityListJson = userData['activities'] ?? [];
-        newUser.activities = activityListJson
-            .map((e) => Activity.fromJson(json.decode(e)))
-            .toList();
-        newUser.splitJson = userData['split']; // Could be null
-        newUser.initializeProfilePicData();
-        appState.visitedUsers.add(newUser);
-        return newUser;
-      } else {
-        print('User $username not found');
-        return null;
-      }
-    } catch (e) {
-      print('ERROR - User $username not found: $e');
-      return null;
-    }
-  }
 }
 
 void _showLikes(BuildContext context, MyAppState appState, User author,
@@ -3081,50 +3232,6 @@ class _LikesWindowState extends State<LikesWindow>
       likesUser = await getUserDataFromFirestore(likesUsername, appState);
     }
     return likesUser;
-  }
-
-  Future<User?> getUserDataFromFirestore(
-      String username, MyAppState appState) async {
-    try {
-      User visitedUser = appState.visitedUsers.firstWhere(
-          (element) => element.username == username,
-          orElse: () => User(username: '', email: '', uid: ''));
-      if (visitedUser.username.isNotEmpty) {
-        return visitedUser;
-      }
-      DocumentReference userRef =
-          FirebaseFirestore.instance.collection('users').doc(username);
-      DocumentSnapshot snapshot = await userRef.get();
-      if (snapshot.exists) {
-        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
-        User newUser = User(
-            username: username,
-            email: userData['email'] ?? '',
-            uid: userData['uid'] ?? '',
-            userGymId: userData['userGymId'] ?? '',
-            favoritesString: userData['favoritesString'] ?? '',
-            profileName: userData['profileName'] ?? '',
-            profileDescription: userData['profileDescription'] ?? '');
-        newUser.profilePictureUrl =
-            userData['profilePictureUrl']; // Could be null
-        newUser.followers = (userData['followers'] ?? []).cast<String>();
-        newUser.following = (userData['following'] ?? []).cast<String>();
-        List<dynamic> activityListJson = userData['activities'] ?? [];
-        newUser.activities = activityListJson
-            .map((e) => Activity.fromJson(json.decode(e)))
-            .toList();
-        newUser.splitJson = userData['split']; // Could be null
-        newUser.initializeProfilePicData();
-        appState.visitedUsers.add(newUser);
-        return newUser;
-      } else {
-        print('User $username not found');
-        return null;
-      }
-    } catch (e) {
-      print('ERROR - User $username not found: $e');
-      return null;
-    }
   }
 }
 

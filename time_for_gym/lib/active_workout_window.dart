@@ -1602,8 +1602,9 @@ class _ActiveWorkoutCompletionPageState
     extends State<ActiveWorkoutCompletionPage> {
   late TextEditingController _liftTitleController;
   TextEditingController _liftDescriptionController = TextEditingController();
-  List<String> postOptions = ['Your followers', 'Only you'];
-  String selectedPostOption = 'Your followers';
+  late String yourFollowersOrFriends;
+  late List<String> postOptions;// = ['Your followers', 'Only you'];
+  late String selectedPostOption;// = 'Your followers';
   String? imageErrorText;
   String? pickedFilePath;
   final ImagePicker _picker = ImagePicker();
@@ -1632,6 +1633,10 @@ class _ActiveWorkoutCompletionPageState
                     : (hour < 21
                         ? 'Evening $workoutName'
                         : 'Night $workoutName'))));
+
+  yourFollowersOrFriends = widget.appState.currentUser.onlyFriendsCanViewPosts ? 'Your friends' : 'Your followers';
+  postOptions = [yourFollowersOrFriends, 'Only you'];
+  selectedPostOption = yourFollowersOrFriends;
   }
 
   @override
@@ -1872,13 +1877,6 @@ class _ActiveWorkoutCompletionPageState
                       padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // setState(() {
-                          //   if (!isSelected) {
-                          //     selectedPostOption = option;
-                          //   } else {
-                          //     selectedPostOption = 'None';
-                          //   }
-                          // });
                         },
                         style: ButtonStyle(
                             backgroundColor: resolveColor(
@@ -1894,8 +1892,6 @@ class _ActiveWorkoutCompletionPageState
                           option,
                           style: titleStyle,
                         ),
-                        // icon: Icon(Icons.check,
-                        //     color: theme.colorScheme.onBackground, size: 16),
                       ),
                     );
                   } else {
@@ -2089,7 +2085,8 @@ class _ActiveWorkoutCompletionPageState
             prsHit: appState.activeWorkout!.prMessages.values.isEmpty
                 ? null
                 : appState.activeWorkout!.prMessages.values.toList(),
-            gym: appState.userGym?.name));
+            gym: appState.userGym?.name,
+            repRanges: getRepRanges(appState)));
     // });
     await appState.storeDataInFirestore();
     _showSnackBar();
@@ -2098,6 +2095,45 @@ class _ActiveWorkoutCompletionPageState
       appState.reloadFriendsPage = true;
       appState.notifyTheListeners();
     }
+  }
+
+  List<String?> getRepRanges(MyAppState appState) {
+    List<String?> repRanges = [];
+    for (int i = 0;
+        i < appState.activeWorkout!.trainingDay.muscleGroups.length;
+        i++) {
+      int min = 9999;
+      int max = -1;
+      Exercise exercise = getExercise(i, appState.activeWorkout!.trainingDay);
+      for (int j = 0; j < exercise.splitRepsPerSet.length; j++) {
+        min = math.min(exercise.splitRepsPerSet[j], min);
+        max = math.max(exercise.splitRepsPerSet[j], max);
+      }
+      if (max == -1) {
+        // No data
+        repRanges.add(null);
+      } else if (min == max) {
+        // Only 1 value
+        repRanges.add('$max reps');
+      } else {
+        // More than 1 value
+        repRanges.add('$min-$max reps');
+      }
+    }
+    return repRanges;
+  }
+
+  Exercise getExercise(int i, TrainingDay trainingDay) {
+    Exercise exercise =
+        widget.appState.muscleGroups[trainingDay.muscleGroups[i]]![
+            widget.appState.splitDayExerciseIndices[trainingDay.dayOfWeek][i]];
+    if (exercise.name != trainingDay.exerciseNames[i]) {
+      print("ERROR - exercise name isn't same as exercise index");
+      exercise = widget.appState.muscleGroups[trainingDay.muscleGroups[0]]!
+          .firstWhere(
+              (element) => element.name == trainingDay.exerciseNames[0]);
+    }
+    return exercise;
   }
 
   Future<void> addPicture(bool fromGallery) async {

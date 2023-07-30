@@ -971,7 +971,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                 ),
               ],
             ),
-            if (appState.activeWorkout == null)
+            if (appState.activeWorkout == null && split.trainingDays[widget.dayIndex].muscleGroups.isNotEmpty)
               Positioned(
                 bottom: 10,
                 left: 40,
@@ -1661,7 +1661,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                     picture: null,
                     private: false,
                     prsHit: null,
-                    gym: appState.userGym?.name));
+                    gym: appState.userGym?.name,
+                    repRanges: []));
             appState.storeDataInFirestore();
           }
           currentExercise.userOneRepMax = newOneRepMax;
@@ -1814,7 +1815,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                   picture: null,
                   private: false,
                   prsHit: null,
-                  gym: appState.userGym?.name));
+                  gym: appState.userGym?.name,
+                  repRanges: []));
           appState.storeDataInFirestore();
         }
 

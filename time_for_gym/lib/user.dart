@@ -218,6 +218,7 @@ class User {
   ImageProvider? profilePicture;
   List<Activity> activities = [];
   ActiveWorkout? workout;
+  bool onlyFriendsCanViewPosts = false;
 
   final ImagePicker _picker = ImagePicker();
 }

@@ -16,7 +16,8 @@ class Activity {
       required this.picture,
       required this.private,
       required this.prsHit,
-      required this.gym});
+      required this.gym,
+      required this.repRanges});
 
   @override
   String toString() {
@@ -38,6 +39,7 @@ class Activity {
       'private': private,
       'prsHit': prsHit,
       'gym': gym,
+      'repRanges': repRanges,
     };
   }
 
@@ -65,6 +67,7 @@ class Activity {
           ? List<String>.from(json['prsHit'])
           : null, // prsHit could be null
       gym: json['gym'], // Could be null
+      repRanges: List<String?>.from(json['repRanges'] ?? []),
     );
   }
 
@@ -82,4 +85,5 @@ class Activity {
   bool? private;
   List<String>? prsHit;
   String? gym;
+  List<String?> repRanges;
 }

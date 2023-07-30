@@ -1,9 +1,9 @@
-import 'dart:convert';
+// import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:time_for_gym/activity.dart';
+// import 'package:time_for_gym/activity.dart';
 // import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/main.dart';
 // import 'package:time_for_gym/split.dart';
@@ -183,48 +183,5 @@ class _SearchFriendsPageState extends State<SearchFriendsPage> {
     );
   }
 
-  Future<User?> getUserDataFromFirestore(
-      String username, MyAppState appState) async {
-    try {
-      User visitedUser = appState.visitedUsers.firstWhere(
-          (element) => element.username == username,
-          orElse: () => User(username: '', email: '', uid: ''));
-      if (visitedUser.username.isNotEmpty) {
-        return visitedUser;
-      }
-
-      DocumentReference userRef =
-          FirebaseFirestore.instance.collection('users').doc(username);
-      DocumentSnapshot snapshot = await userRef.get();
-      if (snapshot.exists) {
-        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
-        User newUser = User(
-            username: username,
-            email: userData['email'] ?? '',
-            uid: userData['uid'] ?? '',
-            userGymId: userData['userGymId'] ?? '',
-            favoritesString: userData['favoritesString'] ?? '',
-            profileName: userData['profileName'] ?? '',
-            profileDescription: userData['profileDescription'] ?? '');
-        newUser.profilePictureUrl =
-            userData['profilePictureUrl']; // Could be null
-        newUser.followers = (userData['followers'] ?? []).cast<String>();
-        newUser.following = (userData['following'] ?? []).cast<String>();
-        List<dynamic> activityListJson = userData['activities'] ?? [];
-        newUser.activities = activityListJson
-            .map((e) => Activity.fromJson(json.decode(e)))
-            .toList();
-        newUser.splitJson = userData['split']; // Could be null
-        newUser.initializeProfilePicData();
-        appState.visitedUsers.add(newUser);
-        return newUser;
-      } else {
-        print('User $username not found');
-        return null;
-      }
-    } catch (e) {
-      print('ERROR - User $username not found: $e');
-      return null;
-    }
-  }
+  
 }

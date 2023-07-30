@@ -398,6 +398,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       currentUser.following = (userData['following'] ?? []).cast<String>();
       currentUser.profileName = userData['profileName'] ?? '';
       currentUser.profileDescription = userData['profileDescription'] ?? '';
+      currentUser.onlyFriendsCanViewPosts =
+          userData['onlyFriendsCanViewPosts'] ?? false;
 
       List<dynamic> activityListJson = userData['activities'] ?? [];
       currentUser.activities = activityListJson
@@ -465,6 +467,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       'profileName': currentUser.profileName,
       'profileDescription': currentUser.profileDescription,
       'activities': currentUser.activities.map((e) => json.encode(e.toJson())),
+      'onlyFriendsCanViewPosts': currentUser.onlyFriendsCanViewPosts,
       // 'activeWorkout': currentUser.workout?.toJson(), // Could be null
     };
 
@@ -2649,8 +2652,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         //     'Resting • ${widget.workout.timersSecondsLeft[index]} seconds left';
         print(formatSecondsString(activeWorkout!.timersSecondsLeft[index]));
         activeWorkout!.timers[index] = Timer(Duration(seconds: 1), () {
-          if (activeWorkout!.timersSecondsLeft[index] != null &&
-              activeWorkout!.timersSecondsLeft[index] != 0) {
+          if (activeWorkout?.timersSecondsLeft[index] != null &&
+              activeWorkout?.timersSecondsLeft[index] != 0) {
             activeWorkout!.timersSecondsLeft[index] =
                 activeWorkout!.timersSecondsLeft[index]! - 1;
           }
@@ -4678,5 +4681,51 @@ String formatSecondsString(int? seconds) {
       // Remove ', ' at end
       return '$minutesPart';
     }
+  }
+}
+
+Future<User?> getUserDataFromFirestore(
+    String username, MyAppState appState) async {
+  try {
+    User visitedUser = appState.visitedUsers.firstWhere(
+        (element) => element.username == username,
+        orElse: () => User(username: '', email: '', uid: ''));
+    if (visitedUser.username.isNotEmpty) {
+      return visitedUser;
+    }
+    DocumentReference userRef =
+        FirebaseFirestore.instance.collection('users').doc(username);
+    DocumentSnapshot snapshot = await userRef.get();
+    if (snapshot.exists) {
+      Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>;
+      User newUser = User(
+          username: username,
+          email: userData['email'] ?? '',
+          uid: userData['uid'] ?? '',
+          userGymId: userData['userGymId'] ?? '',
+          favoritesString: userData['favoritesString'] ?? '',
+          profileName: userData['profileName'] ?? '',
+          profileDescription: userData['profileDescription'] ?? '');
+      newUser.profilePictureUrl =
+          userData['profilePictureUrl']; // Could be null
+      newUser.followers = (userData['followers'] ?? []).cast<String>();
+      newUser.following = (userData['following'] ?? []).cast<String>();
+      List<dynamic> activityListJson = userData['activities'] ?? [];
+      newUser.activities = activityListJson
+          .map((e) => Activity.fromJson(json.decode(e)))
+          .toList();
+      newUser.splitJson = userData['split']; // Could be null
+      newUser.initializeProfilePicData();
+      newUser.onlyFriendsCanViewPosts =
+          userData['onlyFriendsCanViewPosts'] ?? false;
+      appState.visitedUsers.add(newUser);
+      return newUser;
+    } else {
+      print('User $username not found');
+      return null;
+    }
+  } catch (e) {
+    print('ERROR - User $username not found: $e');
+    return null;
   }
 }
