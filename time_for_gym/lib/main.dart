@@ -7,7 +7,7 @@ import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:flutter/scheduler.dart';
 // import 'package:flutter_gif/flutter_gif.dart';
 // import 'package:google_maps_webservice/places.dart';
@@ -15,8 +15,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:time_for_gym/active_workout.dart';
+import 'package:time_for_gym/active_workout_window.dart';
 import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/followers_page.dart';
 import 'package:time_for_gym/friends_page.dart';
@@ -38,6 +40,8 @@ import 'package:connectivity/connectivity.dart';
 // import 'package:google_maps_webservice/places.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image/image.dart' as img;
+import 'package:timezone/data/latest.dart' as tz;
+// import 'package:timezone/timezone.dart' as tz;
 
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/gym.dart';
@@ -61,8 +65,48 @@ import 'package:time_for_gym/user.dart';
 // late final FirebaseAuth auth;
 late bool isAuthenticated;
 late auth.User authUser;
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
+
+// /// Streams are created so that app can respond to notification-related events
+// /// since the plugin is initialised in the `main` function
+// final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
+//     StreamController<ReceivedNotification>.broadcast();
+
+// final StreamController<String?> selectNotificationStream =
+//     StreamController<String?>.broadcast();
+// // const String portName = 'notification_send_port';
+
+// class ReceivedNotification {
+//   ReceivedNotification({
+//     required this.id,
+//     required this.title,
+//     required this.body,
+//     required this.payload,
+//   });
+
+//   final int id;
+//   final String? title;
+//   final String? body;
+//   final String? payload;
+// }
+
+// const String navigationActionId = 'id_3';
+
+// @pragma('vm:entry-point')
+// void notificationTapBackground(NotificationResponse notificationResponse) {
+//   // ignore: avoid_print
+//   print('notification(${notificationResponse.id}) action tapped: '
+//       '${notificationResponse.actionId} with'
+//       ' payload: ${notificationResponse.payload}');
+//   if (notificationResponse.input?.isNotEmpty ?? false) {
+//     // ignore: avoid_print
+//     print(
+//         'notification action tapped with input: ${notificationResponse.input}');
+//   }
+// }
+
+// const notificationPlatForm = MethodChannel('com.example.timeForGym.playSplitTimer');
 
 void main() async {
   // GoogleMapsFlutter.init('YOUR_API_KEY');
@@ -92,20 +136,70 @@ void main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  var initializationSettingsAndroid =
-      AndroidInitializationSettings('app_icon');
-  var initializationSettingsIOS = DarwinInitializationSettings();
-  var initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+  // var initializationSettingsAndroid =
+  //     AndroidInitializationSettings('app_icon');
+  // var initializationSettingsIOS = DarwinInitializationSettings(
+  //   onDidReceiveLocalNotification:
+  //       (int id, String? title, String? body, String? payload) async {
+  //     didReceiveLocalNotificationStream.add(
+  //       ReceivedNotification(
+  //         id: id,
+  //         title: title,
+  //         body: body,
+  //         payload: payload,
+  //       ),
+  //     );
+  //   },
+  // );
+  // final DarwinInitializationSettings initializationSettingsDarwin =
+  //     DarwinInitializationSettings(
+  //   requestSoundPermission: true,
+  //   requestBadgePermission: true,
+  //   requestAlertPermission: true,
+  //   onDidReceiveLocalNotification:
+  //       (int id, String? title, String? body, String? payload) async {
+  //     didReceiveLocalNotificationStream.add(
+  //       ReceivedNotification(
+  //         id: id,
+  //         title: title,
+  //         body: body,
+  //         payload: payload,
+  //       ),
+  //     );
+  //   },
+  // );
+  // var initializationSettings = InitializationSettings(
+  //     // android: initializationSettingsAndroid,
+  //     iOS: initializationSettingsDarwin);
 
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveBackgroundNotificationResponse: (notificationResponse) => handleNotificationAction, // This is the callback when the user interacts with the notification.
-  );
+  // await flutterLocalNotificationsPlugin.initialize(
+  //   initializationSettings,
+  //   onDidReceiveNotificationResponse:
+  //       (NotificationResponse notificationResponse) {
+  //     switch (notificationResponse.notificationResponseType) {
+  //       case NotificationResponseType.selectedNotification:
+  //         selectNotificationStream.add(notificationResponse.payload);
+  //         break;
+  //       case NotificationResponseType.selectedNotificationAction:
+  //         if (notificationResponse.actionId == navigationActionId) {
+  //           selectNotificationStream.add(notificationResponse.payload);
+  //         }
+  //         break;
+  //     }
+  //   },
+  //   onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  // );
+  tz.initializeTimeZones();
 
   // await auth.useAuthEmulator('localhost', 9099);
 
   runApp(MyApp());
+}
+
+Future<void> onReceivedNotificationResponse(var message) async {
+  // This callback is triggered when the user interacts with the notification.
+  // You can handle the action based on the payload of the notification.
+  // For example, you can navigate to a specific screen in your app or perform some other action.
 }
 
 class MyApp extends StatelessWidget with WidgetsBindingObserver {
@@ -139,10 +233,10 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
       },
     );
 
-    Color backgroundColor = Color.fromRGBO(16, 16, 16, 1);
-    Color container1 = Color.fromRGBO(30, 30, 30, 1);
-    Color container2 = Color.fromRGBO(40, 40, 40, 1);
-    Color container3 = Color.fromRGBO(50, 50, 50, 1);
+    Color backgroundColor = Color.fromRGBO(10, 10, 10, 1);
+    Color container1 = Color.fromRGBO(23, 23, 23, 1);
+    Color container2 = Color.fromRGBO(30, 30, 30, 1);
+    Color container3 = Color.fromRGBO(40, 40, 40, 1);
 
     ThemeData theme = ThemeData(
         useMaterial3: true,
@@ -189,14 +283,18 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
 }
 
 class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
-  // late SharedPreferences _prefs;
+  late SharedPreferences prefs;
   // String _favoritesString = '';
   // String _currentSplitString = '';
   // String _splitDayExerciseIndicesString = '';
 
+  // Local notifications
+  // LocalNotificationTimerState localNotificationTimerState =
+  //     LocalNotificationTimerState();
+
   // Google AdMob
-  late BannerAd _bannerAd;
-  late Widget bannerAdWidget;
+  // late BannerAd _bannerAd;
+  // late Widget bannerAdWidget;
 
   late String authUserId;
   String? authUsername;
@@ -255,7 +353,8 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     visitedUsers.add(currentUser);
     print('loading $currentUser');
     print('authentication user id: $authUserId');
-    initAds();
+    prefs = await SharedPreferences.getInstance();
+    // initAds();
     // notifyListeners();
     // await initializeUserID(); // Need user id for muscle group exercise user popularity data
     await getDataFromFirestore(); // Need to initialize firestore strings to initialize favorites in initializeMuscleGroups
@@ -312,6 +411,27 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         currentSplit = Split.fromJson(splitMap);
         makeNewSplit = false;
         print("initialized split: $currentSplit");
+
+        // Shared preferences has priority
+        if (prefs.containsKey('activeWorkout') && currentSplit != null) {
+          currentUser.workout = ActiveWorkout.fromJson(
+              json.decode(prefs.getString('activeWorkout')!), currentSplit);
+          activeWorkout = currentUser.workout;
+          activeWorkoutBannerPageController =
+              PageController(initialPage: activeWorkout!.pageIndex);
+        } else {
+          String? workoutJson = userData['activeWorkout'];
+          if (workoutJson != null && currentSplit != null) {
+            currentUser.workout =
+                ActiveWorkout.fromJson(json.decode(workoutJson), currentSplit);
+            activeWorkout = currentUser.workout;
+            activeWorkoutBannerPageController =
+                PageController(initialPage: activeWorkout!.pageIndex);
+            prefs.setString(
+                'activeWorkout', json.encode(currentUser.workout!.toJson()));
+            userRef.update({'activeWorkout': null}); // Remove from firebase
+          }
+        }
       } else {
         print("No split saved");
       }
@@ -321,7 +441,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void storeDataInFirestore() {
+  Future<void> storeDataInFirestore() async {
     // Create a reference to the user document
     DocumentReference userRef =
         FirebaseFirestore.instance.collection('users').doc(authUsername);
@@ -345,10 +465,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
       'profileName': currentUser.profileName,
       'profileDescription': currentUser.profileDescription,
       'activities': currentUser.activities.map((e) => json.encode(e.toJson())),
+      // 'activeWorkout': currentUser.workout?.toJson(), // Could be null
     };
 
     // Set the user data to the document
-    userRef
+    await userRef
         .update(userData)
         .then((value) => print('User data stored successfully'))
         .catchError((error) => print('Failed to store user data: $error'));
@@ -376,25 +497,25 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         366, 382, img.ColorInt8.rgba(150, 150, 150, 255));
   }
 
-  void initAds() {
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/2934735716',
-      size: AdSize.banner,
-      request: AdRequest(),
-      listener: BannerAdListener(),
-    );
-    _bannerAd.load();
-    bannerAdWidget = buildBannerAd();
-  }
+  // void initAds() {
+  //   _bannerAd = BannerAd(
+  //     adUnitId: 'ca-app-pub-3940256099942544/2934735716',
+  //     size: AdSize.banner,
+  //     request: AdRequest(),
+  //     listener: BannerAdListener(),
+  //   );
+  //   _bannerAd.load();
+  //   bannerAdWidget = buildBannerAd();
+  // }
 
-  Widget buildBannerAd() {
-    return Container(
-      alignment: Alignment.center,
-      width: _bannerAd.size.width.toDouble(),
-      height: _bannerAd.size.height.toDouble(),
-      child: AdWidget(ad: _bannerAd),
-    );
-  }
+  // Widget buildBannerAd() {
+  //   return Container(
+  //     alignment: Alignment.center,
+  //     width: _bannerAd.size.width.toDouble(),
+  //     height: _bannerAd.size.height.toDouble(),
+  //     child: AdWidget(ad: _bannerAd),
+  //   );
+  // }
 
   Future<void> initGyms() async {
     // print('5 ${databaseRef.child('gymData').once()}');
@@ -480,11 +601,11 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   //   WidgetsBinding.instance.addObserver(this);
   // }
 
-  @override
-  void dispose() {
-    _bannerAd.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   // _bannerAd.dispose();
+  //   super.dispose();
+  // }
 
   // @override
   // void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -523,6 +644,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   Map<String, List<Exercise>> muscleGroups =
       <String, List<Exercise>>{}; // Map<String, List<Exercise>>
+  Map<String, bool> areMuscleGroupImagesInitialized = {};
   var gymCount = -1;
   var maxCapacity = 200;
 
@@ -811,6 +933,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     FollowersPage(null, false),
     OtherUserProfilePage(null, true),
   ];
+  bool reloadFriendsPage = false;
 
   bool isHomePageSearchFieldFocused = false;
   Map<String, Gym> gyms = <String, Gym>{};
@@ -833,6 +956,9 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   // String userGymId = '';
   int showAdBeforeExerciseCounter =
       2; // Number of exercises before ad pops up (-1)
+
+  ActiveWorkout? activeWorkout;
+  late PageController activeWorkoutBannerPageController;
 
   void setSplit(Split split) {
     currentSplit = split;
@@ -1154,6 +1280,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         if (!start) {
           exercises.sort(); // Sort alphabetically
           newMap.putIfAbsent(muscleGroup, () => exercises);
+          initializeMuscleGroupImageExists(muscleGroup);
           // print(newMap);
           exercises = <Exercise>[]; // Allocate memory for new list of exercises
           // print(newMap);
@@ -1424,30 +1551,31 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
         // Would make 3 different versions of "Squat", with 3 different mainMuscleGroups. Since mainMuscleGroup is only used for finding an exercise, this does not cause any issues.
         exercise = Exercise(
-          name: attributes[0],
-          description: attributes[1],
-          musclesWorked: musclesWorked,
-          musclesWorkedActivation: musclesWorkedActivation,
-          identifier: exerciseIdentifer,
-          // videoLink: attributes[3],
-          videoLink: videoLink,
-          // waitMultiplier: double.parse(attributes[4]),
-          waitMultiplier: waitMultiplier,
-          mainMuscleGroup: muscleGroup,
-          starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
-          // Temporarily all image must be gifs and images have same name as exercise name
-          imageUrl:
-              "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
-          userRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[0],
-          resourcesRequired: attributes[5].split(","),
-          machineAltName: machineAltName,
-          userOneRepMax: userOneRepMax,
-          isAccessoryMovement: int.parse(attributes[6]) != 0,
-          splitWeightAndReps: userSplitWeightAndReps,
-          splitWeightPerSet: userSplitWeightPerSet,
-          splitRepsPerSet: userSplitRepsPerSet,
-          userOneRepMaxHistory: userOneRepMaxHistory,
-        );
+            name: attributes[0],
+            description: attributes[1],
+            musclesWorked: musclesWorked,
+            musclesWorkedActivation: musclesWorkedActivation,
+            identifier: exerciseIdentifer,
+            // videoLink: attributes[3],
+            videoLink: videoLink,
+            // waitMultiplier: double.parse(attributes[4]),
+            waitMultiplier: waitMultiplier,
+            mainMuscleGroup: muscleGroup,
+            starRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[1]!,
+            // Temporarily all image must be gifs and images have same name as exercise name
+            imageUrl:
+                "${url.replaceFirst("ExerciseData.txt", "exercise_pictures/")}${attributes[0]}.gif",
+            userRating: userRatingAndAverageRatingAnd1RMAndWeightAndReps[0],
+            resourcesRequired: attributes[5].split(","),
+            machineAltName: machineAltName,
+            userOneRepMax: userOneRepMax,
+            isAccessoryMovement: int.parse(attributes[6]) != 0,
+            splitWeightAndReps: userSplitWeightAndReps,
+            splitWeightPerSet: userSplitWeightPerSet,
+            splitRepsPerSet: userSplitRepsPerSet,
+            userOneRepMaxHistory: userOneRepMaxHistory);
+
+        initializeExerciseImageExists(exercise);
 
         // // If exercise already in favorites, no need to allocate memory for a new exercise
         // if (favoriteExercises.contains(exercise)){
@@ -1463,6 +1591,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // print(exercises);
 
     newMap.putIfAbsent(muscleGroup, () => exercises);
+    initializeMuscleGroupImageExists(muscleGroup);
 
     print("Muscle group map: $newMap");
 
@@ -1472,6 +1601,16 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     // print('JSON data written to file: MuscleGroupMap.json');
 
     return newMap;
+  }
+
+  void initializeExerciseImageExists(Exercise exercise) async {
+    exercise.imageExists =
+        await checkAssetExists("exercise_pictures/${exercise.name}_m.gif");
+  }
+
+  void initializeMuscleGroupImageExists(String muscleGroup) async {
+    areMuscleGroupImagesInitialized[muscleGroup] =
+        await checkAssetExists("muscle_group_pictures/$muscleGroup.jpeg");
   }
 
 // Function to download and create a container with the image from a URL
@@ -2403,6 +2542,145 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
     notifyListeners();
   }
+
+  void startWorkout(ActiveWorkout workout) {
+    activeWorkout = workout;
+    activeWorkoutBannerPageController = PageController();
+    notifyListeners();
+    prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
+  }
+
+  void cancelWorkout() {
+    activeWorkout = null;
+    activeWorkoutBannerPageController = PageController();
+    notifyListeners();
+    prefs.remove('activeWorkout');
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(authUsername);
+    userRef.update({'activeWorkout': null}); // Remove from firebase
+  }
+
+  void updateWorkoutBannerPageIndex(int index) {
+    if (activeWorkout != null) {
+      activeWorkout!.pageIndex = index;
+      activeWorkoutBannerPageController.jumpToPage(index);
+      notifyListeners();
+      prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
+    }
+  }
+
+  void updateWorkoutBannerAtIndex(int index, String updated) {
+    if (activeWorkout != null) {
+      activeWorkout!.bannerTitles[index] = updated;
+      notifyListeners();
+      prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
+    }
+  }
+
+  void updateAllWorkoutTimerBanners() {
+    if (activeWorkout != null) {
+      for (int i = 0; i < activeWorkout!.bannerTitles.length; i++) {
+        if (activeWorkout!.bannerTitles[i].startsWith('Resting')) {
+          // Don't change a complete timer's message
+          if (activeWorkout!.bannerTitles[i] != 'Timer complete') {
+            activeWorkout!.bannerTitles[i] = activeWorkout!
+                        .timersSecondsLeft[i] !=
+                    0
+                ? 'Resting • ${formatSecondsString(activeWorkout!.timersSecondsLeft[i])}'
+                : 'Timer complete';
+          }
+        }
+      }
+      notifyListeners();
+      prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
+    }
+  }
+
+  void stopExistingTimers(int index) {
+    if (activeWorkout != null) {
+      int left = index - 1;
+      int right = index + 1;
+      while (left >= 0) {
+        // Complete timer
+        if (activeWorkout!.areBannersAndTimersInitialized &&
+            activeWorkout!.bannerTitles[left].startsWith('Resting') &&
+            activeWorkout!.timersSecondsLeft[left] != null &&
+            activeWorkout!.timersSecondsLeft[left]! > 0) {
+          activeWorkout!.timersSecondsLeft[left] = 0;
+          cancelTimerAtIndex(left);
+          updateWorkoutBannerAtIndex(left, 'Timer complete');
+          break;
+        }
+        left--;
+      }
+      while (right < activeWorkout!.timersSecondsLeft.length) {
+        // Reset timer
+        if (activeWorkout!.areBannersAndTimersInitialized &&
+            activeWorkout!.bannerTitles[right].startsWith('Resting') &&
+            activeWorkout!.timersSecondsLeft[right] != null &&
+            activeWorkout!.timersSecondsLeft[right]! > 0) {
+          activeWorkout!.timersSecondsLeft[right] = null;
+          cancelTimerAtIndex(right);
+          updateWorkoutBannerAtIndex(right,
+              'Resting • ${formatSecondsString(activeWorkout!.restTimesInSeconds[right])}');
+          break;
+        }
+        right++;
+      }
+      prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
+    }
+  }
+
+  void decrementTimer(int index) {
+    if (activeWorkout != null) {
+      if (activeWorkout!.timersSecondsLeft[index] == null) {
+        print('Timer reset');
+        updateWorkoutBannerAtIndex(index, 'Timer reset');
+        // widget.workout.bannerTitles[index] = 'Timer reset';
+      } else if (activeWorkout!.timersSecondsLeft[index] != null &&
+          activeWorkout!.timersSecondsLeft[index]! <= 0) {
+        print('Timer complete');
+        // widget.workout.bannerTitles[index] = 'Timer complete';
+        updateWorkoutBannerAtIndex(index, 'Timer complete');
+      } else {
+        updateWorkoutBannerAtIndex(index,
+            'Resting • ${formatSecondsString(activeWorkout!.timersSecondsLeft[index])}');
+        // widget.workout.bannerTitles[index] =
+        //     'Resting • ${widget.workout.timersSecondsLeft[index]} seconds left';
+        print(formatSecondsString(activeWorkout!.timersSecondsLeft[index]));
+        activeWorkout!.timers[index] = Timer(Duration(seconds: 1), () {
+          if (activeWorkout!.timersSecondsLeft[index] != null &&
+              activeWorkout!.timersSecondsLeft[index] != 0) {
+            activeWorkout!.timersSecondsLeft[index] =
+                activeWorkout!.timersSecondsLeft[index]! - 1;
+          }
+          decrementTimer(index);
+        });
+      }
+    }
+  }
+
+  void cancelTimerAtIndex(int index) {
+    while (activeWorkout != null &&
+        activeWorkout!.timers[index] != null &&
+        activeWorkout!.timers[index]!.isActive) {
+      activeWorkout?.timers[index]?.cancel();
+    }
+    activeWorkout?.timers[index] = null;
+    notifyListeners();
+  }
+
+  void notifyTheListeners() {
+    notifyListeners();
+  }
+
+  // void changeActiveWorkoutTitles(String title, String subtitle) {
+  //   activeWorkout?.bannerTitle = title;
+  //   activeWorkout?.bannerSubtitle = subtitle;
+  //   // notifyListeners();
+  // }
+
+  // Widget? activeWorkoutBannerWidget;
 }
 
 class MyHomePage extends StatefulWidget {
@@ -2848,10 +3126,167 @@ class _MyHomePageState extends State<MyHomePage> {
         throw UnimplementedError('No widget for ${appState.pageIndex}');
     }
     appState.bottomNavigationIndex = _bottomNavigationIndex;
+    appState.appPages[appState.pageIndex] = page;
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
-        body: page,
+        body: Stack(children: [
+          page,
+          // Active workout ongoing
+          if (appState.activeWorkout != null &&
+              appState.activeWorkout!.areBannersAndTimersInitialized)
+            // appState.activeWorkoutBannerWidget!
+            Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () {
+                  showActiveWorkoutWindow(
+                      context,
+                      appState,
+                      appState.activeWorkout!,
+                      appState.activeWorkout!.dayIndex);
+                },
+                child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                      color: appState.activeWorkout!.bannerTitles[
+                                  appState.activeWorkout!.pageIndex] !=
+                              'Complete Workout'
+                          ? Color.alphaBlend(
+                              theme.colorScheme.background.withOpacity(.87),
+                              theme.colorScheme.primary,
+                            ).withOpacity(.97)
+                          : theme.colorScheme.primary.withOpacity(.97),
+                      borderRadius: BorderRadius.circular(5)),
+                  padding: EdgeInsets.all(12.0),
+                  child: PageView(
+                    controller: appState.activeWorkoutBannerPageController,
+                    onPageChanged: (int index) {
+                      appState.activeWorkout!.pageIndex = index;
+                      if (appState
+                              .activeWorkout!.areBannersAndTimersInitialized &&
+                          appState.activeWorkout!.bannerTitles[index]
+                              .startsWith('Resting') &&
+                          appState.activeWorkout!.restTimesInSeconds[index] !=
+                              null &&
+                          appState.activeWorkout!.timersSecondsLeft[index] ==
+                              null) {
+                        // Start timer automatically
+                        appState.stopExistingTimers(index);
+                        appState.activeWorkout!.timersSecondsLeft[index] =
+                            appState.activeWorkout!.restTimesInSeconds[index]!;
+                        appState.decrementTimer(index);
+                      }
+                      appState.prefs.setString('activeWorkout',
+                          json.encode(appState.activeWorkout!.toJson()));
+                      if (appState.activeWorkout!.pageIndex >=
+                          appState.activeWorkout!.bannerTitles.length - 2) {
+                        appState.notifyTheListeners();
+                      }
+                    },
+                    children: [
+                      for (int i = 0;
+                          i < appState.activeWorkout!.bannerTitles.length;
+                          i++)
+                        ListTile(
+                          contentPadding: EdgeInsets.fromLTRB(4, 0, 4, 0),
+                          dense: true,
+                          visualDensity: VisualDensity(
+                              vertical: VisualDensity.minimumDensity,
+                              horizontal: VisualDensity.minimumDensity),
+                          minVerticalPadding: 0,
+                          titleAlignment: ListTileTitleAlignment.titleHeight,
+                          leading:
+                              appState.activeWorkout!.timersSecondsLeft[i] !=
+                                          null &&
+                                      appState.activeWorkout!
+                                              .restTimesInSeconds[i] !=
+                                          null
+                                  ? Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(0, 0, 2, 0),
+                                      child: TimerProgressIndicator(
+                                          fill: theme.colorScheme.primary,
+                                          background:
+                                              theme.colorScheme.onBackground,
+                                          percentCapacity: appState
+                                                      .activeWorkout!
+                                                      .restTimesInSeconds[i]! !=
+                                                  0
+                                              ? appState.activeWorkout!
+                                                      .timersSecondsLeft[i]! /
+                                                  appState.activeWorkout!
+                                                      .restTimesInSeconds[i]!
+                                              : 1.0,
+                                          size: 30,
+                                          strokeWidth: 4),
+                                    )
+                                  : null,
+                          title: Text(appState.activeWorkout!.bannerTitles[i],
+                              style: theme.textTheme.titleMedium!.copyWith(
+                                  color: theme.colorScheme.onBackground),
+                              textAlign: TextAlign.center),
+                          subtitle: Text(
+                              appState.activeWorkout!.bannerSubtitles[i],
+                              style: theme.textTheme.labelSmall!.copyWith(
+                                  color: theme.colorScheme.onBackground),
+                              textAlign: TextAlign.center),
+                          trailing: appState.activeWorkout!
+                                          .timersSecondsLeft[i] !=
+                                      null &&
+                                  appState.activeWorkout!
+                                          .restTimesInSeconds[i] !=
+                                      null
+                              ? GestureDetector(
+                                  onTap: () {
+                                    if (appState.activeWorkout!.timers[i] !=
+                                        null) {
+                                      // Pause
+                                      appState.cancelTimerAtIndex(i);
+                                    } else {
+                                      // Play
+                                      appState.decrementTimer(i);
+                                    }
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(),
+                                    child: Icon(
+                                        appState.activeWorkout!.timers[i] !=
+                                                null
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        color: theme.colorScheme.onBackground,
+                                        size: 30),
+                                  ))
+                              : null,
+                        ),
+                    ],
+                    // child: ListTile(
+                    //   dense: true,
+                    //   visualDensity: VisualDensity(
+                    //       vertical: VisualDensity.minimumDensity,
+                    //       horizontal: VisualDensity.minimumDensity),
+                    //   minVerticalPadding: 0,
+                    //   title: Text(
+                    //       appState.activeWorkout!
+                    //           .bannerTitles[appState.activeWorkout!.pageIndex],
+                    //       style: theme.textTheme.titleMedium!
+                    //           .copyWith(color: theme.colorScheme.onBackground),
+                    //       textAlign: TextAlign.center),
+                    //   subtitle: Text(
+                    //       appState.activeWorkout!.bannerSubtitles[
+                    //           appState.activeWorkout!.pageIndex],
+                    //       style: theme.textTheme.labelSmall!
+                    //           .copyWith(color: theme.colorScheme.onBackground),
+                    //       textAlign: TextAlign.center),
+                    // ),
+                  ),
+                ),
+              ),
+            ),
+        ]),
         bottomNavigationBar: SizedBox(
           height: 100,
           child: Column(
@@ -3470,6 +3905,35 @@ class CustomCircularProgressIndicator extends StatelessWidget {
   }
 }
 
+class TimerProgressIndicator extends StatelessWidget {
+  final double strokeWidth;
+  final double percentCapacity;
+  final double size;
+  final Color fill;
+  final Color background;
+
+  TimerProgressIndicator(
+      {this.strokeWidth = 10.0,
+      this.percentCapacity = 0.0,
+      this.size = 60.0,
+      required this.fill,
+      required this.background});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CircularProgressIndicator(
+        strokeWidth: strokeWidth,
+        value: percentCapacity,
+        valueColor: AlwaysStoppedAnimation<Color>(background),
+        backgroundColor: fill,
+      ),
+    );
+  }
+}
+
 class GymCrowdCard extends StatelessWidget {
   const GymCrowdCard({
     super.key,
@@ -3636,20 +4100,20 @@ int binarySearchExerciseList(List<Exercise> array, String targetName) {
   return -1;
 }
 
-class ImageContainer extends StatefulWidget {
+class ImageContainer extends StatelessWidget {
   ImageContainer({
     super.key,
-    required this.exerciseName,
+    required this.exercise,
   });
 
-  final String exerciseName;
+  final Exercise exercise;
 
-  @override
-  State<ImageContainer> createState() => _ImageContainerState();
-}
+//   @override
+//   State<ImageContainer> createState() => _ImageContainerState();
+// }
 
-class _ImageContainerState extends State<ImageContainer>
-    with TickerProviderStateMixin {
+// class _ImageContainerState extends State<ImageContainer>
+//     with TickerProviderStateMixin {
   // late FlutterGifController controller;
   // bool isImageInitialized = false;
 
@@ -3672,122 +4136,90 @@ class _ImageContainerState extends State<ImageContainer>
   // bool isImageInitialized = false;
   @override
   Widget build(BuildContext context) {
-    try {
-      return FutureBuilder(
-        future:
-            checkAssetExists("exercise_pictures/${widget.exerciseName}_m.gif"),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData && snapshot.data == true) {
-              //       return Image.asset(
-              //   "exercise_pictures/1_experimenting/${widget.exerciseName}_modified2.gif",
-              //   frameBuilder: (context, frame) {
-              //     // Set custom frame duration for each frame
-              //     final frameDuration = const Duration(milliseconds: 200); // Set your desired frame duration here
+    // try {
+    //   return FutureBuilder(
+    //     future:
+    //         checkAssetExists("exercise_pictures/${widget.exerciseName}_m.gif"),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.connectionState == ConnectionState.done) {
+    //         if (snapshot.hasData && snapshot.data == true) {
+    // );
+    return exercise.imageExists
+        ? Image.asset(
+            'exercise_pictures/${exercise.name}_m.gif',
+            fit: BoxFit.cover,
+          )
+        : Container(
+            color: Colors.grey[200],
+          );
+    //     } else {
+    //       print(('Failed to load ${widget.exerciseName} image'));
+    //       return Container(
+    //         color: Colors.grey[200],
+    //       );
+    //       // return Text('Failed to load image');
+    //     }
+    //   } else {
+    //     return CircularProgressIndicator();
+    //   }
+    // },
 
-              //     return Future.delayed(frameDuration, () => frame);
-              //   },
-              // );
-              // return GifImage(
-              //   repeat: ImageRepeat.repeat,
-              //   controller: controller,
-              //   image: AssetImage(
-              //       "exercise_pictures/1_experimenting/${widget.exerciseName}_modified2.gif"),
-              // );
-              return Image.asset(
-                  'exercise_pictures/${widget.exerciseName}_m.gif');
-              //   frameBuilder: (BuildContext context, Widget child, int? frame,
-              //       bool wasSynchronouslyLoaded) {
-              //     // Calculate custom duration based on the desired animation speed
-              //     const frameDuration = Duration(
-              //         milliseconds:
-              //             500); // Set your desired frame duration here
-              //     return AnimatedSwitcher(
-              //       duration: frameDuration,
-              //       switchInCurve: Curves.linear,
-              //       switchOutCurve: Curves.linear,
-              //       layoutBuilder:
-              //           (Widget? currentChild, List<Widget> previousChildren) {
-              //         return Stack(
-              //           alignment: Alignment.center,
-              //           children: <Widget>[
-              //             ...previousChildren,
-              //             if (currentChild != null) currentChild,
-              //           ],
-              //         );
-              //       },
-              //       child: child,
-              //     );
-              //   },
-              // );
-            } else {
-              print(('Failed to load ${widget.exerciseName} image'));
-              return Container(
-                color: Colors.grey[200],
-              );
-              // return Text('Failed to load image');
-            }
-          } else {
-            return CircularProgressIndicator();
-          }
-        },
+    // child: FutureBuilder<void>(
+    //   future: loadImageAsset(context),
+    //   builder: (context, snapshot) {
+    //     if (snapshot.connectionState == ConnectionState.done) {
+    //       if (snapshot.hasData == false) {
+    //         return Text('Failed to load image');
+    //       } else {
+    //         return Image.asset('exercise_pictures/${exercise.name}.gif');
+    //       }
+    //     } else {
+    //       return CircularProgressIndicator();
+    //     }
+    //   },
+    // ),
 
-        // child: FutureBuilder<void>(
-        //   future: loadImageAsset(context),
-        //   builder: (context, snapshot) {
-        //     if (snapshot.connectionState == ConnectionState.done) {
-        //       if (snapshot.hasData == false) {
-        //         return Text('Failed to load image');
-        //       } else {
-        //         return Image.asset('exercise_pictures/${exercise.name}.gif');
-        //       }
-        //     } else {
-        //       return CircularProgressIndicator();
-        //     }
-        //   },
-        // ),
+    // child: FutureBuilder(
+    //   future: _loadImage("assets/images/${exercise.name}.gif"),
+    //   builder: (BuildContext context,
+    //       AsyncSnapshot<ImageProvider<Object>> snapshot) {
+    //     if (snapshot.connectionState == ConnectionState.done) {
+    //       if (snapshot.hasError) {
+    //         print('Error loading image: ${snapshot.error}');
+    //         return Text('Failed to load image');
+    //       }
+    //       return Image(image: snapshot.data!);
+    //     } else {
+    //       return CircularProgressIndicator();
+    //     }
+    //   },),
 
-        // child: FutureBuilder(
-        //   future: _loadImage("assets/images/${exercise.name}.gif"),
-        //   builder: (BuildContext context,
-        //       AsyncSnapshot<ImageProvider<Object>> snapshot) {
-        //     if (snapshot.connectionState == ConnectionState.done) {
-        //       if (snapshot.hasError) {
-        //         print('Error loading image: ${snapshot.error}');
-        //         return Text('Failed to load image');
-        //       }
-        //       return Image(image: snapshot.data!);
-        //     } else {
-        //       return CircularProgressIndicator();
-        //     }
-        //   },),
-
-        // child: Image.asset("exercise_pictures/${exercise.name}.gif"),
-      );
-      // return Padding(
-      //   padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
-      //   child: FutureBuilder<ImageProvider<Object>>(
-      //     future: _loadImage(exercise.imageUrl),
-      //     builder: (BuildContext context,
-      //         AsyncSnapshot<ImageProvider<Object>> snapshot) {
-      //       if (snapshot.connectionState == ConnectionState.done) {
-      //         if (snapshot.hasError) {
-      //           print('Error loading image: ${snapshot.error}');
-      //           return Text('Failed to load image');
-      //         }
-      //         image = Image(image: snapshot.data!);
-      //         isImageInitialized = true;
-      //         return image;
-      //       } else {
-      //         return CircularProgressIndicator();
-      //       }
-      //     },
-      //   ),
-      // );
-    } catch (e) {
-      print('Failed to load image: $e');
-      return Text('Failed to load image');
-    }
+    // child: Image.asset("exercise_pictures/${exercise.name}.gif"),
+    // );
+    // return Padding(
+    //   padding: EdgeInsets.fromLTRB(50, 10, 50, 20),
+    //   child: FutureBuilder<ImageProvider<Object>>(
+    //     future: _loadImage(exercise.imageUrl),
+    //     builder: (BuildContext context,
+    //         AsyncSnapshot<ImageProvider<Object>> snapshot) {
+    //       if (snapshot.connectionState == ConnectionState.done) {
+    //         if (snapshot.hasError) {
+    //           print('Error loading image: ${snapshot.error}');
+    //           return Text('Failed to load image');
+    //         }
+    //         image = Image(image: snapshot.data!);
+    //         isImageInitialized = true;
+    //         return image;
+    //       } else {
+    //         return CircularProgressIndicator();
+    //       }
+    //     },
+    //   ),
+    // );
+    // } catch (e) {
+    //   print('Failed to load image: $e');
+    //   return Text('Failed to load image');
+    // }
   }
 }
 
@@ -3802,29 +4234,15 @@ class MuscleGroupImageContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      return FutureBuilder(
-        future: checkAssetExists("muscle_group_pictures/$muscleGroup.jpeg"),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData && snapshot.data == true) {
-              return Image.asset(
-                'muscle_group_pictures/$muscleGroup.jpeg',
-                fit: BoxFit.cover,
-              );
-            } else {
-              print('Failed to load image $muscleGroup');
-              return Container();
-            }
-          } else {
-            return CircularProgressIndicator();
-          }
-        },
-      );
-    } catch (e) {
-      print('Failed to load image: $e');
-      return Text('Failed to load image');
-    }
+    final MyAppState appState = context.watch<MyAppState>();
+    return appState.areMuscleGroupImagesInitialized[muscleGroup] == true
+        ? Image.asset(
+            'muscle_group_pictures/$muscleGroup.jpeg',
+            fit: BoxFit.cover,
+          )
+        : Container(
+            color: Colors.grey[200],
+          );
   }
 }
 
@@ -3982,68 +4400,283 @@ MaterialStateProperty<EdgeInsetsGeometry?> resolveButtonPaddingProperty(
   );
 }
 
-Future<void> scheduleNotificationAndStartTimer() async {
-  int timerDuration = 3 * 60; // 3 minutes in seconds
-  const String channelId = 'my_channel_id';
-  const String channelName = 'My Channel';
-  const String channelDescription = 'Channel for My App';
-  const String notificationTitle = 'Timer Notification';
-  const String notificationText = 'Your timer has started.';
-  const int notificationId = 0;
+// Future<void> scheduleNotificationAndStartTimer() async {
+//   int timerDuration = 3 * 60; // 3 minutes in seconds
+//   // timerDuration = 5; // 3 minutes in seconds
+//   // const String channelId = 'my_channel_id';
+//   // const String channelName = 'My Channel';
+//   // const String channelDescription = 'Channel for My App';
+//   const String notificationTitle = 'Timer Notification';
+//   const String notificationText = 'Your timer has started.';
+//   const int notificationId = 0;
 
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    channelId,
-    channelName,
-    channelDescription: channelDescription,
-    importance: Importance.max,
-    priority: Priority.high,
-    ongoing: true, // This makes the notification persistent
-    onlyAlertOnce: true,
-    playSound: false,
-    showProgress: true, // This enables the progress bar for the timer.
-  );
-  var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
-  var platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-    iOS: iOSPlatformChannelSpecifics,
-  );
+//   // var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+//   //   channelId,
+//   //   channelName,
+//   //   channelDescription: channelDescription,
+//   //   importance: Importance.max,
+//   //   priority: Priority.high,
+//   //   ongoing: true, // This makes the notification persistent
+//   //   onlyAlertOnce: true,
+//   //   playSound: false,
+//   //   showProgress: true, // This enables the progress bar for the timer.
+//   // );
+//   var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
+//   var platformChannelSpecifics = NotificationDetails(
+//     // android: androidPlatformChannelSpecifics,
+//     iOS: iOSPlatformChannelSpecifics,
+//   );
 
-  await flutterLocalNotificationsPlugin.show(
-    notificationId,
-    notificationTitle,
-    notificationText,
-    platformChannelSpecifics,
-  );
+//   await flutterLocalNotificationsPlugin.zonedSchedule(
+//     notificationId,
+//     notificationTitle,
+//     '$timerDuration seconds left',
+//     tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//     platformChannelSpecifics,
+//     // androidAllowWhileIdle: true,
+//     uiLocalNotificationDateInterpretation:
+//         UILocalNotificationDateInterpretation.absoluteTime,
+//     payload: timerDuration
+//         .toString(), // Store the initial timer value in the notification payload.
+//   );
 
-  // Start the timer
-  Timer.periodic(Duration(seconds: 1), (timer) {
-    timerDuration--;
-    if (timerDuration <= 0) {
-      timer.cancel(); // Timer is finished
-      // Here you can update the notification or perform any other actions when the timer is done.
-    } else {
-      // Update the notification to show the remaining time in the progress bar.
-      flutterLocalNotificationsPlugin.show(
-        notificationId,
-        notificationTitle,
-        notificationText,
-        platformChannelSpecifics,
-        payload: timerDuration.toString(), // Store the remaining time in the notification payload.
-      );
+//   // Start the timer
+//   Timer.periodic(Duration(seconds: 1), (timer) {
+//     timerDuration--;
+//     if (timerDuration <= 0) {
+//       timer.cancel(); // Timer is finished
+//       // Here you can update the notification or perform any other actions when the timer is done.
+//     } else {
+//       // Update the notification to show the remaining time in the progress bar.
+//       flutterLocalNotificationsPlugin.zonedSchedule(
+//         notificationId,
+//         notificationTitle,
+//         '$timerDuration seconds left',
+//         tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//         platformChannelSpecifics,
+//         // androidAllowWhileIdle: true,
+//         uiLocalNotificationDateInterpretation:
+//             UILocalNotificationDateInterpretation.absoluteTime,
+//         payload: timerDuration
+//             .toString(), // Store the remaining time in the notification payload.
+//       );
+//     }
+//   });
+// }
+
+// Future<void> handleNotificationAction(String? payload) async {
+//   if (payload == null) return;
+
+//   if (payload == 'start') {
+//     // Start the timer logic here.
+//     // Call the function that sets up the timer.
+//     scheduleNotificationAndStartTimer();
+//   } else if (payload == 'stop') {
+//     // Stop the timer logic here.
+//     // You can stop the timer or cancel the notification.
+//     flutterLocalNotificationsPlugin.cancelAll();
+//   }
+// }
+
+// Future<void> scheduleNotificationAndStartTimer(MyAppState appState) async {
+//   // final timerState = Provider.of<LocalNotificationTimerState>(context, listen: false);
+//   final timerState = appState.localNotificationTimerState;
+//   const String notificationTitle = 'Timer Notification';
+//   const int notificationId = 0;
+
+//   var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
+//   var platformChannelSpecifics = NotificationDetails(
+//     iOS: iOSPlatformChannelSpecifics,
+//   );
+
+//   // Start the timer
+//   timerState.startTimer();
+
+//   // Update the notification with the remaining time
+//   flutterLocalNotificationsPlugin.zonedSchedule(
+//     notificationId,
+//     notificationTitle,
+//     '${timerState.timerDuration} seconds left',
+//     tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//     platformChannelSpecifics,
+//     uiLocalNotificationDateInterpretation:
+//         UILocalNotificationDateInterpretation.absoluteTime,
+//     payload: timerState.timerDuration.toString(),
+//   );
+// }
+
+// Future<void> scheduleNotificationAndStartTimer() async {
+//   int timerDuration = 3 * 60; // 3 minutes in seconds
+//   const String notificationTitle = 'Timer Notification';
+//   const int notificationId = 0;
+
+//   var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
+//   var platformChannelSpecifics = NotificationDetails(
+//     iOS: iOSPlatformChannelSpecifics,
+//   );
+
+//   // Schedule the notification
+//   await flutterLocalNotificationsPlugin.zonedSchedule(
+//     notificationId,
+//     notificationTitle,
+//     '$timerDuration seconds left',
+//     tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//     platformChannelSpecifics,
+//     uiLocalNotificationDateInterpretation:
+//         UILocalNotificationDateInterpretation.absoluteTime,
+//     payload: timerDuration.toString(),
+//   );
+
+//   // Start the timer
+//   Timer.periodic(Duration(seconds: 1), (timer) {
+//     timerDuration--;
+//     if (timerDuration <= 0) {
+//       timer.cancel(); // Timer is finished
+//       // Here you can update the notification or perform any other actions when the timer is done.
+//     } else {
+//       // Update the notification to show the remaining time in the progress bar.
+//       _updateNotification(
+//         notificationId,
+//         notificationTitle,
+//         '$timerDuration seconds left',
+//         platformChannelSpecifics,
+//       );
+//     }
+//   });
+// }
+
+// Helper function to update the notification
+// void _updateNotification(int id, String title, String body,
+//     NotificationDetails notificationDetails) {
+//   flutterLocalNotificationsPlugin.show(
+//     id,
+//     title,
+//     body,
+//     // tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//     notificationDetails,
+//     // uiLocalNotificationDateInterpretation:
+//     //     UILocalNotificationDateInterpretation.absoluteTime,
+//     payload: body,
+//     // matchDateTimeComponents: DateTimeComponents.time
+//   );
+// }
+
+// class LocalNotificationTimerState {
+//   int _timerDuration = 3 * 60; // 3 minutes in seconds
+//   Timer? _timer;
+//   bool _isPaused = false;
+
+//   int get timerDuration => _timerDuration;
+//   bool get isPaused => _isPaused;
+
+//   void startTimer() {
+//     _timer ??= Timer.periodic(Duration(seconds: 1), (timer) {
+//       if (!_isPaused) {
+//         _timerDuration--;
+//         // notifyListeners();
+//         if (_timerDuration <= 0) {
+//           completeTimer(); // Timer is finished
+//           // notifyListeners();
+//           // Perform any other actions when the timer is done.
+//         }
+//       }
+//     });
+//     // notifyListeners();
+//   }
+
+//   void pauseTimer() {
+//     _isPaused = true;
+//     // notifyListeners();
+//   }
+
+//   void resumeTimer() {
+//     _isPaused = false;
+//     // notifyListeners();
+//   }
+
+//   void completeTimer() {
+//     _timer?.cancel();
+//     _timer = null;
+//     _timerDuration = 0;
+//     // notifyListeners();
+//   }
+
+//   bool hasStarted() {
+//     return _timer != null;
+//   }
+// }
+
+// Future<void> updateTimerDuration(int seconds) async {
+//   try {
+//     await notificationPlatForm.invokeMethod('updateTimerDuration', {'seconds': seconds});
+//   } on PlatformException catch (e) {
+//     print("Failed to update timer duration: ${e.message}");
+//   }
+// }
+
+// Future<void> scheduleNotificationAndStartTimer(MyAppState appState, int timerDuration) async {
+
+//   tz.initializeTimeZones();
+
+//   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+//   const String notificationTitle = 'Timer Notification';
+//   const int notificationId = 0;
+
+//   var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
+//   var platformChannelSpecifics = NotificationDetails(
+//     iOS: iOSPlatformChannelSpecifics,
+//   );
+
+//   // Start the timer
+//   appState.localNotificationTimerState.startTimer();
+
+//   // Schedule the initial notification with the timer duration in the payload
+//   await flutterLocalNotificationsPlugin.zonedSchedule(
+//     notificationId,
+//     notificationTitle,
+//     '$timerDuration seconds left',
+//     tz.TZDateTime.now(tz.local).add(Duration(seconds: 1)),
+//     platformChannelSpecifics,
+//     uiLocalNotificationDateInterpretation:
+//         UILocalNotificationDateInterpretation.absoluteTime,
+//     payload: '$timerDuration seconds left',
+//   );
+// }
+
+// const platform = MethodChannel('com.example.timeForGym.playSplitTimer');
+// class NotificationService {
+
+//   static Future<void> updateTimerDuration(int seconds) async {
+//     await platform.invokeMethod('updateTimerDuration', {'seconds': seconds});
+//     // await platform.invokeMethod('startTimer', {});
+//     print('test');
+//   }
+// }
+
+// Future<void> scheduleNotificationAndStartTimer() async {
+//   int timerDuration = 20; // 20 seconds for demonstration purposes
+
+//   // Schedule the initial notification with the timer duration in the payload
+//   await NotificationService.updateTimerDuration(timerDuration);
+// }
+
+String formatSecondsString(int? seconds) {
+  if (seconds == null) {
+    return '';
+  }
+  if (seconds < 60) {
+    return '$seconds sec';
+  } else {
+    String minutesPart = '';
+    if (seconds ~/ 60 > 0) {
+      minutesPart = '${seconds ~/ 60} min';
     }
-  });
-}
-
-Future<void> handleNotificationAction(String? payload) async {
-  if (payload == null) return;
-
-  if (payload == 'start') {
-    // Start the timer logic here.
-    // Call the function that sets up the timer.
-    scheduleNotificationAndStartTimer();
-  } else if (payload == 'stop') {
-    // Stop the timer logic here.
-    // You can stop the timer or cancel the notification.
-    flutterLocalNotificationsPlugin.cancelAll();
+    if (seconds % 60 != 0) {
+      return '$minutesPart, ${seconds % 60} sec';
+    } else {
+      // Remove ', ' at end
+      return '$minutesPart';
+    }
   }
 }

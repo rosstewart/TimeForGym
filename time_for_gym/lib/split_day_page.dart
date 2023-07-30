@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/services.dart';
+import 'package:time_for_gym/active_workout.dart';
 import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'dart:async';
@@ -20,6 +21,7 @@ import 'dart:math' as math;
 import 'package:time_for_gym/main.dart';
 import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/split.dart';
+import 'package:time_for_gym/active_workout_window.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'gym.dart';
@@ -281,653 +283,721 @@ class _SplitDayPageState extends State<SplitDayPage> {
             ),
             backgroundColor: theme.scaffoldBackgroundColor,
           ),
-          body: OuterScroll(
-            scrollMode: appState.splitDayReorderMode,
-            children: [
-              Column(
-                children: [
-                  SizedBox(
-                    height: appState.splitDayReorderMode ? 20 : 0,
-                  ),
-                  // if (!appState.splitDayEditMode)
-                  //   Text(
-                  //     trainingDays[widget.dayIndex].splitDay,
-                  //     style: titleStyle,
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // if (appState.splitDayEditMode)
-                  //   Form(
-                  //     key: _titleFormKey,
-                  //     child: ConstrainedBox(
-                  //       constraints: BoxConstraints(
-                  //         maxWidth: 250,
-                  //       ),
-                  //       child: TextFormField(
-                  //         initialValue: trainingDays[widget.dayIndex].splitDay,
-                  //         style: titleStyle.copyWith(
-                  //             color: theme.colorScheme.onBackground
-                  //                 .withOpacity(0.65)),
-                  //         textAlign: TextAlign.center,
-                  //         validator: (value) {
-                  //           if (value == null || value.trim().isEmpty) {
-                  //             return 'Please enter a value';
-                  //           }
-                  //           return null; // Return null to indicate the input is valid
-                  //         },
-                  //         onChanged: (value) {
-                  //           setState(() {
-                  //             trainingDays[widget.dayIndex].splitDay = value;
-                  //           });
-                  //         },
-                  //       ),
-                  //     ),
-                  //   ),
-                  // if (!appState.splitDayEditMode &&
-                  // !appState.splitDayReorderMode)
-                  if (!appState.splitDayReorderMode)
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    //   children: [
-                    // ElevatedButton.icon(
-                    //     style: ButtonStyle(
-                    //         backgroundColor: resolveColor(
-                    //             theme.colorScheme.primaryContainer),
-                    //         surfaceTintColor: resolveColor(
-                    //             theme.colorScheme.primaryContainer)),
-                    //     onPressed: () {
-                    //       appState.toSplitDayEditMode(true);
-                    //     },
-                    //     icon: Icon(Icons.edit,
-                    //         color: theme.colorScheme.primary),
-                    //     label: Text(
-                    //       "Edit Day",
-                    //       style: TextStyle(
-                    //           color: theme.colorScheme.onBackground),
-                    //     )),
-                    // if (muscleGroupCards.length >
-                    //     1) // If 0 or 1 muscle groups, no option to reorder
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton.icon(
-                            style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                    theme.colorScheme.primaryContainer),
-                                surfaceTintColor: resolveColor(
-                                    theme.colorScheme.primaryContainer)),
-                            onPressed: () {
-                              appState.toSplitDayReorderMode(true);
-                            },
-                            icon: Icon(Icons.edit,
-                                color: theme.colorScheme.primary, size: 16),
-                            label: Text(
-                              'Edit',
-                              style: theme.textTheme.labelSmall!.copyWith(
-                                  color: theme.colorScheme.onBackground),
-                            )),
-                        ElevatedButton.icon(
-                            style: ButtonStyle(
-                                backgroundColor:
-                                    resolveColor(theme.colorScheme.primary),
-                                surfaceTintColor:
-                                    resolveColor(theme.colorScheme.primary)),
-                            onPressed: () {
-                              // Don't include exercises already in the split day
-                              // Don't add exercise as a superset
-                              _showSearchExercisesWindow(
-                                  context,
-                                  appState,
-                                  appState.muscleGroups.values
-                                      .toList()
-                                      .expand((innerList) => innerList)
-                                      .toList()
-                                      .where((element) => !split
-                                          .trainingDays[widget.dayIndex]
-                                          .exerciseNames
-                                          .contains(element.name))
-                                      .toList(),
-                                  widget.dayIndex,
-                                  null,
-                                  null);
-                            },
-                            icon: Icon(Icons.add,
-                                color: theme.colorScheme.onBackground,
-                                size: 16),
-                            label: Text(
-                              'Add exercise',
-                              style: theme.textTheme.labelSmall!.copyWith(
-                                  color: theme.colorScheme.onBackground),
-                            )),
-                        IconButton(
-                            style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                    theme.colorScheme.primaryContainer),
-                                surfaceTintColor: resolveColor(
-                                    theme.colorScheme.primaryContainer)),
-                            onPressed: () {
-                              scheduleNotificationAndStartTimer();
-                            },
-                            icon: Icon(Icons.play_arrow, size: 30)),
-                      ],
+          body: Stack(children: [
+            OuterScroll(
+              scrollMode: appState.splitDayReorderMode,
+              children: [
+                Column(
+                  children: [
+                    SizedBox(
+                      height: appState.splitDayReorderMode ? 20 : 0,
                     ),
-                  //   ],
-                  // ),
-                  // if (appState.splitDayEditMode || appState.splitDayReorderMode)
-                  if (appState.splitDayReorderMode)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            ElevatedButton.icon(
-                                style: ButtonStyle(
-                                    backgroundColor: resolveColor(
-                                        theme.colorScheme.primaryContainer),
-                                    surfaceTintColor: resolveColor(
-                                        theme.colorScheme.primaryContainer)),
-                                onPressed: () {
-                                  // if (appState.splitDayEditMode) {
-                                  //   cancelEditChanges(appState);
-                                  // } else {
-                                  cancelReorderChanges(appState);
-                                  // }
-                                },
-                                icon: Icon(
-                                  Icons.close,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                label: Text(
-                                  "Cancel",
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onBackground,
+                    // if (!appState.splitDayEditMode)
+                    //   Text(
+                    //     trainingDays[widget.dayIndex].splitDay,
+                    //     style: titleStyle,
+                    //     textAlign: TextAlign.center,
+                    //   ),
+                    // if (appState.splitDayEditMode)
+                    //   Form(
+                    //     key: _titleFormKey,
+                    //     child: ConstrainedBox(
+                    //       constraints: BoxConstraints(
+                    //         maxWidth: 250,
+                    //       ),
+                    //       child: TextFormField(
+                    //         initialValue: trainingDays[widget.dayIndex].splitDay,
+                    //         style: titleStyle.copyWith(
+                    //             color: theme.colorScheme.onBackground
+                    //                 .withOpacity(0.65)),
+                    //         textAlign: TextAlign.center,
+                    //         validator: (value) {
+                    //           if (value == null || value.trim().isEmpty) {
+                    //             return 'Please enter a value';
+                    //           }
+                    //           return null; // Return null to indicate the input is valid
+                    //         },
+                    //         onChanged: (value) {
+                    //           setState(() {
+                    //             trainingDays[widget.dayIndex].splitDay = value;
+                    //           });
+                    //         },
+                    //       ),
+                    //     ),
+                    //   ),
+                    // if (!appState.splitDayEditMode &&
+                    // !appState.splitDayReorderMode)
+                    if (!appState.splitDayReorderMode)
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      //   children: [
+                      // ElevatedButton.icon(
+                      //     style: ButtonStyle(
+                      //         backgroundColor: resolveColor(
+                      //             theme.colorScheme.primaryContainer),
+                      //         surfaceTintColor: resolveColor(
+                      //             theme.colorScheme.primaryContainer)),
+                      //     onPressed: () {
+                      //       appState.toSplitDayEditMode(true);
+                      //     },
+                      //     icon: Icon(Icons.edit,
+                      //         color: theme.colorScheme.primary),
+                      //     label: Text(
+                      //       "Edit Day",
+                      //       style: TextStyle(
+                      //           color: theme.colorScheme.onBackground),
+                      //     )),
+                      // if (muscleGroupCards.length >
+                      //     1) // If 0 or 1 muscle groups, no option to reorder
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              onPressed: () {
+                                appState.toSplitDayReorderMode(true);
+                              },
+                              icon: Icon(Icons.edit,
+                                  color: theme.colorScheme.primary, size: 16),
+                              label: Text(
+                                'Edit',
+                                style: theme.textTheme.labelSmall!.copyWith(
+                                    color: theme.colorScheme.onBackground),
+                              )),
+                          ElevatedButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor:
+                                      resolveColor(theme.colorScheme.primary),
+                                  surfaceTintColor:
+                                      resolveColor(theme.colorScheme.primary)),
+                              onPressed: () {
+                                // Don't include exercises already in the split day
+                                // Don't add exercise as a superset
+                                _showSearchExercisesWindow(
+                                    context,
+                                    appState,
+                                    appState.muscleGroups.values
+                                        .toList()
+                                        .expand((innerList) => innerList)
+                                        .toList()
+                                        .where((element) => !split
+                                            .trainingDays[widget.dayIndex]
+                                            .exerciseNames
+                                            .contains(element.name))
+                                        .toList(),
+                                    widget.dayIndex,
+                                    null,
+                                    null);
+                              },
+                              icon: Icon(Icons.add,
+                                  color: theme.colorScheme.onBackground,
+                                  size: 16),
+                              label: Text(
+                                'Add exercise',
+                                style: theme.textTheme.labelSmall!.copyWith(
+                                    color: theme.colorScheme.onBackground),
+                              )),
+                          // IconButton(
+                          //     style: ButtonStyle(
+                          //         backgroundColor: resolveColor(
+                          //             theme.colorScheme.primaryContainer),
+                          //         surfaceTintColor: resolveColor(
+                          //             theme.colorScheme.primaryContainer)),
+                          //     onPressed: () {
+                          //       scheduleNotificationAndStartTimer();
+                          //       // updateTimerDuration(30);
+                          //       // if (!appState.localNotificationTimerState
+                          //       //     .hasStarted()) {
+                          //       //   scheduleNotificationAndStartTimer();
+                          //       // } else {
+                          //       //   appState.localNotificationTimerState.isPaused
+                          //       //       ? appState
+                          //       //           .localNotificationTimerState.resumeTimer
+                          //       //       : appState
+                          //       //           .localNotificationTimerState.pauseTimer;
+                          //       // }
+                          //     },
+                          //     icon: Icon(
+                          //         appState.localNotificationTimerState.isPaused ||
+                          //                 !appState.localNotificationTimerState
+                          //                     .hasStarted()
+                          //             ? Icons.play_arrow
+                          //             : Icons.pause,
+                          //         color: theme.colorScheme.primary,
+                          //         size: 30)),
+                        ],
+                      ),
+                    //   ],
+                    // ),
+                    // if (appState.splitDayEditMode || appState.splitDayReorderMode)
+                    if (appState.splitDayReorderMode)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton.icon(
+                                  style: ButtonStyle(
+                                      backgroundColor: resolveColor(
+                                          theme.colorScheme.primaryContainer),
+                                      surfaceTintColor: resolveColor(
+                                          theme.colorScheme.primaryContainer)),
+                                  onPressed: () {
+                                    // if (appState.splitDayEditMode) {
+                                    //   cancelEditChanges(appState);
+                                    // } else {
+                                    cancelReorderChanges(appState);
+                                    // }
+                                  },
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: theme.colorScheme.primary,
                                   ),
-                                )),
-                            Spacer(),
-                            ElevatedButton.icon(
-                                style: ButtonStyle(
-                                    backgroundColor: resolveColor(
-                                        theme.colorScheme.primaryContainer),
-                                    surfaceTintColor: resolveColor(
-                                        theme.colorScheme.primaryContainer)),
-                                onPressed: () {
-                                  // if (appState.splitDayEditMode) {
-                                  // Can only edit title in edit mode, not reorder mode
-                                  if (_titleFormKey.currentState!.validate()) {
-                                    // saveEditChanges(appState);
-                                    saveReorderChanges(appState);
-                                  }
-                                  // } else {
-                                  //   saveReorderChanges(appState);
-                                  // }
-                                },
-                                icon: Icon(
-                                  Icons.save_alt,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                label: Text(
-                                  "Save",
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onBackground,
+                                  label: Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onBackground,
+                                    ),
+                                  )),
+                              Spacer(),
+                              ElevatedButton.icon(
+                                  style: ButtonStyle(
+                                      backgroundColor: resolveColor(
+                                          theme.colorScheme.primaryContainer),
+                                      surfaceTintColor: resolveColor(
+                                          theme.colorScheme.primaryContainer)),
+                                  onPressed: () {
+                                    // if (appState.splitDayEditMode) {
+                                    // Can only edit title in edit mode, not reorder mode
+                                    if (_titleFormKey.currentState!
+                                        .validate()) {
+                                      // saveEditChanges(appState);
+                                      saveReorderChanges(appState);
+                                    }
+                                    // } else {
+                                    //   saveReorderChanges(appState);
+                                    // }
+                                  },
+                                  icon: Icon(
+                                    Icons.save_alt,
+                                    color: theme.colorScheme.primary,
                                   ),
-                                ))
-                          ]),
-                    ),
+                                  label: Text(
+                                    "Save",
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onBackground,
+                                    ),
+                                  ))
+                            ]),
+                      ),
 
-                  if (appState
-                      .splitDayReorderMode) // Drag and drop muscle group cards
-                    Column(
-                      children: [
-                        // Add to end, then reorder
-                        // AddButton(
-                        //     appState: appState,
-                        //     dayIndex: widget.dayIndex,
-                        //     cardIndex: split.trainingDays[widget.dayIndex]
-                        //         .muscleGroups.length),
-                        SizedBox(height: 15),
-                        SizedBox(
-                          height: 557,
-                          child: ReorderableListView(
-                            children: muscleGroupCards,
-                            onReorder: (oldCardIndex, newCardIndex) {
-                              print(
-                                  "Muscle groups before reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
-                              print(
-                                  "Exercise indices before reorder: ${exerciseIndices[widget.dayIndex]}");
-                              print(
-                                  "Number of sets after reorder: ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup}");
-                              try {
-                                setState(() {
-                                  // if (newIndex >= muscleGroupCards.length ||
-                                  //     newIndex < 0) {
-                                  //   // Avoid out of bounds error
-                                  //   return;
-                                  // }
-                                  if (newCardIndex > oldCardIndex) {
-                                    newCardIndex -=
-                                        1; // Adjust the index when moving an item down
-                                  }
+                    if (appState
+                        .splitDayReorderMode) // Drag and drop muscle group cards
+                      Column(
+                        children: [
+                          // Add to end, then reorder
+                          // AddButton(
+                          //     appState: appState,
+                          //     dayIndex: widget.dayIndex,
+                          //     cardIndex: split.trainingDays[widget.dayIndex]
+                          //         .muscleGroups.length),
+                          SizedBox(height: 15),
+                          SizedBox(
+                            height: 557,
+                            child: ReorderableListView(
+                              children: muscleGroupCards,
+                              onReorder: (oldCardIndex, newCardIndex) {
+                                print(
+                                    "Muscle groups before reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
+                                print(
+                                    "Exercise indices before reorder: ${exerciseIndices[widget.dayIndex]}");
+                                print(
+                                    "Number of sets after reorder: ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup}");
+                                try {
+                                  setState(() {
+                                    // if (newIndex >= muscleGroupCards.length ||
+                                    //     newIndex < 0) {
+                                    //   // Avoid out of bounds error
+                                    //   return;
+                                    // }
+                                    if (newCardIndex > oldCardIndex) {
+                                      newCardIndex -=
+                                          1; // Adjust the index when moving an item down
+                                    }
 
-                                  int splitDayCardIndex =
-                                      muscleGroupCards[oldCardIndex]
-                                          .getSplitDayCardIndex();
-                                  int newSplitDayCardIndex;
-                                  if (muscleGroupCards.length > newCardIndex) {
-                                    newSplitDayCardIndex =
-                                        muscleGroupCards[newCardIndex]
+                                    int splitDayCardIndex =
+                                        muscleGroupCards[oldCardIndex]
                                             .getSplitDayCardIndex();
-                                  } else {
-                                    newSplitDayCardIndex =
-                                        muscleGroupCards.length;
-                                  }
-                                  final List<dynamic>
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier =
-                                      appState.removeTempMuscleGroupFromSplit(
-                                          widget.dayIndex, splitDayCardIndex);
-
-                                  List<dynamic>? supersetExerciseInfo;
-                                  // Check next exercise to see if it's a superset, old index gets shifted into superset spot
-                                  if (split.trainingDays[widget.dayIndex]
-                                              .isSupersettedWithLast.length >
-                                          splitDayCardIndex &&
-                                      split.trainingDays[widget.dayIndex]
-                                              .isSupersettedWithLast[
-                                          splitDayCardIndex]) {
-                                    supersetExerciseInfo =
+                                    int newSplitDayCardIndex;
+                                    if (muscleGroupCards.length >
+                                        newCardIndex) {
+                                      newSplitDayCardIndex =
+                                          muscleGroupCards[newCardIndex]
+                                              .getSplitDayCardIndex();
+                                    } else {
+                                      newSplitDayCardIndex =
+                                          muscleGroupCards.length;
+                                    }
+                                    final List<dynamic>
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier =
                                         appState.removeTempMuscleGroupFromSplit(
                                             widget.dayIndex, splitDayCardIndex);
-                                  }
-                                  final SplitMuscleGroupCard card =
-                                      muscleGroupCards.removeAt(oldCardIndex);
-                                  muscleGroupCards.insert(newCardIndex, card);
 
-                                  if (supersetExerciseInfo != null) {
-                                    // Shift newSplitDayCardIndex by 1
-                                    if (newSplitDayCardIndex >
-                                        splitDayCardIndex) {
-                                      newSplitDayCardIndex--;
-                                    } else if (newSplitDayCardIndex >
-                                        splitDayCardIndex) {
-                                      newSplitDayCardIndex++;
+                                    List<dynamic>? supersetExerciseInfo;
+                                    // Check next exercise to see if it's a superset, old index gets shifted into superset spot
+                                    if (split.trainingDays[widget.dayIndex]
+                                                .isSupersettedWithLast.length >
+                                            splitDayCardIndex &&
+                                        split.trainingDays[widget.dayIndex]
+                                                .isSupersettedWithLast[
+                                            splitDayCardIndex]) {
+                                      supersetExerciseInfo = appState
+                                          .removeTempMuscleGroupFromSplit(
+                                              widget.dayIndex,
+                                              splitDayCardIndex);
                                     }
-                                  }
-                                  appState.addTempMuscleGroupToSplit(
-                                      widget.dayIndex,
-                                      newSplitDayCardIndex,
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          0],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          1],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          2],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          3],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          4],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          5],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          6],
-                                      muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
-                                          7]);
+                                    final SplitMuscleGroupCard card =
+                                        muscleGroupCards.removeAt(oldCardIndex);
+                                    muscleGroupCards.insert(newCardIndex, card);
 
-                                  if (supersetExerciseInfo != null) {
-                                    // Add superset also
+                                    if (supersetExerciseInfo != null) {
+                                      // Shift newSplitDayCardIndex by 1
+                                      if (newSplitDayCardIndex >
+                                          splitDayCardIndex) {
+                                        newSplitDayCardIndex--;
+                                      } else if (newSplitDayCardIndex >
+                                          splitDayCardIndex) {
+                                        newSplitDayCardIndex++;
+                                      }
+                                    }
                                     appState.addTempMuscleGroupToSplit(
                                         widget.dayIndex,
-                                        newSplitDayCardIndex + 1,
-                                        supersetExerciseInfo[0],
-                                        supersetExerciseInfo[1],
-                                        supersetExerciseInfo[2],
-                                        supersetExerciseInfo[3],
-                                        supersetExerciseInfo[4],
-                                        supersetExerciseInfo[5],
-                                        supersetExerciseInfo[6],
-                                        supersetExerciseInfo[7]);
-                                  }
+                                        newSplitDayCardIndex,
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            0],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            1],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            2],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            3],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            4],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            5],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            6],
+                                        muscleGroupAndExerciseIndexAndNumSetsAndIdentifier[
+                                            7]);
 
-                                  print(
-                                      "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
-                                  print(
-                                      "Exercise indices after reorder: ${exerciseIndices[widget.dayIndex]}");
-                                  print(
-                                      "Number of sets after reorder: ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup}");
-                                });
-                              } catch (e) {
-                                print("Drag and drop error - $e");
-                              }
-                            },
+                                    if (supersetExerciseInfo != null) {
+                                      // Add superset also
+                                      appState.addTempMuscleGroupToSplit(
+                                          widget.dayIndex,
+                                          newSplitDayCardIndex + 1,
+                                          supersetExerciseInfo[0],
+                                          supersetExerciseInfo[1],
+                                          supersetExerciseInfo[2],
+                                          supersetExerciseInfo[3],
+                                          supersetExerciseInfo[4],
+                                          supersetExerciseInfo[5],
+                                          supersetExerciseInfo[6],
+                                          supersetExerciseInfo[7]);
+                                    }
+
+                                    print(
+                                        "Muscle groups after reorder: ${split.trainingDays[widget.dayIndex].muscleGroups}");
+                                    print(
+                                        "Exercise indices after reorder: ${exerciseIndices[widget.dayIndex]}");
+                                    print(
+                                        "Number of sets after reorder: ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup}");
+                                  });
+                                } catch (e) {
+                                  print("Drag and drop error - $e");
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  if (!appState.splitDayReorderMode)
-                    for (int i = 0;
-                        i <
-                            split.trainingDays[widget.dayIndex].muscleGroups
-                                .length;
-                        i++)
-                      // If i is a superset, don't show as it was shown in the previous row
-                      split.trainingDays[widget.dayIndex]
-                                  .isSupersettedWithLast[i] ==
-                              false
-                          ? ((i <
-                                      split.trainingDays[widget.dayIndex]
-                                              .muscleGroups.length -
-                                          1 &&
-                                  split.trainingDays[widget.dayIndex]
-                                          .isSupersettedWithLast[i + 1] ==
-                                      true)
+                        ],
+                      ),
+                    if (!appState.splitDayReorderMode)
+                      for (int i = 0;
+                          i <
+                              split.trainingDays[widget.dayIndex].muscleGroups
+                                  .length;
+                          i++)
+                        // If i is a superset, don't show as it was shown in the previous row
+                        split.trainingDays[widget.dayIndex]
+                                    .isSupersettedWithLast[i] ==
+                                false
+                            ? ((i <
+                                        split.trainingDays[widget.dayIndex]
+                                                .muscleGroups.length -
+                                            1 &&
+                                    split.trainingDays[widget.dayIndex]
+                                            .isSupersettedWithLast[i + 1] ==
+                                        true)
 
-                              // If a superset vs not a superset
-                              ? Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text('Superset   ',
-                                              style: titleStyle.copyWith(
-                                                  fontWeight: FontWeight.w600),
-                                              textAlign: TextAlign.center),
-                                          if (split
-                                                  .trainingDays[widget.dayIndex]
-                                                  .setsPerMuscleGroup[i] !=
-                                              1)
-                                            Text(
-                                              '-  ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup[i]} Sets',
-                                              textAlign: TextAlign.center,
-                                              style: textStyle,
-                                            ),
-                                          if (split
-                                                  .trainingDays[widget.dayIndex]
-                                                  .setsPerMuscleGroup[i] ==
-                                              1)
-                                            Text(
-                                              '-  1 Set',
-                                              textAlign: TextAlign.center,
-                                              style: textStyle,
-                                            ),
-                                          Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                10, 0, 0, 0),
-                                            child: Column(
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    // Increment number of sets
-                                                    if (split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .setsPerMuscleGroup[i] <
-                                                        10) {
-                                                      setState(() {
-                                                        split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .setsPerMuscleGroup[i]++;
-                                                        split
-                                                                .trainingDays[
-                                                                    widget.dayIndex]
-                                                                .setsPerMuscleGroup[
-                                                            i + 1]++;
-                                                        // setsWeightControllers.add(
-                                                        //     TextEditingController());
-                                                        // setsRepsControllers.add(
-                                                        //     TextEditingController());
-                                                        // previousWeights.add('');
-                                                        // previousReps.add('');
-                                                        // weightSuffixIcons
-                                                        //     .add(null);
-                                                        // repsSuffixIcons.add(null);
-                                                      });
-                                                      appState
-                                                          .storeSplitInSharedPreferences();
-                                                    }
-                                                  },
-                                                  child: Icon(
-                                                    Icons.keyboard_arrow_up,
-                                                    color: theme
-                                                        .colorScheme.primary,
-                                                    size: 14,
-                                                  ),
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    // Decrement number of sets
-                                                    if (split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .setsPerMuscleGroup[i] >
-                                                        1) {
-                                                      setState(() {
-                                                        split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .setsPerMuscleGroup[i]--;
-                                                        split
-                                                                .trainingDays[
-                                                                    widget.dayIndex]
-                                                                .setsPerMuscleGroup[
-                                                            i + 1]--;
-                                                        // setsWeightControllers[
-                                                        //         setsWeightControllers
-                                                        //                 .length -
-                                                        //             1]
-                                                        //     .dispose();
-                                                        // setsWeightControllers
-                                                        //     .removeLast();
-                                                        // setsRepsControllers[
-                                                        //         setsRepsControllers
-                                                        //                 .length -
-                                                        //             1]
-                                                        //     .dispose();
-                                                        // setsRepsControllers
-                                                        //     .removeLast();
-                                                        // previousWeights
-                                                        //     .removeLast();
-                                                        // previousReps.removeLast();
-                                                        // weightSuffixIcons
-                                                        //     .removeLast();
-                                                        // repsSuffixIcons
-                                                        //     .removeLast();
-                                                      });
-                                                      appState
-                                                          .storeSplitInSharedPreferences();
-                                                    }
-                                                  },
-                                                  child: Icon(
-                                                    Icons.keyboard_arrow_down,
-                                                    color: theme
-                                                        .colorScheme.primary,
-                                                    size: 14,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 5),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(15),
-                                          color: theme
-                                              .colorScheme.primaryContainer,
-                                        ),
-                                        child: Column(
+                                // If a superset vs not a superset
+                                ? Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            SizedBox(
-                                              height: 358,
-                                              child: PageView(
-                                                controller:
-                                                    _pageControllers[i] ??
-                                                        (_pageControllers[i] =
-                                                            PageController()),
-                                                onPageChanged: (int index) {
-                                                  setState(() {
-                                                    _currentDotIndices[i] =
-                                                        index;
-                                                  });
-                                                },
+                                            Text('Superset   ',
+                                                style: titleStyle.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                                textAlign: TextAlign.center),
+                                            if (split
+                                                    .trainingDays[
+                                                        widget.dayIndex]
+                                                    .setsPerMuscleGroup[i] !=
+                                                1)
+                                              Text(
+                                                '-  ${split.trainingDays[widget.dayIndex].setsPerMuscleGroup[i]} Sets',
+                                                textAlign: TextAlign.center,
+                                                style: textStyle,
+                                              ),
+                                            if (split
+                                                    .trainingDays[
+                                                        widget.dayIndex]
+                                                    .setsPerMuscleGroup[i] ==
+                                                1)
+                                              Text(
+                                                '-  1 Set',
+                                                textAlign: TextAlign.center,
+                                                style: textStyle,
+                                              ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      10, 0, 0, 0),
+                                              child: Column(
                                                 children: [
-                                                  // First card
-                                                  SizedBox(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.9,
-                                                    child: SplitMuscleGroupCard(
-                                                      muscleGroup: split
-                                                          .trainingDays[
-                                                              widget.dayIndex]
-                                                          .muscleGroups[i],
-                                                      splitDayCardIndex: i,
-                                                      split: split,
-                                                      exerciseIndices:
-                                                          exerciseIndices,
-                                                      isDraggable: false,
-                                                      dayIndex: widget.dayIndex,
-                                                      addSupersetOption: false,
-                                                      gymOpeningHours:
-                                                          gymOpeningHours,
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      // Increment number of sets
+                                                      if (split
+                                                              .trainingDays[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .setsPerMuscleGroup[i] <
+                                                          10) {
+                                                        setState(() {
+                                                          split
+                                                              .trainingDays[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .setsPerMuscleGroup[i]++;
+                                                          split
+                                                                  .trainingDays[
+                                                                      widget
+                                                                          .dayIndex]
+                                                                  .setsPerMuscleGroup[
+                                                              i + 1]++;
+                                                          // setsWeightControllers.add(
+                                                          //     TextEditingController());
+                                                          // setsRepsControllers.add(
+                                                          //     TextEditingController());
+                                                          // previousWeights.add('');
+                                                          // previousReps.add('');
+                                                          // weightSuffixIcons
+                                                          //     .add(null);
+                                                          // repsSuffixIcons.add(null);
+                                                        });
+                                                        appState
+                                                            .storeSplitInSharedPreferences();
+                                                      }
+                                                    },
+                                                    child: Icon(
+                                                      Icons.keyboard_arrow_up,
+                                                      color: theme
+                                                          .colorScheme.primary,
+                                                      size: 14,
                                                     ),
                                                   ),
-                                                  // Second card
-                                                  SizedBox(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.9,
-                                                    child: SplitMuscleGroupCard(
-                                                      muscleGroup: split
-                                                          .trainingDays[
-                                                              widget.dayIndex]
-                                                          .muscleGroups[i + 1],
-                                                      splitDayCardIndex: i + 1,
-                                                      split: split,
-                                                      exerciseIndices:
-                                                          exerciseIndices,
-                                                      isDraggable: false,
-                                                      dayIndex: widget.dayIndex,
-                                                      addSupersetOption: false,
-                                                      gymOpeningHours:
-                                                          gymOpeningHours,
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      // Decrement number of sets
+                                                      if (split
+                                                              .trainingDays[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .setsPerMuscleGroup[i] >
+                                                          1) {
+                                                        setState(() {
+                                                          split
+                                                              .trainingDays[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .setsPerMuscleGroup[i]--;
+                                                          split
+                                                                  .trainingDays[
+                                                                      widget
+                                                                          .dayIndex]
+                                                                  .setsPerMuscleGroup[
+                                                              i + 1]--;
+                                                          // setsWeightControllers[
+                                                          //         setsWeightControllers
+                                                          //                 .length -
+                                                          //             1]
+                                                          //     .dispose();
+                                                          // setsWeightControllers
+                                                          //     .removeLast();
+                                                          // setsRepsControllers[
+                                                          //         setsRepsControllers
+                                                          //                 .length -
+                                                          //             1]
+                                                          //     .dispose();
+                                                          // setsRepsControllers
+                                                          //     .removeLast();
+                                                          // previousWeights
+                                                          //     .removeLast();
+                                                          // previousReps.removeLast();
+                                                          // weightSuffixIcons
+                                                          //     .removeLast();
+                                                          // repsSuffixIcons
+                                                          //     .removeLast();
+                                                        });
+                                                        appState
+                                                            .storeSplitInSharedPreferences();
+                                                      }
+                                                    },
+                                                    child: Icon(
+                                                      Icons.keyboard_arrow_down,
+                                                      color: theme
+                                                          .colorScheme.primary,
+                                                      size: 14,
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                             ),
-                                            DotsIndicator(
-                                              key: Key('$i'),
-                                              dotsCount: 2,
-                                              position: _currentDotIndices[i] ??
-                                                  (_currentDotIndices[i] = 0),
-                                              decorator: DotsDecorator(
-                                                activeColor:
-                                                    theme.colorScheme.primary,
-                                                size: const Size.square(8.0),
-                                                activeSize:
-                                                    const Size.square(8.0),
-                                                activeShape:
-                                                    RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          5.0),
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(height: 10),
                                           ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              // ? SingleChildScrollView(
-                              //     scrollDirection: Axis.horizontal,
-                              //     child: Row(
-                              //       children: [
-                              //         SizedBox(
-                              //           width:
-                              //               MediaQuery.of(context).size.width *
-                              //                   0.9,
-                              //           child: Padding(
-                              //             padding: const EdgeInsets.fromLTRB(
-                              //                 20, 20, 0, 20),
-                              //             child: SplitMuscleGroupCard(
-                              //               muscleGroup: split
-                              //                   .trainingDays[widget.dayIndex]
-                              //                   .muscleGroups[i],
-                              //               splitDayCardIndex: i,
-                              //               split: split,
-                              //               exerciseIndices: exerciseIndices,
-                              //               isDraggable: false,
-                              //               dayIndex: widget.dayIndex,
-                              //               addSupersetOption: false,
-                              //             ),
-                              //           ),
-                              //         ),
-                              //         // Transform.rotate(
-                              //         //   angle: -90 *
-                              //         //       (pi / 180), // 90 degrees in radians
-                              //         //   // Need container so the dimensions match up
-                              //         //   // ignore: avoid_unnecessary_containers
-                              //         //   child: Container(
-                              //         //     child: Text(
-                              //         //       'Superset',
-                              //         //       style: titleStyle,
-                              //         //     ),
-                              //         //   ),
-                              //         // ),
-                              //         SizedBox(
-                              //           width:
-                              //               MediaQuery.of(context).size.width *
-                              //                   0.9,
-                              //           child: Padding(
-                              //             padding: const EdgeInsets.fromLTRB(
-                              //                 0, 20, 20, 20),
-                              //             child: SplitMuscleGroupCard(
-                              //               muscleGroup: split
-                              //                   .trainingDays[widget.dayIndex]
-                              //                   .muscleGroups[i + 1],
-                              //               splitDayCardIndex: i + 1,
-                              //               split: split,
-                              //               exerciseIndices: exerciseIndices,
-                              //               isDraggable: false,
-                              //               dayIndex: widget.dayIndex,
-                              //               addSupersetOption: false,
-                              //             ),
-                              //           ),
-                              //         ),
-                              //       ],
-                              //     ),
-                              //   )
-                              : Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: SplitMuscleGroupCard(
-                                    muscleGroup: split
-                                        .trainingDays[widget.dayIndex]
-                                        .muscleGroups[i],
-                                    splitDayCardIndex: i,
-                                    split: split,
-                                    exerciseIndices: exerciseIndices,
-                                    isDraggable: false,
-                                    dayIndex: widget.dayIndex,
-                                    addSupersetOption: true,
-                                    gymOpeningHours: gymOpeningHours,
-                                  ),
-                                ))
-                          : SizedBox.shrink(),
-                ],
+                                        SizedBox(height: 5),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            color: theme
+                                                .colorScheme.primaryContainer,
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              SizedBox(
+                                                height: 358,
+                                                child: PageView(
+                                                  controller:
+                                                      _pageControllers[i] ??
+                                                          (_pageControllers[i] =
+                                                              PageController()),
+                                                  onPageChanged: (int index) {
+                                                    setState(() {
+                                                      _currentDotIndices[i] =
+                                                          index;
+                                                    });
+                                                  },
+                                                  children: [
+                                                    // First card
+                                                    SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.9,
+                                                      child:
+                                                          SplitMuscleGroupCard(
+                                                        muscleGroup: split
+                                                            .trainingDays[
+                                                                widget.dayIndex]
+                                                            .muscleGroups[i],
+                                                        splitDayCardIndex: i,
+                                                        split: split,
+                                                        exerciseIndices:
+                                                            exerciseIndices,
+                                                        isDraggable: false,
+                                                        dayIndex:
+                                                            widget.dayIndex,
+                                                        addSupersetOption:
+                                                            false,
+                                                        gymOpeningHours:
+                                                            gymOpeningHours,
+                                                      ),
+                                                    ),
+                                                    // Second card
+                                                    SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.9,
+                                                      child:
+                                                          SplitMuscleGroupCard(
+                                                        muscleGroup: split
+                                                            .trainingDays[
+                                                                widget.dayIndex]
+                                                            .muscleGroups[i + 1],
+                                                        splitDayCardIndex:
+                                                            i + 1,
+                                                        split: split,
+                                                        exerciseIndices:
+                                                            exerciseIndices,
+                                                        isDraggable: false,
+                                                        dayIndex:
+                                                            widget.dayIndex,
+                                                        addSupersetOption:
+                                                            false,
+                                                        gymOpeningHours:
+                                                            gymOpeningHours,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              DotsIndicator(
+                                                key: Key('$i'),
+                                                dotsCount: 2,
+                                                position:
+                                                    _currentDotIndices[i] ??
+                                                        (_currentDotIndices[i] =
+                                                            0),
+                                                decorator: DotsDecorator(
+                                                  activeColor:
+                                                      theme.colorScheme.primary,
+                                                  size: const Size.square(8.0),
+                                                  activeSize:
+                                                      const Size.square(8.0),
+                                                  activeShape:
+                                                      RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5.0),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(height: 10),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                // ? SingleChildScrollView(
+                                //     scrollDirection: Axis.horizontal,
+                                //     child: Row(
+                                //       children: [
+                                //         SizedBox(
+                                //           width:
+                                //               MediaQuery.of(context).size.width *
+                                //                   0.9,
+                                //           child: Padding(
+                                //             padding: const EdgeInsets.fromLTRB(
+                                //                 20, 20, 0, 20),
+                                //             child: SplitMuscleGroupCard(
+                                //               muscleGroup: split
+                                //                   .trainingDays[widget.dayIndex]
+                                //                   .muscleGroups[i],
+                                //               splitDayCardIndex: i,
+                                //               split: split,
+                                //               exerciseIndices: exerciseIndices,
+                                //               isDraggable: false,
+                                //               dayIndex: widget.dayIndex,
+                                //               addSupersetOption: false,
+                                //             ),
+                                //           ),
+                                //         ),
+                                //         // Transform.rotate(
+                                //         //   angle: -90 *
+                                //         //       (pi / 180), // 90 degrees in radians
+                                //         //   // Need container so the dimensions match up
+                                //         //   // ignore: avoid_unnecessary_containers
+                                //         //   child: Container(
+                                //         //     child: Text(
+                                //         //       'Superset',
+                                //         //       style: titleStyle,
+                                //         //     ),
+                                //         //   ),
+                                //         // ),
+                                //         SizedBox(
+                                //           width:
+                                //               MediaQuery.of(context).size.width *
+                                //                   0.9,
+                                //           child: Padding(
+                                //             padding: const EdgeInsets.fromLTRB(
+                                //                 0, 20, 20, 20),
+                                //             child: SplitMuscleGroupCard(
+                                //               muscleGroup: split
+                                //                   .trainingDays[widget.dayIndex]
+                                //                   .muscleGroups[i + 1],
+                                //               splitDayCardIndex: i + 1,
+                                //               split: split,
+                                //               exerciseIndices: exerciseIndices,
+                                //               isDraggable: false,
+                                //               dayIndex: widget.dayIndex,
+                                //               addSupersetOption: false,
+                                //             ),
+                                //           ),
+                                //         ),
+                                //       ],
+                                //     ),
+                                //   )
+                                : Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: SplitMuscleGroupCard(
+                                      muscleGroup: split
+                                          .trainingDays[widget.dayIndex]
+                                          .muscleGroups[i],
+                                      splitDayCardIndex: i,
+                                      split: split,
+                                      exerciseIndices: exerciseIndices,
+                                      isDraggable: false,
+                                      dayIndex: widget.dayIndex,
+                                      addSupersetOption: true,
+                                      gymOpeningHours: gymOpeningHours,
+                                    ),
+                                  ))
+                            : SizedBox.shrink(),
+                  ],
+                ),
+              ],
+            ),
+            if (appState.activeWorkout == null)
+              Positioned(
+                bottom: 10,
+                left: 40,
+                right: 40,
+                child: GestureDetector(
+                  onTap: () {
+                    // Start new workout if null
+                    appState.startWorkout(ActiveWorkout(
+                        dayIndex: widget.dayIndex,
+                        split: split,
+                        trainingDay: split.trainingDays[widget.dayIndex],
+                        timeStarted: DateTime.now()));
+                    showActiveWorkoutWindow(context, appState,
+                        appState.activeWorkout!, widget.dayIndex);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(.9),
+                        borderRadius: BorderRadius.circular(5)),
+                    padding: EdgeInsets.all(12.0),
+                    child: Text('Start workout',
+                        style: titleStyle, textAlign: TextAlign.center),
+                  ),
+                ),
               ),
-            ],
-          ),
+          ]),
         ),
       ),
     );
@@ -1521,7 +1591,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
 
     if (!showMoreSets) {
       if (weights[0].isNotEmpty &&
-          weights[0] != '0' &&
+          // weights[0] != '0' &&
           reps[0].isNotEmpty &&
           reps[0] != '0') {
         setState(() {
@@ -1540,7 +1610,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           hasSavedTopSet = false;
         });
         isValidated = false;
-        if (weights[0].isEmpty || weights[0] == '0') {
+        if (weights[0].isEmpty) {
+          // || weights[0] == '0') {
           setState(() {
             weightSuffixIcons[0] = suffixIcon;
           });
@@ -1580,14 +1651,17 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                     type: 'auto_pr',
                     title: 'Hit a new PR!',
                     description:
-                        '${currentExercise.name}: ${int.parse(weights[0])} lbs for ${int.parse(reps[0])} reps',
+                        '${currentExercise.name}: ${int.parse(weights[0])} lbs for ${int.parse(reps[0])} reps\nNew estimated one-rep-max: $newOneRepMax',
                     trainingDay: null,
                     millisecondsFromEpoch: now.millisecondsSinceEpoch,
                     totalMinutesDuration: 0,
                     usernamesThatLiked: [],
                     commentsFromEachUsername: {},
                     pictureUrl: null,
-                    picture: null));
+                    picture: null,
+                    private: false,
+                    prsHit: null,
+                    gym: appState.userGym?.name));
             appState.storeDataInFirestore();
           }
           currentExercise.userOneRepMax = newOneRepMax;
@@ -1625,7 +1699,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
               currentExercise.userOneRepMaxHistory[sameDayMilliseconds] ?? -1);
         }
         appState.submitExercisePopularityDataToFirebase(
-            appState.authUserId,
+            appState.currentUser.username,
             currentExercise.name,
             currentExercise.mainMuscleGroup,
             currentExercise.userRating,
@@ -1737,7 +1811,10 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                   usernamesThatLiked: [],
                   commentsFromEachUsername: {},
                   pictureUrl: null,
-                  picture: null));
+                  picture: null,
+                  private: false,
+                  prsHit: null,
+                  gym: appState.userGym?.name));
           appState.storeDataInFirestore();
         }
 
@@ -1780,7 +1857,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
           }
         }
         appState.submitExercisePopularityDataToFirebase(
-            appState.authUserId,
+            appState.currentUser.username,
             currentExercise.name,
             currentExercise.mainMuscleGroup,
             currentExercise.userRating,
@@ -2108,8 +2185,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                         borderRadius: BorderRadius.circular(4),
                                         color: theme.colorScheme.onBackground),
                                     child: ImageContainer(
-                                        exerciseName:
-                                            similarExercises[index].name),
+                                        exercise: similarExercises[index]),
                                   ),
                                   Align(
                                       alignment: Alignment.topRight,
@@ -2257,26 +2333,17 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headingStyle = theme.textTheme.titleMedium!.copyWith(
-      color: theme.colorScheme.onBackground,
-      fontWeight: FontWeight.w600,
-    );
-    final textStyle = theme.textTheme.titleSmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-
-    final formHeadingStyle = theme.textTheme.bodyMedium!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-
-    final formTextStyle = theme.textTheme.labelSmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-    final labelStyle = theme.textTheme.labelSmall!.copyWith(
-      color: theme.colorScheme.onBackground,
-    );
-    final greyLabelStyle = theme.textTheme.labelSmall!.copyWith(
-      color: theme.colorScheme.onBackground.withOpacity(.65),
-    );
+        color: theme.colorScheme.onBackground, fontWeight: FontWeight.w600);
+    final textStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final formHeadingStyle = theme.textTheme.bodyMedium!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final formTextStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final greyLabelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     // print(appState.splitDayExerciseIndices);
 
@@ -2570,9 +2637,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                       height: 120,
                                                       width: 120,
                                                       child: ImageContainer(
-                                                          exerciseName:
-                                                              currentExercise
-                                                                  .name),
+                                                          exercise:
+                                                              currentExercise),
                                                     ),
                                                   ]),
                                                 ),
@@ -2670,20 +2736,22 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                               SizedBox(
                                                 width: 150,
                                                 child: Text(
-                                                    '$expectedWaitTime Minutes',
-                                                    style: labelStyle.copyWith(
-                                                        color: int.parse(
-                                                                    expectedWaitTime) <
-                                                                4
-                                                            ? theme.colorScheme
-                                                                .primary
-                                                            : (int.parse(
-                                                                        expectedWaitTime) <
-                                                                    7
-                                                                ? Colors.yellow
-                                                                : theme
-                                                                    .colorScheme
-                                                                    .secondary))),
+                                                  '$expectedWaitTime Minutes',
+                                                  style: labelStyle.copyWith(
+                                                      color: int.parse(
+                                                                  expectedWaitTime) <
+                                                              4
+                                                          ? theme.colorScheme
+                                                              .primary
+                                                          : (int.parse(
+                                                                      expectedWaitTime) <
+                                                                  7
+                                                              ? Colors.yellow
+                                                              : theme
+                                                                  .colorScheme
+                                                                  .secondary)),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                               ),
                                             if (expectedWaitTime ==
                                                     'No gym selected' ||
@@ -3566,7 +3634,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
             color: theme.colorScheme.onBackground,
             height: 60,
             width: 60,
-            child: ImageContainer(exerciseName: currentExercise.name),
+            child: ImageContainer(exercise: currentExercise),
           ),
           SizedBox(
             width: 20,
@@ -4464,8 +4532,7 @@ class _SearchExercisesState extends State<SearchExercises>
                                 color: theme.colorScheme.onBackground),
                             child: Padding(
                               padding: const EdgeInsets.all(1.0),
-                              child:
-                                  ImageContainer(exerciseName: exercise.name),
+                              child: ImageContainer(exercise: exercise),
                             ),
                           ),
                           title: Row(children: [

@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
+import 'package:time_for_gym/active_workout.dart';
 
 import 'activity.dart';
 
@@ -216,6 +217,7 @@ class User {
   String? profilePictureDevicePath;
   ImageProvider? profilePicture;
   List<Activity> activities = [];
+  ActiveWorkout? workout;
 
   final ImagePicker _picker = ImagePicker();
 }

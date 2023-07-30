@@ -111,6 +111,7 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: 65,
           title: appState.userGym != null
               ?
               //  ElevatedButton(
@@ -168,22 +169,25 @@ class _HomePageState extends State<HomePage> {
                         if (weightedAverageString.isNotEmpty ||
                             (currentlyOpenString != null &&
                                 currentlyOpenString!.isEmpty))
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CustomCircularProgressIndicator(
-                                  percentCapacity: double.parse(
-                                          weightedAverageString.substring(
-                                              0,
-                                              weightedAverageString.length -
-                                                  1)) /
-                                      100.0,
-                                  strokeWidth: 2,
-                                  size: 15.0),
-                              SizedBox(width: 10),
-                              Text('Estimated $weightedAverageString capacity',
-                                  style: labelStyle),
-                            ],
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0,3,0,0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CustomCircularProgressIndicator(
+                                    percentCapacity: double.parse(
+                                            weightedAverageString.substring(
+                                                0,
+                                                weightedAverageString.length -
+                                                    1)) /
+                                        100.0,
+                                    strokeWidth: 1.5,
+                                    size: 9.0),
+                                SizedBox(width: 6),
+                                Text('Estimated $weightedAverageString capacity',
+                                    style: labelStyle),
+                              ],
+                            ),
                           ),
                       ],
                     ),

@@ -60,6 +60,7 @@ class Exercise implements Comparable<Exercise> {
   // Split reps for each set (including top set)
   List<int> splitRepsPerSet = [];
   Map<int, int> userOneRepMaxHistory = {};
+  late bool imageExists;
 
   @override
   int compareTo(Exercise other) {
@@ -206,6 +207,6 @@ class ExercisePopularityData {
         if (splitWeightAndReps.length > 1) 'splitReps': splitWeightAndReps[1],
         'splitWeightPerSet': splitWeightPerSet,
         'splitRepsPerSet': splitRepsPerSet,
-        'userOneRepMaxHistory': userOneRepMaxHistory,
+        'userOneRepMaxHistory': userOneRepMaxHistory.map((key, value) => MapEntry(key.toString(), value)),
       };
 }

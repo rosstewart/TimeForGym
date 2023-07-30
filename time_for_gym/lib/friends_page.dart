@@ -31,8 +31,10 @@ class _FriendsPageState extends State<FriendsPage> {
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
 
-    if (friends.isEmpty) {
+    if (friends.isEmpty && isLoadingFriends) {
       loadFriends(appState);
+    } else if (appState.reloadFriendsPage == true) {
+      reloadFriends(appState);
     }
 
     return GestureDetector(
@@ -167,9 +169,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void loadFriends(final MyAppState appState) async {
-    List<String> friendUsernames = appState.currentUser.following.toList();
-    // .where((element) => appState.currentUser.followers.contains(element))
-    // .toList();
+    if (friends.isNotEmpty) {
+      return;
+    }
+    List<String> friendUsernames = appState.currentUser.following
+        // .where((element) => appState.currentUser.followers.contains(element))
+        .toList();
     friendUsernames.add(appState.currentUser.username);
     for (int i = 0; i < friendUsernames.length; i++) {
       User? newUser;
@@ -188,10 +193,12 @@ class _FriendsPageState extends State<FriendsPage> {
             activityIndex < newUser.activities.length;
             activityIndex++) {
           final activity = newUser.activities[activityIndex];
-          allActivities.add(ActivityWithAuthorIndex(
-              author: newUser,
-              activity: activity,
-              activityIndex: activityIndex));
+          if (activity.private != true) {
+            allActivities.add(ActivityWithAuthorIndex(
+                author: newUser,
+                activity: activity,
+                activityIndex: activityIndex));
+          }
         }
       }
     }
@@ -201,6 +208,16 @@ class _FriendsPageState extends State<FriendsPage> {
     setState(() {
       isLoadingFriends = false;
     });
+  }
+
+  void reloadFriends(MyAppState appState) {
+    appState.reloadFriendsPage = false;
+    setState(() {
+      isLoadingFriends = true;
+    });
+    friends.clear();
+    friendsThatBothFollow.clear();
+    allActivities.clear();
   }
 
   Future<User?> getUserDataFromFirestore(

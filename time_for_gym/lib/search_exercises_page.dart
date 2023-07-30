@@ -257,7 +257,7 @@ class _SearchExercisesPageState extends State<SearchExercisesPage> {
                             color: theme.colorScheme.onBackground),
                         child: Padding(
                           padding: const EdgeInsets.all(1.0),
-                          child: ImageContainer(exerciseName: exercise.name),
+                          child: ImageContainer(exercise: exercise),
                         ),
                       ),
                       title: Row(children: [

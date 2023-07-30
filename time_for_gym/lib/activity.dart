@@ -13,7 +13,10 @@ class Activity {
       required this.usernamesThatLiked,
       required this.commentsFromEachUsername,
       required this.pictureUrl,
-      required this.picture});
+      required this.picture,
+      required this.private,
+      required this.prsHit,
+      required this.gym});
 
   @override
   String toString() {
@@ -32,6 +35,9 @@ class Activity {
       'commentsFromEachUsername': commentsFromEachUsername,
       'trainingDay': trainingDay?.toJson(),
       'pictureUrl': pictureUrl,
+      'private': private,
+      'prsHit': prsHit,
+      'gym': gym,
     };
   }
 
@@ -51,7 +57,14 @@ class Activity {
           ? TrainingDay.fromJson(json['trainingDay'])
           : null, // Convert JSON to TrainingDay
       pictureUrl: json['pictureUrl'], // Could be null
-      picture: json['pictureUrl'] != null ? Image.network(json['pictureUrl'], fit: BoxFit.cover): null
+      picture: json['pictureUrl'] != null
+          ? Image.network(json['pictureUrl'], fit: BoxFit.cover)
+          : null,
+      private: json['private'] ?? false,
+      prsHit: json['prsHit'] != null
+          ? List<String>.from(json['prsHit'])
+          : null, // prsHit could be null
+      gym: json['gym'], // Could be null
     );
   }
 
@@ -66,4 +79,7 @@ class Activity {
   Map<String, List<String>> commentsFromEachUsername;
   String? pictureUrl;
   Widget? picture;
+  bool? private;
+  List<String>? prsHit;
+  String? gym;
 }

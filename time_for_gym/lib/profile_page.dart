@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -149,9 +149,9 @@ class _ProfilePageState extends State<ProfilePage> {
             title: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                  Spacer(flex: titleFlexTopLeft),
+                Spacer(flex: titleFlexTopLeft),
                 Text(widget.user!.username, style: titleStyle),
-                  Spacer(flex: titleFlexTopRight),
+                Spacer(flex: titleFlexTopRight),
                 if (widget.setAuthenticationState != null &&
                     appState.currentUser == widget.user)
                   GestureDetector(
@@ -522,66 +522,68 @@ class _ProfilePageState extends State<ProfilePage> {
                   SplitPreview(widget.user!.splitJson != null
                       ? Split.fromJson(json.decode(widget.user!.splitJson!))
                       : null),
-                  ListView.builder(
-                    itemCount: widget.user!.favoritesString.split(',').length,
-                    itemBuilder: (context, index) {
-                      if (widget.user!.favoritesString.isEmpty) {
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                    child: ListView.builder(
+                      itemCount: widget.user!.favoritesString.split(',').length,
+                      itemBuilder: (context, index) {
+                        if (widget.user!.favoritesString.isEmpty) {
+                          return ListTile(
+                            title: Text('No favorite exercises',
+                                style: greyLabelStyle,
+                                textAlign: TextAlign.center),
+                          );
+                        }
+                        final List<String> temps =
+                            widget.user!.favoritesString.split(',');
+                        List<String> temp2 = temps[index].split('=');
+                        Exercise exercise = appState.muscleGroups[temp2[1]]!
+                            .firstWhere((element) => element.name == temp2[0]);
                         return ListTile(
-                          title: Text('No favorite exercises',
-                              style: greyLabelStyle,
-                              textAlign: TextAlign.center),
-                        );
-                      }
-                      final List<String> temps =
-                          widget.user!.favoritesString.split(',');
-                      List<String> temp2 = temps[index].split('=');
-                      Exercise exercise = appState.muscleGroups[temp2[1]]!
-                          .firstWhere((element) => element.name == temp2[0]);
-                      return ListTile(
-                          onTap: () {
-                            appState.fromProfilePage = true;
-                            appState.changePageToExercise(exercise);
-                          },
-                          leading: Container(
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                color: theme.colorScheme.onBackground),
-                            child: Padding(
-                              padding: const EdgeInsets.all(1.0),
-                              child:
-                                  ImageContainer(exerciseName: exercise.name),
-                            ),
-                          ),
-                          title: Row(children: [
-                            SizedBox(
-                              width: 200,
-                              child: Text(
-                                exercise.name,
-                                style: labelStyle,
-                                maxLines: 2,
+                            onTap: () {
+                              appState.fromProfilePage = true;
+                              appState.changePageToExercise(exercise);
+                            },
+                            leading: Container(
+                              height: 60,
+                              width: 60,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: theme.colorScheme.onBackground),
+                              child: Padding(
+                                padding: const EdgeInsets.all(1.0),
+                                child: ImageContainer(exercise: exercise),
                               ),
                             ),
-                          ]),
-                          subtitle: Row(
-                            children: [
-                              Text(
-                                '${exercise.mainMuscleGroup} ',
-                                style: labelStyle.copyWith(
-                                    color: theme.colorScheme.primary),
-                              ),
-                              if (exercise.mainMuscleGroup !=
-                                  exercise.musclesWorked[0])
-                                Text(
-                                  '(${exercise.musclesWorked[0]})',
-                                  style: labelStyle.copyWith(
-                                      color: theme.colorScheme.onBackground
-                                          .withOpacity(.65)),
+                            title: Row(children: [
+                              SizedBox(
+                                width: 200,
+                                child: Text(
+                                  exercise.name,
+                                  style: labelStyle,
+                                  maxLines: 2,
                                 ),
-                            ],
-                          ));
-                    },
+                              ),
+                            ]),
+                            subtitle: Row(
+                              children: [
+                                Text(
+                                  '${exercise.mainMuscleGroup} ',
+                                  style: labelStyle.copyWith(
+                                      color: theme.colorScheme.primary),
+                                ),
+                                if (exercise.mainMuscleGroup !=
+                                    exercise.musclesWorked[0])
+                                  Text(
+                                    '(${exercise.musclesWorked[0]})',
+                                    style: labelStyle.copyWith(
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65)),
+                                  ),
+                              ],
+                            ));
+                      },
+                    ),
                   ),
                 ]),
               ),
@@ -625,6 +627,14 @@ class _ProfilePageState extends State<ProfilePage> {
     ).then((value) {
       if (value == 'Sign out') {
         if (widget.setAuthenticationState != null) {
+          if (appState.activeWorkout != null) {
+            FirebaseFirestore.instance
+                .collection('users')
+                .doc(appState.authUsername)
+                .update({
+              'activeWorkout': json.encode(appState.activeWorkout!.toJson())
+            });
+          }
           widget.setAuthenticationState!(() {
             isAuthenticated = false;
             // appState.currentUser = null;
@@ -651,6 +661,9 @@ class _ProfilePageState extends State<ProfilePage> {
             appState.isGymCountInitialized = false;
             appState.userProfileStack = [];
             appState.userProfileStackFromOwnProfile = [];
+            appState.activeWorkout = null;
+            appState.areMuscleGroupImagesInitialized = {};
+            appState.prefs.clear();
           });
         }
 
@@ -931,7 +944,7 @@ class SplitPreviewCard extends StatelessWidget {
                             color: theme.colorScheme.onBackground),
                         child: Padding(
                           padding: const EdgeInsets.all(1.0),
-                          child: ImageContainer(exerciseName: exercise.name),
+                          child: ImageContainer(exercise: exercise),
                         ),
                       ),
                       title: Row(children: [
@@ -1667,21 +1680,29 @@ class _ManualActivityWindowState extends State<ManualActivityWindow>
               usernamesThatLiked: [],
               commentsFromEachUsername: {},
               pictureUrl: activityPictureUrl,
-              picture: activityPicture));
+              picture: activityPicture,
+              private: false,
+              prsHit: null,
+              gym: appState.userGym?.name));
     });
     appState.storeDataInFirestore();
   }
 
   Future<void> addPicture(bool fromGallery) async {
+    String? oldPath = pickedFilePath;
     pickedFilePath = await setActivityPicture(fromGallery);
     if (pickedFilePath == '2') {
+      pickedFilePath = null;
       setState(() {
         imageErrorText = 'Failed to upload image';
       });
     } else if (pickedFilePath == '1') {
-      setState(() {
-        imageErrorText = null;
-      });
+      pickedFilePath = oldPath;
+      if (pickedFilePath == null) {
+        setState(() {
+          imageErrorText = null;
+        });
+      }
     } else {
       setState(() {
         imageErrorText = 'Attached';
@@ -1819,13 +1840,69 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     }
   }
 
+  bool isDayBefore(DateTime timeOfPost, DateTime now) {
+    if (now.day != 1) {
+      return timeOfPost.day == now.day - 1 &&
+          timeOfPost.month == now.month &&
+          timeOfPost.year == now.year;
+    } else {
+      if (now.month == 1) {
+        // First of the year
+        return timeOfPost.day == 31 &&
+            timeOfPost.month == 12 &&
+            timeOfPost.year == now.year - 1;
+      } else {
+        // First of a different month
+        int daysInPreviousMonth = DateTime(now.year, now.month - 1, 0).day;
+        return timeOfPost.day == daysInPreviousMonth &&
+            timeOfPost.month == now.month - 1 &&
+            timeOfPost.year == now.year;
+      }
+    }
+  }
+
+  bool isTwoDaysBefore(DateTime timeOfPost, DateTime now) {
+    if (now.day >= 2) {
+      return timeOfPost.day == now.day - 2 &&
+          timeOfPost.month == now.month &&
+          timeOfPost.year == now.year;
+    } else {
+      if (now.month == 1) {
+        // First two days of the year
+        if (now.day == 1) {
+          return timeOfPost.day == 30 &&
+              timeOfPost.month == 12 &&
+              timeOfPost.year == now.year - 1;
+        } else {
+          // now.day == 0
+          return timeOfPost.day == 31 &&
+              timeOfPost.month == 12 &&
+              timeOfPost.year == now.year - 1;
+        }
+      } else {
+        // First two days of a different month
+        int lastMonthDays = DateTime(now.year, now.month - 1, 0).day;
+        if (now.day == 1) {
+          return timeOfPost.day == lastMonthDays - 1 &&
+              timeOfPost.month == now.month - 1 &&
+              timeOfPost.year == now.year;
+        } else {
+          // now.day == 0
+          return timeOfPost.day == lastMonthDays &&
+              timeOfPost.month == now.month - 1 &&
+              timeOfPost.year == now.year;
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground);
-    final bodyStyle = theme.textTheme.bodyLarge!
+    final bodyStyle = theme.textTheme.bodyMedium!
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.8));
@@ -1837,24 +1914,58 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
     DateTime now = DateTime.now();
     Duration timeDifference = now.difference(timeOfPost);
     String timeDifferenceString;
-    if (timeDifference.inSeconds < 60) {
+    // if (timeDifference.inSeconds < 60) {
+    //   timeDifferenceString =
+    //       '${timeDifference.inSeconds} second${timeDifference.inSeconds == 1 ? '' : 's'} ago';
+    // } else if (timeDifference.inMinutes < 60) {
+    //   timeDifferenceString =
+    //       '${timeDifference.inMinutes} minute${timeDifference.inMinutes == 1 ? '' : 's'} ago';
+    // } else if (timeDifference.inHours < 24) {
+    //   timeDifferenceString =
+    //       '${timeDifference.inHours} hour${timeDifference.inHours == 1 ? '' : 's'} ago';
+    // } else if (timeDifference.inDays < 7) {
+    //   timeDifferenceString =
+    //       '${timeDifference.inDays} day${timeDifference.inDays == 1 ? '' : 's'} ago';
+    // } else if (timeOfPost.year == now.year) {
+    //   timeDifferenceString =
+    //       '${months[timeOfPost.month - 1]} ${timeOfPost.day}';
+    // } else {
+    //   timeDifferenceString =
+    //       '${months[timeOfPost.month - 1]} ${timeOfPost.day}, ${timeOfPost.year}';
+    // }
+    String hoursString = '';
+    String amPM = '';
+    if (timeOfPost.hour == 0) {
+      hoursString = '12';
+      amPM = 'AM';
+    } else if (timeOfPost.hour == 12) {
+      hoursString = '12';
+      amPM = 'PM';
+    } else if (timeOfPost.hour < 12) {
+      hoursString = timeOfPost.hour.toString();
+      amPM = 'AM';
+    } else if (timeOfPost.hour > 12) {
+      hoursString = '${timeOfPost.hour - 12}';
+      amPM = 'PM';
+    }
+    String minutesString = timeOfPost.minute < 10
+        ? '0${timeOfPost.minute}'
+        : timeOfPost.minute.toString();
+    if (timeOfPost.day == now.day &&
+        timeOfPost.month == now.month &&
+        timeOfPost.year == now.year) {
+      timeDifferenceString = 'Today at $hoursString:$minutesString $amPM';
+    } else if (isDayBefore(timeOfPost, now)) {
+      timeDifferenceString = 'Yesterday at $hoursString:$minutesString $amPM';
+    } else if (isTwoDaysBefore(timeOfPost, now)) {
       timeDifferenceString =
-          '${timeDifference.inSeconds} second${timeDifference.inSeconds == 1 ? '' : 's'} ago';
-    } else if (timeDifference.inMinutes < 60) {
-      timeDifferenceString =
-          '${timeDifference.inMinutes} minute${timeDifference.inMinutes == 1 ? '' : 's'} ago';
-    } else if (timeDifference.inHours < 24) {
-      timeDifferenceString =
-          '${timeDifference.inHours} hour${timeDifference.inHours == 1 ? '' : 's'} ago';
-    } else if (timeDifference.inDays < 7) {
-      timeDifferenceString =
-          '${timeDifference.inDays} day${timeDifference.inDays == 1 ? '' : 's'} ago';
+          'Two days ago at $hoursString:$minutesString $amPM';
     } else if (timeOfPost.year == now.year) {
       timeDifferenceString =
-          '${months[timeOfPost.month - 1]} ${timeOfPost.day}';
+          '${months[timeOfPost.month - 1]} ${timeOfPost.day}, at $hoursString:$minutesString $amPM';
     } else {
       timeDifferenceString =
-          '${months[timeOfPost.month - 1]} ${timeOfPost.day}, ${timeOfPost.year}';
+          '${months[timeOfPost.month - 1]} ${timeOfPost.day}, ${timeOfPost.year}, at $hoursString:$minutesString $amPM';
     }
 
     int numComments = widget.activity.commentsFromEachUsername.values
@@ -1884,7 +1995,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
             decoration: BoxDecoration(),
             child: Row(
               children: [
-                SizedBox(width: 15),
+                SizedBox(width: 10),
                 Row(
                   children: [
                     CircleAvatar(
@@ -1923,172 +2034,235 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+          padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
           child: Container(
             decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(15)),
+                borderRadius: BorderRadius.circular(5)),
             // height: 200,
             child: Padding(
-                padding: const EdgeInsets.all(15),
-                child: widget.activity.trainingDay == null
-                    ? Row(
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                    child: Text(
+                      widget.activity.title,
+                      style: theme.textTheme.titleMedium!
+                          .copyWith(color: theme.colorScheme.onBackground),
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  if (widget.activity.description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                      child: Text(widget.activity.description,
+                          style: greyLabelStyle),
+                    ),
+                  if (widget.activity.trainingDay != null) SizedBox(height: 10),
+                  if (widget.activity.trainingDay != null)
+                    TrainingDayPreviewCard(widget.activity.trainingDay!),
+                  if (widget.activity.pictureUrl != null ||
+                      (widget.activity.prsHit != null &&
+                          widget.activity.prsHit!.isNotEmpty))
+                    SizedBox(
+                        height: widget.activity.trainingDay != null ? 15 : 10),
+                  if (widget.activity.prsHit != null &&
+                      widget.activity.prsHit!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          SizedBox(height: 0),
+                          Text('New PRs Hit', style: bodyStyle),
+                          SizedBox(height: 5),
+                          for (int i = 0;
+                              i < widget.activity.prsHit!.length;
+                              i++)
+                            Text(widget.activity.prsHit![i],
+                                style: greyLabelStyle),
+                        ],
+                      ),
+                    ),
+                  if (widget.activity.prsHit != null &&
+                      widget.activity.prsHit!.isNotEmpty)
+                    SizedBox(height: 20),
+                  if (widget.activity.pictureUrl != null)
+                    Hero(
+                      tag: widget.activityIndex,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenPhoto(
+                                  photoTag: widget.activityIndex.toString(),
+                                  photo: widget.activity.picture ??
+                                      (widget.activity.picture = Image.network(
+                                          widget.activity.pictureUrl!,
+                                          fit: BoxFit.cover))),
+                            ),
+                          );
+                        },
+                        child: Center(
+                          child: Container(
+                            color: theme.colorScheme.onBackground,
+                            // Natural size, up to 175 high
+                            height: 175,
+                            // width: MediaQuery.of(context).size.width - 100,
+                            child: widget.activity.picture ??
+                                (widget.activity.picture = Image.network(
+                                    widget.activity.pictureUrl!,
+                                    fit: BoxFit.cover)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  SizedBox(
+                      height: widget.activity.pictureUrl != null ? 20 : 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        // color: theme.colorScheme.secondaryContainer,
+                        width: MediaQuery.of(context).size.width / 2 - 15,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                                onTap: () {
+                                  if (!widget.activity.usernamesThatLiked
+                                      .contains(
+                                          appState.currentUser.username)) {
+                                    setState(() {
+                                      widget.activity.usernamesThatLiked
+                                          .add(appState.currentUser.username);
+                                    });
+                                  } else {
+                                    setState(() {
+                                      widget.activity.usernamesThatLiked.remove(
+                                          appState.currentUser.username);
+                                    });
+                                  }
+                                  DocumentReference authorRef =
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(widget.author.username);
+
+                                  authorRef
+                                      .update({
+                                        'activities': widget.author.activities
+                                            .map(
+                                                (e) => json.encode(e.toJson())),
+                                      })
+                                      .then((value) => print(
+                                          '${widget.author} post at index ${widget.activityIndex} likes updated to ${widget.activity.usernamesThatLiked.length}'))
+                                      .catchError((error) => print(
+                                          'Failed to update likes: $error'));
+                                },
+                                child: widget.activity.usernamesThatLiked
+                                        .contains(appState.currentUser.username)
+                                    ? Icon(Icons.favorite,
+                                        color: theme.colorScheme.secondary,
+                                        size: 26)
+                                    : Icon(Icons.favorite_border,
+                                        color: theme.colorScheme.onBackground,
+                                        size: 26)),
+                            SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () {
+                                _showLikes(
+                                    context,
+                                    appState,
+                                    widget.author,
+                                    widget.activity,
+                                    widget.activityIndex,
+                                    setState);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(),
+                                child: Text(
+                                  '${widget.activity.usernamesThatLiked.length < 10000 ? widget.activity.usernamesThatLiked.length : '${widget.activity.usernamesThatLiked.length ~/ 10000}K'}',
+                                  style: labelStyle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 2 - 15,
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SizedBox(
-                                width: 250,
-                                child: Text(
-                                  widget.activity.title,
-                                  style: bodyStyle,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              SizedBox(
-                                width: 300,
-                                child: Text(
-                                  widget.activity.description,
-                                  style: greyLabelStyle,
-                                ),
-                              ),
-                              if (widget.activity.pictureUrl != null)
-                                Hero(
-                                  tag: widget.activityIndex,
-                                  child: GestureDetector(
+                              Row(
+                                children: [
+                                  GestureDetector(
                                     onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => FullScreenPhoto(
-                                              photoTag: widget.activityIndex
-                                                  .toString(),
-                                              photo: widget.activity.picture ??
-                                                  (widget.activity.picture =
-                                                      Image.network(
-                                                          widget.activity
-                                                              .pictureUrl!,
-                                                          fit: BoxFit.cover))),
-                                        ),
-                                      );
+                                      _showComments(
+                                          context,
+                                          appState,
+                                          widget.author,
+                                          widget.activity,
+                                          widget.activityIndex,
+                                          setState);
+                                    },
+                                    child: Icon(Icons.comment,
+                                        color: theme.colorScheme.onBackground,
+                                        size: 26),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showComments(
+                                          context,
+                                          appState,
+                                          widget.author,
+                                          widget.activity,
+                                          widget.activityIndex,
+                                          setState);
                                     },
                                     child: Container(
-                                      color: theme.colorScheme.onBackground,
-                                      height: 150,
-                                      width: 150,
-                                      // Actual size: width: 496, height: 496
-                                      child: widget.activity.picture ??
-                                          (widget.activity.picture =
-                                              Image.network(
-                                                  widget.activity.pictureUrl!,
-                                                  fit: BoxFit.cover)),
+                                      width: 8,
+                                      height: 24,
+                                      decoration: BoxDecoration(),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              GestureDetector(
-                                  onTap: () {
-                                    if (!widget.activity.usernamesThatLiked
-                                        .contains(
-                                            appState.currentUser.username)) {
-                                      setState(() {
-                                        widget.activity.usernamesThatLiked
-                                            .add(appState.currentUser.username);
-                                      });
-                                    } else {
-                                      setState(() {
-                                        widget.activity.usernamesThatLiked
-                                            .remove(
-                                                appState.currentUser.username);
-                                      });
-                                    }
-                                    DocumentReference authorRef =
-                                        FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(widget.author.username);
-
-                                    authorRef
-                                        .update({
-                                          'activities': widget.author.activities
-                                              .map((e) =>
-                                                  json.encode(e.toJson())),
-                                        })
-                                        .then((value) => print(
-                                            '${widget.author} post at index ${widget.activityIndex} likes updated to ${widget.activity.usernamesThatLiked.length}'))
-                                        .catchError((error) => print(
-                                            'Failed to update likes: $error'));
-                                  },
-                                  child: widget.activity.usernamesThatLiked
-                                          .contains(
-                                              appState.currentUser.username)
-                                      ? Icon(Icons.favorite,
-                                          color: theme.colorScheme.secondary)
-                                      : Icon(Icons.favorite_border,
-                                          color:
-                                              theme.colorScheme.onBackground)),
-                              SizedBox(height: 3),
-                              GestureDetector(
-                                onTap: () {
-                                  _showLikes(
-                                      context,
-                                      appState,
-                                      widget.author,
-                                      widget.activity,
-                                      widget.activityIndex,
-                                      setState);
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(),
-                                  child: Text(
-                                    '${widget.activity.usernamesThatLiked.length < 10000 ? widget.activity.usernamesThatLiked.length : '${widget.activity.usernamesThatLiked.length ~/ 10000}K'}',
-                                    style: labelStyle,
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showComments(
+                                          context,
+                                          appState,
+                                          widget.author,
+                                          widget.activity,
+                                          widget.activityIndex,
+                                          setState);
+                                    },
+                                    child: Text(
+                                      '${numComments < 10000 ? numComments : '${numComments ~/ 10000}K'}',
+                                      style: labelStyle,
+                                    ),
                                   ),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              GestureDetector(
-                                onTap: () {
-                                  _showComments(
-                                      context,
-                                      appState,
-                                      widget.author,
-                                      widget.activity,
-                                      widget.activityIndex,
-                                      setState);
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.comment,
-                                          color:
-                                              theme.colorScheme.onBackground),
-                                      SizedBox(height: 3),
-                                      Text(
-                                        '${numComments < 10000 ? numComments : '${numComments ~/ 10000}K'}',
-                                        style: labelStyle,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      )
-                    : Column()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         SizedBox(height: 5),
         Row(
           children: [
-            SizedBox(width: 15),
+            SizedBox(width: 10),
             Text(
               timeDifferenceString,
               style: greyLabelStyle,
@@ -2099,7 +2273,7 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
                 '${widget.activity.totalMinutesDuration ~/ 60} hour${widget.activity.totalMinutesDuration ~/ 60 == 1 ? '' : 's'}, ${widget.activity.totalMinutesDuration % 60} minute${widget.activity.totalMinutesDuration % 60 == 1 ? '' : 's'}',
                 style: greyLabelStyle,
               ),
-            SizedBox(width: 15),
+            SizedBox(width: 10),
           ],
         ),
         SizedBox(height: 25),
@@ -2203,6 +2377,117 @@ class _ActivityPreviewCardState extends State<ActivityPreviewCard> {
         }
       }
     });
+  }
+}
+
+class TrainingDayPreviewCard extends StatelessWidget {
+  final TrainingDay trainingDay;
+  TrainingDayPreviewCard(this.trainingDay);
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.8));
+    final greyLabelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+
+    return Container(
+      decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(5)),
+      height: 175,
+      // width: MediaQuery.of(context).size.width - 100,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+        child: ListView.builder(
+          itemCount: trainingDay.muscleGroups.length,
+          itemBuilder: (context, index) {
+            List<Exercise> exercisesTestList = appState
+                .muscleGroups[trainingDay.muscleGroups[index]]!
+                .where((element) =>
+                    trainingDay.exerciseNames[index] == element.name)
+                .toList();
+            if (exercisesTestList.length != 1) {
+              return null;
+            }
+            Exercise exercise = exercisesTestList[0];
+            return Column(
+              children: [
+                if (trainingDay.isSupersettedWithLast[index])
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.swap_vert,
+                        color: theme.colorScheme.onBackground.withOpacity(.8),
+                        size: 16,
+                      ),
+                      Text(' Superset ', style: labelStyle),
+                      Icon(
+                        Icons.swap_vert,
+                        color: theme.colorScheme.onBackground.withOpacity(.8),
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ListTile(
+                  onTap: () {
+                    toExercise(appState, exercise);
+                  },
+                  contentPadding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                  leading: Container(
+                    height: 60,
+                    width: 60,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        color: theme.colorScheme.onBackground),
+                    child: Padding(
+                      padding: const EdgeInsets.all(1.0),
+                      child: ImageContainer(exercise: exercise),
+                    ),
+                  ),
+                  title: Row(children: [
+                    SizedBox(
+                        width: 150,
+                        child: Text(exercise.name,
+                            style: labelStyle, maxLines: 2)),
+                  ]),
+                  subtitle: Row(
+                    children: [
+                      Text(
+                        '${exercise.mainMuscleGroup} ',
+                        style: labelStyle.copyWith(
+                            color: theme.colorScheme.primary),
+                      ),
+                      if (exercise.mainMuscleGroup != exercise.musclesWorked[0])
+                        Text(
+                          '(${exercise.musclesWorked[0]})',
+                          style: labelStyle.copyWith(
+                              color: theme.colorScheme.onBackground
+                                  .withOpacity(.65)),
+                        ),
+                    ],
+                  ),
+                  trailing: Text(
+                    '${trainingDay.setsPerMuscleGroup[index]} sets',
+                    style: greyLabelStyle,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void toExercise(MyAppState appState, Exercise exercise) {
+    appState.fromProfilePage = true;
+    // appState.currentExerciseFromProfilePage = exercise;
+    appState.changePageToExercise(exercise);
   }
 }
 
@@ -2843,39 +3128,39 @@ class _LikesWindowState extends State<LikesWindow>
   }
 }
 
+// Future<void> sendNotification(
+//     String recipientToken, String senderUsername) async {
+//   // Replace YOUR_FCM_SERVER_KEY with your actual FCM server key from the Firebase console
+//   const String serverKey = '2983018103981223317';
 
+//   // Construct the FCM notification payload
+//   final Map<String, dynamic> notification = {
+//     'title': 'Nudge from $senderUsername',
+//     'body': 'You have been nudged to go to the gym!',
+//     'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+//   };
 
-Future<void> sendNotification(String recipientToken, String senderUsername) async {
-  // Replace YOUR_FCM_SERVER_KEY with your actual FCM server key from the Firebase console
-  const String serverKey = '2983018103981223317';
+//   // Construct the FCM request body
+//   final Map<String, dynamic> requestBody = {
+//     'to': recipientToken,
+//     'notification': notification,
+//     'priority':
+//         'high', // Set the priority to high for time-sensitive notifications
+//   };
 
-  // Construct the FCM notification payload
-  final Map<String, dynamic> notification = {
-    'title': 'Nudge from $senderUsername',
-    'body': 'You have been nudged to go to the gym!',
-    'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-  };
+//   // Send the FCM request
+//   final response = await http.post(
+//     Uri.parse('https://fcm.googleapis.com/fcm/send'),
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': 'key=$serverKey',
+//     },
+//     body: jsonEncode(requestBody),
+//   );
 
-  // Construct the FCM request body
-  final Map<String, dynamic> requestBody = {
-    'to': recipientToken,
-    'notification': notification,
-    'priority': 'high', // Set the priority to high for time-sensitive notifications
-  };
-
-  // Send the FCM request
-  final response = await http.post(
-    Uri.parse('https://fcm.googleapis.com/fcm/send'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'key=$serverKey',
-    },
-    body: jsonEncode(requestBody),
-  );
-
-  if (response.statusCode == 200) {
-    print('Notification sent successfully.');
-  } else {
-    print('Failed to send notification. Status code: ${response.statusCode}');
-  }
-}
+//   if (response.statusCode == 200) {
+//     print('Notification sent successfully.');
+//   } else {
+//     print('Failed to send notification. Status code: ${response.statusCode}');
+//   }
+// }

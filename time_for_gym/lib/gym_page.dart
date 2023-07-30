@@ -411,7 +411,7 @@ class _GymPageState extends State<GymPage> {
                               width: 70,
                               child: Stack(children: [
                                 ImageContainer(
-                                    exerciseName: displayExercises[index].name),
+                                    exercise: displayExercises[index]),
                                 Align(
                                     alignment: Alignment.topRight,
                                     child: Icon(
@@ -1482,10 +1482,9 @@ class _GymPageState extends State<GymPage> {
                                                         ),
                                                         // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
                                                         child: ImageContainer(
-                                                            exerciseName:
+                                                            exercise:
                                                                 machinesAvailable[
-                                                                        i]
-                                                                    .name),
+                                                                    i]),
                                                         // child: ,
                                                       ),
                                                     ),

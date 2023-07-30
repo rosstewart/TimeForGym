@@ -221,18 +221,19 @@ class _SearchPageState extends State<SearchPage> {
 class SquareButton extends StatelessWidget {
   final String name;
   final bool isExercise;
+  final Exercise? exercise;
   final VoidCallback onPressed;
   Widget image = Placeholder();
 
   SquareButton(
-      {required this.name, required this.isExercise, required this.onPressed});
+      {required this.name, required this.isExercise, required this.onPressed, required this.exercise});
 
   @override
   Widget build(BuildContext context) {
     if (!isExercise) {
       image = MuscleGroupImageContainer(muscleGroup: name);
     } else {
-      image = ImageContainer(exerciseName: name);
+      image = ImageContainer(exercise: exercise!);
     }
     return GestureDetector(
       onTap: onPressed,
@@ -290,6 +291,7 @@ class ScrollableButtonRow extends StatelessWidget {
               child: SquareButton(
                 name: names[index],
                 isExercise: isExercise,
+                exercise: isExercise ? appState.favoriteExercises[index] : null,
                 onPressed: () {
                   // Handle button press
                   if (!isExercise) {

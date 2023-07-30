@@ -236,7 +236,7 @@ class ExerciseSelectorButton extends StatelessWidget {
                 color: theme.colorScheme.onBackground),
             child: Padding(
               padding: const EdgeInsets.all(1.0),
-              child: ImageContainer(exerciseName: exercise.name),
+              child: ImageContainer(exercise: exercise),
             ),
           ),
           SizedBox(width: 25),

@@ -258,6 +258,48 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserNotificationCategory</key>
+	<array>
+		<dict>
+			<key>UIMediaOptions</key>
+			<array>
+				<string>UIUserNotificationActionContextMinimal</string>
+			</array>
+			<key>UIUserNotificationActionContextDefault</key>
+			<array>
+				<string>UIUserNotificationActionContextMinimal</string>
+			</array>
+			<key>UIUserNotificationActions</key>
+			<array>
+				<dict>
+					<key>UIUserNotificationActionAuthenticationRequired</key>
+					<false/>
+					<key>UIUserNotificationActionDestructive</key>
+					<false/>
+					<key>UIUserNotificationActionIdentifier</key>
+					<string>start_action</string>
+					<key>UIUserNotificationActionTitle</key>
+					<string>Start</string>
+					<key>UIUserNotificationActivationMode</key>
+					<string>UIUserNotificationActivationModeBackground</string>
+				</dict>
+				<dict>
+					<key>UIUserNotificationActionAuthenticationRequired</key>
+					<false/>
+					<key>UIUserNotificationActionDestructive</key>
+					<false/>
+					<key>UIUserNotificationActionIdentifier</key>
+					<string>stop_action</string>
+					<key>UIUserNotificationActionTitle</key>
+					<string>Stop</string>
+					<key>UIUserNotificationActivationMode</key>
+					<string>UIUserNotificationActivationModeBackground</string>
+				</dict>
+			</array>
+			<key>UIUserNotificationCategoryIdentifier</key>
+			<string>notification_category</string>
+		</dict>
+	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>

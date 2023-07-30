@@ -224,7 +224,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
       icon = Icons.favorite_border;
     }
 
-    ImageContainer imageContainer = ImageContainer(exerciseName: exercise.name);
+    ImageContainer imageContainer = ImageContainer(exercise: exercise);
 
     return GestureDetector(
       //   behavior: HitTestBehavior.opaque, // Handle the tap gesture directly
@@ -587,7 +587,7 @@ class SimilarExercisesRow extends StatelessWidget {
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
                         child: ImageContainer(
-                            exerciseName: similarExercises[index].name),
+                            exercise: similarExercises[index]),
                       ),
                       // child: ,
                     ),
@@ -1493,22 +1493,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
           // mainAxisAlignment: MainAxisAlignment.spaceEvenly
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Instructions',
-              style: headingStyle,
-            ),
+            Text('Instructions', style: headingStyle),
             SizedBox(height: 5),
-            Text(
-              widget.exercise.description,
-              style: textStyle,
-            ),
+            Text(widget.exercise.description, style: textStyle),
             // Text(name,style: titleStyle),
             // Image.asset('assets/images/Barbell Bench Press.gif'),
             SizedBox(height: 15),
-            Text(
-              'Muscles Worked',
-              style: headingStyle,
-            ),
+            Text('Muscles Worked', style: headingStyle),
             SizedBox(height: 10),
             for (int i = 0; i < widget.exercise.musclesWorked.length; i++)
               MuscleFillBar(
@@ -1516,10 +1507,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   fillLevel: widget.exercise.musclesWorkedActivation[i],
                   textStyle: whiteTextStyle),
             SizedBox(height: 15),
-            Text(
-              'Expected Wait Time',
-              style: headingStyle,
-            ),
+            Text('Expected Wait Time', style: headingStyle),
             SizedBox(height: 5),
             if (widget.expectedWaitTime != 'No gym selected' &&
                 widget.expectedWaitTime !=
