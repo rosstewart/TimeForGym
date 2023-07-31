@@ -64,7 +64,7 @@ class User {
       List<dynamic> otherFollowingAsObjects = otherUserData['following'] ?? [];
       List<String> otherFollowing = otherFollowingAsObjects.cast<String>();
       otherFollowing.remove(username);
-      await otherUserRef.update({'followers': otherFollowing}).then((value) {
+      await otherUserRef.update({'following': otherFollowing}).then((value) {
         print('Updated other user\'s ($otherUsername) following');
       }).catchError((error) {
         print('Failed to update other user\'s following: $error');

@@ -11,7 +11,7 @@ import 'package:image/image.dart' as img;
 import 'package:time_for_gym/active_workout.dart';
 import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/exercise.dart';
-import 'package:time_for_gym/friends_page.dart';
+// import 'package:time_for_gym/friends_page.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'package:time_for_gym/individual_exercise_page.dart';
 import 'package:time_for_gym/main.dart';
@@ -60,6 +60,7 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
   late Animation<Offset> _animation;
   late final PageController _pageController;
   final List<Widget> pages = [];
+  late final GymOpeningHours? gymOpeningHours;
 
   Exercise getExercise(int i) {
     Exercise exercise = widget
@@ -93,6 +94,13 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
       ),
     );
     _animationController.forward();
+
+    if (widget.appState.userGym != null &&
+        widget.appState.userGym!.openingHours != null) {
+      gymOpeningHours = GymOpeningHours(widget.appState.userGym!.openingHours!);
+    } else {
+      gymOpeningHours = null;
+    }
 
     int totalSetCount = 0;
     for (int i = 0;
@@ -221,7 +229,8 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
         workout: widget.workout,
         pageController: _pageController,
         pages: pages,
-        setActiveWorkoutWindowState: setState));
+        setActiveWorkoutWindowState: setState,
+        gymOpeningHours: gymOpeningHours));
     if (!widget.workout.areBannersAndTimersInitialized) {
       widget.workout.bannerTitles.add(exercise.name);
       widget.workout.bannerSubtitles.add(
@@ -346,6 +355,7 @@ class ActiveWorkoutExercisePage extends StatefulWidget {
   final PageController pageController;
   final List<Widget> pages;
   final StateSetter setActiveWorkoutWindowState;
+  final GymOpeningHours? gymOpeningHours;
 
   ActiveWorkoutExercisePage(
       {required this.exercise,
@@ -361,7 +371,8 @@ class ActiveWorkoutExercisePage extends StatefulWidget {
       required this.workout,
       required this.pageController,
       required this.pages,
-      required this.setActiveWorkoutWindowState});
+      required this.setActiveWorkoutWindowState,
+      required this.gymOpeningHours});
   @override
   State<ActiveWorkoutExercisePage> createState() =>
       _ActiveWorkoutExercisePageState();
@@ -375,6 +386,8 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
   int? previousReps;
   late List<Exercise> similarExercises;
   late Image musclesWorkedImage;
+  String expectedWaitTime = '';
+  double? percentCapacity;
 
   @override
   void initState() {
@@ -464,6 +477,11 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
 
+    // If exercise is swapped
+    if (similarExercises.contains(widget.exercise)) {
+      similarExercises = findSimilarExercises(widget.exercise, appState);
+    }
+
     String equipmentNeededString = "None";
     if (widget.exercise.resourcesRequired != null &&
         widget.exercise.resourcesRequired!.isNotEmpty) {
@@ -509,6 +527,10 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
       weightController.text = '${previousWeight ?? ''}';
       repsController.text = '${previousReps ?? ''}';
       hasInitializedTextControllers = true;
+    }
+
+    if (expectedWaitTime.isEmpty) {
+      expectedWaitTime = getExpectedWaitTime(appState);
     }
 
     return Scaffold(
@@ -720,6 +742,29 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
                     ],
                   ),
                   SizedBox(height: 10),
+                  if (expectedWaitTime != 'No gym selected' &&
+                      expectedWaitTime !=
+                          '${appState.userGym!.name} is currently closed')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Expected Wait Time',
+                          style: titleStyle,
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '$expectedWaitTime Minute${expectedWaitTime != '1' ? 's' : ''}',
+                          style: labelStyle.copyWith(
+                              color: int.parse(expectedWaitTime) < 4
+                                  ? theme.colorScheme.primary
+                                  : (int.parse(expectedWaitTime) < 7
+                                      ? Colors.yellow
+                                      : theme.colorScheme.secondary)),
+                        ),
+                        SizedBox(height: 15),
+                      ],
+                    ),
                   Text('Instructions', style: titleStyle),
                   SizedBox(height: 5),
                   Text(widget.exercise.description, style: greyLabelStyle),
@@ -754,14 +799,14 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
                       ),
                       Spacer(flex: 3),
                       Hero(
-                        tag: '1',
+                        tag: '2',
                         child: GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => FullScreenPhoto(
-                                    photoTag: '1', photo: musclesWorkedImage),
+                                    photoTag: '2', photo: musclesWorkedImage),
                               ),
                             );
                           },
@@ -800,6 +845,47 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
         ),
       ),
     );
+  }
+
+  String getExpectedWaitTime(MyAppState appState) {
+    String expectedWaitTime;
+    if (appState.userGym == null || widget.gymOpeningHours == null) {
+      expectedWaitTime = 'No gym selected';
+    } else {
+      String currentlyOpenString;
+      DateTime now = DateTime.now();
+      percentCapacity =
+          appState.avgGymCrowdData[now.weekday - 1][now.hour] / 12.0;
+      if (appState.userGym!.openingHours == null) {
+        // Assume it's open
+        // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
+        expectedWaitTime = calculateExpectedWaitTimeForExercise(
+            percentCapacity!, widget.exercise);
+      } else {
+        currentlyOpenString = widget.gymOpeningHours!.getCurrentlyOpenString();
+        // 'Open - ...' or 'Open 24 hours'
+        if (currentlyOpenString.startsWith('Open ')) {
+          // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
+          expectedWaitTime = (WAIT_MULTIPLIER_TO_MINUTES *
+                  widget.exercise.waitMultiplier *
+                  percentCapacity!)
+              .toStringAsFixed(0);
+        } else {
+          // Closed
+          expectedWaitTime = '${appState.userGym!.name} is currently closed';
+          percentCapacity = null;
+        }
+      }
+    }
+    return expectedWaitTime;
+  }
+
+  String calculateExpectedWaitTimeForExercise(
+      double percentCapacity, Exercise exercise) {
+    return (WAIT_MULTIPLIER_TO_MINUTES *
+            exercise.waitMultiplier *
+            percentCapacity)
+        .toStringAsFixed(0);
   }
 
   void showOptionsDropdown(
@@ -886,25 +972,27 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
         appState.cancelWorkout();
       } else if (value == 'Change Exercise') {
         _showSwapExerciseWindow(
-            context,
-            appState,
-            appState.muscleGroups.values
-                .toList()
-                .expand((innerList) => innerList)
-                .toList(),
-            similarExercises,
-            widget.exercise,
-            widget.workout.dayIndex,
-            widget.exerciseNum,
-            widget.pages,
-            widget.scrollController,
-            widget.set,
-            widget.supersetA,
-            widget.totalSetCount,
-            widget.totalSetIndex,
-            widget.workout,
-            widget.pageController,
-            setState);
+          context,
+          appState,
+          appState.muscleGroups.values
+              .toList()
+              .expand((innerList) => innerList)
+              .toList(),
+          similarExercises,
+          widget.exercise,
+          widget.workout.dayIndex,
+          widget.exerciseNum,
+          widget.pages,
+          widget.scrollController,
+          widget.set,
+          widget.supersetA,
+          widget.totalSetCount,
+          widget.totalSetIndex,
+          widget.workout,
+          widget.pageController,
+          setState,
+          percentCapacity,
+        );
       } else if (value == 'Jump to first page') {
         widget.pageController.jumpToPage(0);
       } else if (value == 'Jump to last page') {
@@ -1603,8 +1691,8 @@ class _ActiveWorkoutCompletionPageState
   late TextEditingController _liftTitleController;
   TextEditingController _liftDescriptionController = TextEditingController();
   late String yourFollowersOrFriends;
-  late List<String> postOptions;// = ['Your followers', 'Only you'];
-  late String selectedPostOption;// = 'Your followers';
+  late List<String> postOptions; // = ['Your followers', 'Only you'];
+  late String selectedPostOption; // = 'Your followers';
   String? imageErrorText;
   String? pickedFilePath;
   final ImagePicker _picker = ImagePicker();
@@ -1634,9 +1722,11 @@ class _ActiveWorkoutCompletionPageState
                         ? 'Evening $workoutName'
                         : 'Night $workoutName'))));
 
-  yourFollowersOrFriends = widget.appState.currentUser.onlyFriendsCanViewPosts ? 'Your friends' : 'Your followers';
-  postOptions = [yourFollowersOrFriends, 'Only you'];
-  selectedPostOption = yourFollowersOrFriends;
+    yourFollowersOrFriends = widget.appState.currentUser.onlyFriendsCanViewPosts
+        ? 'Your friends'
+        : 'Your followers';
+    postOptions = [yourFollowersOrFriends, 'Only you'];
+    selectedPostOption = yourFollowersOrFriends;
   }
 
   @override
@@ -1876,8 +1966,7 @@ class _ActiveWorkoutCompletionPageState
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                        },
+                        onPressed: () {},
                         style: ButtonStyle(
                             backgroundColor: resolveColor(
                                 theme.colorScheme.primaryContainer),
@@ -2540,6 +2629,7 @@ void _showSwapExerciseWindow(
   final ActiveWorkout workout,
   final PageController pageController,
   final StateSetter setActiveWorkoutExercisePageState,
+  final double? percentCapacity,
 ) {
   showModalBottomSheet(
     context: context,
@@ -2567,7 +2657,8 @@ void _showSwapExerciseWindow(
           totalSetIndex,
           workout,
           pageController,
-          setActiveWorkoutExercisePageState);
+          setActiveWorkoutExercisePageState,
+          percentCapacity);
     },
   );
 }
@@ -2590,6 +2681,7 @@ class SwapExercises extends StatefulWidget {
   final ActiveWorkout workout;
   final PageController pageController;
   final StateSetter setActiveWorkoutExercisePageState;
+  final double? percentCapacity;
 
   SwapExercises(
       this.appState,
@@ -2607,7 +2699,8 @@ class SwapExercises extends StatefulWidget {
       this.totalSetIndex,
       this.workout,
       this.pageController,
-      this.setActiveWorkoutExercisePageState);
+      this.setActiveWorkoutExercisePageState,
+      this.percentCapacity);
 
   @override
   _SwapExercisesState createState() => _SwapExercisesState();
@@ -2624,7 +2717,7 @@ class _SwapExercisesState extends State<SwapExercises>
     'Similar Exercises',
     'Dumbbell-Only',
     'No Equipment',
-    'Machine-Only'
+    'Machine-Only',
   ];
 
   late TextEditingController searchController;
@@ -2909,6 +3002,12 @@ class _SwapExercisesState extends State<SwapExercises>
                     itemCount: searchFilteredExercises.length,
                     itemBuilder: (context, index) {
                       Exercise exercise = searchFilteredExercises[index];
+                      int? expectedWaitTime;
+                      if (widget.percentCapacity != null) {
+                        expectedWaitTime = int.parse(
+                            calculateExpectedWaitTimeForExercise(
+                                widget.percentCapacity!, exercise));
+                      }
                       return ListTile(
                         onTap: () {
                           Split split = appState.currentSplit;
@@ -2918,7 +3017,6 @@ class _SwapExercisesState extends State<SwapExercises>
                           appState.addMuscleGroupToSplit(
                             split,
                             widget.dayIndex,
-                            // Add to end if not superset
                             widget.exerciseNum,
                             exercise.mainMuscleGroup,
                             appState.muscleGroups[exercise.mainMuscleGroup]!
@@ -2967,13 +3065,14 @@ class _SwapExercisesState extends State<SwapExercises>
                                   i, exercise.name);
                             }
                           }
-                          if (widget.pageController.page != null) {
-                            widget.pageController.jumpToPage(
-                                widget.pageController.page!.toInt() + 1);
-                            widget.pageController.jumpToPage(
-                                widget.pageController.page!.toInt() - 1);
-                          }
+                          // if (widget.pageController.page != null) {
+                          //   widget.pageController.jumpToPage(
+                          //       widget.pageController.page!.toInt() + 1);
+                          //   widget.pageController.jumpToPage(
+                          //       widget.pageController.page!.toInt() - 1);
+                          // }
                           _showSnackBar(theme, exercise);
+                          Navigator.of(context).pop();
                         },
                         leading: Container(
                           height: 60,
@@ -2988,7 +3087,7 @@ class _SwapExercisesState extends State<SwapExercises>
                         ),
                         title: Row(children: [
                           SizedBox(
-                            width: 200,
+                            width: MediaQuery.of(context).size.width - 230,
                             child: Text(
                               exercise.name,
                               style: labelStyle,
@@ -3013,6 +3112,32 @@ class _SwapExercisesState extends State<SwapExercises>
                               ),
                           ],
                         ),
+                        trailing: widget.percentCapacity != null &&
+                                expectedWaitTime != null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Expected wait',
+                                    style: labelStyle.copyWith(
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65),
+                                        fontSize: 10),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    '$expectedWaitTime minute${expectedWaitTime != 1 ? 's' : ''}',
+                                    style: labelStyle.copyWith(
+                                        color: expectedWaitTime < 4
+                                            ? theme.colorScheme.primary
+                                            : (expectedWaitTime < 7
+                                                ? Colors.yellow
+                                                : theme.colorScheme.secondary),
+                                        fontSize: 10),
+                                  ),
+                                ],
+                              )
+                            : null,
                       );
                     },
                   ),
@@ -3023,6 +3148,14 @@ class _SwapExercisesState extends State<SwapExercises>
         ),
       ),
     );
+  }
+
+  String calculateExpectedWaitTimeForExercise(
+      double percentCapacity, Exercise exercise) {
+    return (WAIT_MULTIPLIER_TO_MINUTES *
+            exercise.waitMultiplier *
+            percentCapacity)
+        .toStringAsFixed(0);
   }
 }
 

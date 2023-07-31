@@ -458,6 +458,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                             appState: appState,
                             scrollController: _scrollController,
                           ),
+                    SizedBox(height: 90),
 
                           // SizedBox(
                           //     height:
@@ -480,6 +481,7 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                           child:
                               UserStrengthChart(exercise.userOneRepMaxHistory)),
                     ),
+                    SizedBox(height: 90),
                   ],
                 ),
               ),
@@ -586,8 +588,8 @@ class SimilarExercisesRow extends StatelessWidget {
                       // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
-                        child: ImageContainer(
-                            exercise: similarExercises[index]),
+                        child:
+                            ImageContainer(exercise: similarExercises[index]),
                       ),
                       // child: ,
                     ),
@@ -1512,7 +1514,9 @@ class _ExerciseCardState extends State<ExerciseCard> {
             if (widget.expectedWaitTime != 'No gym selected' &&
                 widget.expectedWaitTime !=
                     '${appState.userGym!.name} is currently closed')
-              Text('${widget.expectedWaitTime} Minutes', style: textStyle),
+              Text(
+                  '${widget.expectedWaitTime} Minute${widget.expectedWaitTime != '1' ? 's' : ''}',
+                  style: textStyle),
             if (widget.expectedWaitTime == 'No gym selected' ||
                 widget.expectedWaitTime ==
                     '${appState.userGym!.name} is currently closed')

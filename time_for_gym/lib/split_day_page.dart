@@ -15,6 +15,8 @@ import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/gym_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:image/image.dart' as img;
+import 'package:time_for_gym/individual_exercise_page.dart';
 
 // import 'dart:io';
 
@@ -23,6 +25,7 @@ import 'package:time_for_gym/exercise.dart';
 import 'package:time_for_gym/split.dart';
 import 'package:time_for_gym/active_workout_window.dart';
 import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 import 'gym.dart';
 // import 'package:time_for_gym/muscle_groups_page.dart';
@@ -136,25 +139,28 @@ class _SplitDayPageState extends State<SplitDayPage> {
     // Draggable cards for reorder mode, only include the first exercise of supersets
     List<SplitMuscleGroupCard> muscleGroupCards = [];
 
-    int totalSetIndex = 0;
-    for (int i = 0; i < numNonSupersets; i++) {
-      while (
-          trainingDays[widget.dayIndex].isSupersettedWithLast[totalSetIndex]) {
+    if (appState.splitDayReorderMode) {
+      int totalSetIndex = 0;
+      for (int i = 0; i < numNonSupersets; i++) {
+        while (trainingDays[widget.dayIndex]
+            .isSupersettedWithLast[totalSetIndex]) {
+          totalSetIndex++;
+        }
+        muscleGroupCards.add(SplitMuscleGroupCard(
+          key: ValueKey(i), // Assign a unique key to each SplitMuscleGroupCard
+          muscleGroup:
+              split.trainingDays[widget.dayIndex].muscleGroups[totalSetIndex],
+          splitDayCardIndex: totalSetIndex,
+          split: split,
+          exerciseIndices: exerciseIndices,
+          isDraggable: true,
+          dayIndex: widget.dayIndex,
+          addSupersetOption: false,
+          gymOpeningHours: gymOpeningHours,
+          setSplitDayPageState: setState,
+        ));
         totalSetIndex++;
       }
-      muscleGroupCards.add(SplitMuscleGroupCard(
-        key: ValueKey(i), // Assign a unique key to each SplitMuscleGroupCard
-        muscleGroup:
-            split.trainingDays[widget.dayIndex].muscleGroups[totalSetIndex],
-        splitDayCardIndex: totalSetIndex,
-        split: split,
-        exerciseIndices: exerciseIndices,
-        isDraggable: true,
-        dayIndex: widget.dayIndex,
-        addSupersetOption: false,
-        gymOpeningHours: gymOpeningHours,
-      ));
-      totalSetIndex++;
     }
     //  List.generate(
     //   // split.trainingDays[widget.dayIndex].muscleGroups.length,
@@ -645,7 +651,8 @@ class _SplitDayPageState extends State<SplitDayPage> {
 
                                 // If a superset vs not a superset
                                 ? Padding(
-                                    padding: const EdgeInsets.all(20),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(0, 20, 0, 20),
                                     child: Column(
                                       children: [
                                         Row(
@@ -785,110 +792,124 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                           ],
                                         ),
                                         SizedBox(height: 5),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                            color: theme
-                                                .colorScheme.primaryContainer,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(
-                                                height: 358,
-                                                child: PageView(
-                                                  controller:
-                                                      _pageControllers[i] ??
-                                                          (_pageControllers[i] =
-                                                              PageController()),
-                                                  onPageChanged: (int index) {
-                                                    setState(() {
-                                                      _currentDotIndices[i] =
-                                                          index;
-                                                    });
-                                                  },
-                                                  children: [
-                                                    // First card
-                                                    SizedBox(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.9,
-                                                      child:
-                                                          SplitMuscleGroupCard(
-                                                        muscleGroup: split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .muscleGroups[i],
-                                                        splitDayCardIndex: i,
-                                                        split: split,
-                                                        exerciseIndices:
-                                                            exerciseIndices,
-                                                        isDraggable: false,
-                                                        dayIndex:
-                                                            widget.dayIndex,
-                                                        addSupersetOption:
-                                                            false,
-                                                        gymOpeningHours:
-                                                            gymOpeningHours,
-                                                      ),
+                                        // Container(
+                                        // decoration: BoxDecoration(
+                                        // borderRadius:
+                                        // BorderRadius.circular(15),
+                                        // color: theme
+                                        //     .colorScheme.primaryContainer,
+                                        // gradient: LinearGradient(
+                                        //   begin: Alignment.centerLeft,
+                                        //   end: Alignment.centerRight,
+                                        //   colors: [
+                                        //     Color.fromRGBO(16, 16, 16,
+                                        //         1), // The color for the first 40 pixels
+                                        //     theme.colorScheme
+                                        //         .primaryContainer, // The color for the rest of the container
+                                        //   ],
+                                        //   stops: [
+                                        //     45 /
+                                        //         MediaQuery.of(context)
+                                        //             .size
+                                        //             .width,
+                                        //     45 /
+                                        //         MediaQuery.of(context)
+                                        //             .size
+                                        //             .width
+                                        //   ],
+                                        // ),
+                                        // ),
+                                        Column(
+                                          children: [
+                                            SizedBox(
+                                              height: 250,
+                                              child: PageView(
+                                                controller:
+                                                    _pageControllers[i] ??
+                                                        (_pageControllers[i] =
+                                                            PageController()),
+                                                onPageChanged: (int index) {
+                                                  setState(() {
+                                                    _currentDotIndices[i] =
+                                                        index;
+                                                  });
+                                                },
+                                                children: [
+                                                  // First card
+                                                  SizedBox(
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    child: SplitMuscleGroupCard(
+                                                      muscleGroup: split
+                                                          .trainingDays[
+                                                              widget.dayIndex]
+                                                          .muscleGroups[i],
+                                                      splitDayCardIndex: i,
+                                                      split: split,
+                                                      exerciseIndices:
+                                                          exerciseIndices,
+                                                      isDraggable: false,
+                                                      dayIndex: widget.dayIndex,
+                                                      addSupersetOption: false,
+                                                      gymOpeningHours:
+                                                          gymOpeningHours,
+                                                      setSplitDayPageState:
+                                                          setState,
                                                     ),
-                                                    // Second card
-                                                    SizedBox(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.9,
-                                                      child:
-                                                          SplitMuscleGroupCard(
-                                                        muscleGroup: split
-                                                            .trainingDays[
-                                                                widget.dayIndex]
-                                                            .muscleGroups[i + 1],
-                                                        splitDayCardIndex:
-                                                            i + 1,
-                                                        split: split,
-                                                        exerciseIndices:
-                                                            exerciseIndices,
-                                                        isDraggable: false,
-                                                        dayIndex:
-                                                            widget.dayIndex,
-                                                        addSupersetOption:
-                                                            false,
-                                                        gymOpeningHours:
-                                                            gymOpeningHours,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              DotsIndicator(
-                                                key: Key('$i'),
-                                                dotsCount: 2,
-                                                position:
-                                                    _currentDotIndices[i] ??
-                                                        (_currentDotIndices[i] =
-                                                            0),
-                                                decorator: DotsDecorator(
-                                                  activeColor:
-                                                      theme.colorScheme.primary,
-                                                  size: const Size.square(8.0),
-                                                  activeSize:
-                                                      const Size.square(8.0),
-                                                  activeShape:
-                                                      RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5.0),
                                                   ),
+                                                  // Second card
+                                                  SizedBox(
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    child: SplitMuscleGroupCard(
+                                                      muscleGroup: split
+                                                          .trainingDays[
+                                                              widget.dayIndex]
+                                                          .muscleGroups[i + 1],
+                                                      splitDayCardIndex: i + 1,
+                                                      split: split,
+                                                      exerciseIndices:
+                                                          exerciseIndices,
+                                                      isDraggable: false,
+                                                      dayIndex: widget.dayIndex,
+                                                      addSupersetOption: false,
+                                                      gymOpeningHours:
+                                                          gymOpeningHours,
+                                                      setSplitDayPageState:
+                                                          setState,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(height: 6),
+                                            DotsIndicator(
+                                              key: Key('$i'),
+                                              dotsCount: 2,
+                                              position: _currentDotIndices[i] ??
+                                                  (_currentDotIndices[i] = 0),
+                                              decorator: DotsDecorator(
+                                                activeColor:
+                                                    theme.colorScheme.primary,
+                                                size: const Size.square(8.0),
+                                                activeSize:
+                                                    const Size.square(8.0),
+                                                activeShape:
+                                                    RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
                                                 ),
                                               ),
-                                              SizedBox(height: 10),
-                                            ],
-                                          ),
+                                            ),
+                                            SizedBox(height: 10),
+                                          ],
                                         ),
+                                        // ),
                                       ],
                                     ),
                                   )
@@ -952,7 +973,8 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                 //     ),
                                 //   )
                                 : Padding(
-                                    padding: const EdgeInsets.all(20),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(0, 20, 0, 20),
                                     child: SplitMuscleGroupCard(
                                       muscleGroup: split
                                           .trainingDays[widget.dayIndex]
@@ -964,6 +986,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                                       dayIndex: widget.dayIndex,
                                       addSupersetOption: true,
                                       gymOpeningHours: gymOpeningHours,
+                                      setSplitDayPageState: setState,
                                     ),
                                   ))
                             : SizedBox.shrink(),
@@ -971,7 +994,8 @@ class _SplitDayPageState extends State<SplitDayPage> {
                 ),
               ],
             ),
-            if (appState.activeWorkout == null && split.trainingDays[widget.dayIndex].muscleGroups.isNotEmpty)
+            if (appState.activeWorkout == null &&
+                split.trainingDays[widget.dayIndex].muscleGroups.isNotEmpty)
               Positioned(
                 bottom: 10,
                 left: 40,
@@ -1297,17 +1321,17 @@ class _SplitDayPageState extends State<SplitDayPage> {
 
 // ignore: must_be_immutable
 class SplitMuscleGroupCard extends StatefulWidget {
-  SplitMuscleGroupCard({
-    super.key,
-    required this.muscleGroup,
-    required this.splitDayCardIndex,
-    required this.split,
-    required this.exerciseIndices,
-    required this.isDraggable,
-    required this.dayIndex,
-    required this.addSupersetOption,
-    required this.gymOpeningHours,
-  });
+  SplitMuscleGroupCard(
+      {super.key,
+      required this.muscleGroup,
+      required this.splitDayCardIndex,
+      required this.split,
+      required this.exerciseIndices,
+      required this.isDraggable,
+      required this.dayIndex,
+      required this.addSupersetOption,
+      required this.gymOpeningHours,
+      required this.setSplitDayPageState});
 
   final String muscleGroup;
   final int splitDayCardIndex;
@@ -1318,6 +1342,7 @@ class SplitMuscleGroupCard extends StatefulWidget {
   final int dayIndex;
   final bool addSupersetOption;
   GymOpeningHours? gymOpeningHours;
+  final StateSetter setSplitDayPageState;
 
   int getSplitDayCardIndex() {
     return splitDayCardIndex;
@@ -1327,7 +1352,8 @@ class SplitMuscleGroupCard extends StatefulWidget {
   State<SplitMuscleGroupCard> createState() => _SplitMuscleGroupCardState();
 }
 
-class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
+class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
+    with SingleTickerProviderStateMixin {
   // TextEditingController weightController = TextEditingController();
   // TextEditingController repsController = TextEditingController();
 
@@ -1372,10 +1398,19 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
 
   late int previousSeconds;
   late int previousMinutes;
+  late TabController _tabController;
+  late PageController _pageController;
+  Image? musclesWorkedImage;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
+    _pageController = PageController(initialPage: 0);
+    _tabController.addListener(_handleTabChange);
+    // _tabController.animation?.addListener(() {
+    // setState(() {});
+    // });
     updatePreviousSecondsAndMinutes();
     setsWeightControllers = [];
     setsRepsControllers = [];
@@ -1414,125 +1449,135 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
   void dispose() {
     _timer?.cancel();
     _restSavedTimer?.cancel();
+    _tabController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  void changeExercise(
-      MyAppState appState, Exercise previousExercise, bool next) {
-    widget.exerciseIndex =
-        widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
-    // Change exercise to next similar exercise
-    similarExercises = appState.muscleGroups[previousExercise.mainMuscleGroup]!
-        .where((element) =>
-            element.musclesWorked.isNotEmpty &&
-            element.musclesWorkedActivation.isNotEmpty &&
-            previousExercise.musclesWorked.isNotEmpty &&
-            previousExercise.musclesWorkedActivation.isNotEmpty &&
-            element.musclesWorked[0] == previousExercise.musclesWorked[0]) // &&
-        // element.musclesWorkedActivation[0] ==
-        // previousExercise.musclesWorkedActivation[0])
-        .toList();
-
-    switch (widget.split.equipmentLevel) {
-      case 0:
-        // Bodyweight exercises only
-        similarExercises.removeWhere((element) =>
-            element.resourcesRequired != null &&
-            element.resourcesRequired!.isNotEmpty &&
-            element.resourcesRequired![0] != 'None' &&
-            element.resourcesRequired![0] != 'Bodyweight' &&
-            element.resourcesRequired![0] != 'Pull-Up Bar' &&
-            element.resourcesRequired![0] != 'Parallel Bars');
-        break;
-      case 1:
-        // Dumbbell and bodyweight only
-        similarExercises.removeWhere((element) =>
-            element.resourcesRequired != null &&
-            element.resourcesRequired!.isNotEmpty &&
-            element.resourcesRequired![0] != 'None' &&
-            element.resourcesRequired![0] != 'Bodyweight' &&
-            element.resourcesRequired![0] != 'Pull-Up Bar' &&
-            element.resourcesRequired![0] != 'Parallel Bars' &&
-            !element.resourcesRequired!.contains('Dumbbells'));
-        break;
-      case 2:
-        // Only select exercises that are available at the gym
-        if (appState.userGym != null) {
-          // canSupportExercise checks if resources available or machines available are empty
-          similarExercises.removeWhere(
-              (element) => !appState.userGym!.canSupportExercise(element));
-        }
-        break;
-      default:
-        print('ERROR - Equipment Level');
-        return;
-    }
-
-    int similarExerciseIndex = similarExercises.indexOf(previousExercise);
-    if (similarExercises.isNotEmpty && similarExerciseIndex == -1) {
-      // User gym has changed, previous exercise not in resources of current gym
-      // Set to most popular exercise that satisfies the resource requirements
-      Exercise nextExercise = similarExercises[0];
-      setState(() {
-        widget.exerciseIndex = appState
-            .muscleGroups[previousExercise.mainMuscleGroup]!
-            .indexOf(nextExercise);
-      });
-    }
-    // If index can change
-    if (similarExerciseIndex != -1 && similarExercises.length > 1) {
-      if (next) {
-        // If last item
-        if (similarExerciseIndex >= similarExercises.length - 1) {
-          return;
-        }
-        Exercise nextExercise = similarExercises[similarExerciseIndex + 1];
-        setState(() {
-          // Next similar exercise
-          widget.exerciseIndex = appState
-              .muscleGroups[previousExercise.mainMuscleGroup]!
-              .indexOf(nextExercise);
-        });
-      } else {
-        if (similarExerciseIndex == 0) {
-          return;
-        }
-        Exercise previousExercise = similarExercises[similarExerciseIndex - 1];
-        setState(() {
-          // Next similar exercise
-          widget.exerciseIndex = appState
-              .muscleGroups[previousExercise.mainMuscleGroup]!
-              .indexOf(previousExercise);
-        });
-      }
-    }
-
-    // widget.exerciseIndex =
-    //     widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
-    // if (next) {
-    //   if (widget.exerciseIndex >=
-    //       appState.muscleGroups[widget.muscleGroup]!.length - 1) {
-    //     // if will be out of bounds
-    //     return;
-    //   }
-    //   setState(() {
-    //     widget.exerciseIndex++;
-    //   });
-    // } else {
-    //   // previous
-    //   if (widget.exerciseIndex == 0) {
-    //     // if will be out of bounds
-    //     return;
-    //   }
-    //   setState(() {
-    //     widget.exerciseIndex--;
-    //   });
-    // }
-
-    // Set the "default" exercise to view in that muscle group of the split
-    widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] =
-        widget.exerciseIndex;
+  void _handleTabChange() {
+    _pageController.animateToPage(
+      _tabController.index == 0 ? 1 : 0,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
+
+  // void changeExercise(
+  //     MyAppState appState, Exercise previousExercise) {
+  //   widget.exerciseIndex =
+  //       widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
+  //   // Change exercise to next similar exercise
+  //   // similarExercises ??= appState.muscleGroups[previousExercise.mainMuscleGroup]!
+  //   //     .where((element) =>
+  //   //         element.musclesWorked.isNotEmpty &&
+  //   //         element.musclesWorkedActivation.isNotEmpty &&
+  //   //         previousExercise.musclesWorked.isNotEmpty &&
+  //   //         previousExercise.musclesWorkedActivation.isNotEmpty &&
+  //   //         element.musclesWorked[0] == previousExercise.musclesWorked[0]) // &&
+  //   //     // element.musclesWorkedActivation[0] ==
+  //   //     // previousExercise.musclesWorkedActivation[0])
+  //   //     .toList();
+
+  //   switch (widget.split.equipmentLevel) {
+  //     case 0:
+  //       // Bodyweight exercises only
+  //       similarExercises.removeWhere((element) =>
+  //           element.resourcesRequired != null &&
+  //           element.resourcesRequired!.isNotEmpty &&
+  //           element.resourcesRequired![0] != 'None' &&
+  //           element.resourcesRequired![0] != 'Bodyweight' &&
+  //           element.resourcesRequired![0] != 'Pull-Up Bar' &&
+  //           element.resourcesRequired![0] != 'Parallel Bars');
+  //       break;
+  //     case 1:
+  //       // Dumbbell and bodyweight only
+  //       similarExercises.removeWhere((element) =>
+  //           element.resourcesRequired != null &&
+  //           element.resourcesRequired!.isNotEmpty &&
+  //           element.resourcesRequired![0] != 'None' &&
+  //           element.resourcesRequired![0] != 'Bodyweight' &&
+  //           element.resourcesRequired![0] != 'Pull-Up Bar' &&
+  //           element.resourcesRequired![0] != 'Parallel Bars' &&
+  //           !element.resourcesRequired!.contains('Dumbbells'));
+  //       break;
+  //     case 2:
+  //       // Only select exercises that are available at the gym
+  //       if (appState.userGym != null) {
+  //         // canSupportExercise checks if resources available or machines available are empty
+  //         similarExercises.removeWhere(
+  //             (element) => !appState.userGym!.canSupportExercise(element));
+  //       }
+  //       break;
+  //     default:
+  //       print('ERROR - Equipment Level');
+  //       return;
+  //   }
+
+  //   int similarExerciseIndex = similarExercises.indexOf(previousExercise);
+  //   if (similarExercises.isNotEmpty && similarExerciseIndex == -1) {
+  //     // User gym has changed, previous exercise not in resources of current gym
+  //     // Set to most popular exercise that satisfies the resource requirements
+  //     Exercise nextExercise = similarExercises[0];
+  //     setState(() {
+  //       widget.exerciseIndex = appState
+  //           .muscleGroups[previousExercise.mainMuscleGroup]!
+  //           .indexOf(nextExercise);
+  //     });
+  //   }
+  //   // If index can change
+  //   if (similarExerciseIndex != -1 && similarExercises.length > 1) {
+  //     if (next) {
+  //       // If last item
+  //       if (similarExerciseIndex >= similarExercises.length - 1) {
+  //         return;
+  //       }
+  //       Exercise nextExercise = similarExercises[similarExerciseIndex + 1];
+  //       setState(() {
+  //         // Next similar exercise
+  //         widget.exerciseIndex = appState
+  //             .muscleGroups[previousExercise.mainMuscleGroup]!
+  //             .indexOf(nextExercise);
+  //       });
+  //     } else {
+  //       if (similarExerciseIndex == 0) {
+  //         return;
+  //       }
+  //       Exercise previousExercise = similarExercises[similarExerciseIndex - 1];
+  //       setState(() {
+  //         // Next similar exercise
+  //         widget.exerciseIndex = appState
+  //             .muscleGroups[previousExercise.mainMuscleGroup]!
+  //             .indexOf(previousExercise);
+  //       });
+  //     }
+  //   }
+
+  //   // widget.exerciseIndex =
+  //   //     widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
+  //   // if (next) {
+  //   //   if (widget.exerciseIndex >=
+  //   //       appState.muscleGroups[widget.muscleGroup]!.length - 1) {
+  //   //     // if will be out of bounds
+  //   //     return;
+  //   //   }
+  //   //   setState(() {
+  //   //     widget.exerciseIndex++;
+  //   //   });
+  //   // } else {
+  //   //   // previous
+  //   //   if (widget.exerciseIndex == 0) {
+  //   //     // if will be out of bounds
+  //   //     return;
+  //   //   }
+  //   //   setState(() {
+  //   //     widget.exerciseIndex--;
+  //   //   });
+  //   // }
+
+  //   // Set the "default" exercise to view in that muscle group of the split
+  //   widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex] =
+  //       widget.exerciseIndex;
+  // }
 
   void toExercise(MyAppState appState, Exercise exercise) {
     // print(widget.exerciseIndices[appState.currentDayIndex]
@@ -1880,16 +1925,16 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
     widget.exerciseIndex =
         widget.exerciseIndices[widget.dayIndex][widget.splitDayCardIndex];
     // Change exercise to next similar exercise
-    similarExercises = appState.muscleGroups[previousExercise.mainMuscleGroup]!
-        .where((element) =>
-            element.musclesWorked.isNotEmpty &&
-            element.musclesWorkedActivation.isNotEmpty &&
-            previousExercise.musclesWorked.isNotEmpty &&
-            previousExercise.musclesWorkedActivation.isNotEmpty &&
-            element.musclesWorked[0] == previousExercise.musclesWorked[0]) // &&
-        // element.musclesWorkedActivation[0] ==
-        // previousExercise.musclesWorkedActivation[0])
-        .toList();
+    // similarExercises ??= appState.muscleGroups[previousExercise.mainMuscleGroup]!
+    //     .where((element) =>
+    //         element.musclesWorked.isNotEmpty &&
+    //         element.musclesWorkedActivation.isNotEmpty &&
+    //         previousExercise.musclesWorked.isNotEmpty &&
+    //         previousExercise.musclesWorkedActivation.isNotEmpty &&
+    //         element.musclesWorked[0] == previousExercise.musclesWorked[0]) // &&
+    //     // element.musclesWorkedActivation[0] ==
+    //     // previousExercise.musclesWorkedActivation[0])
+    //     .toList();
     List<Exercise> similarExercisesInGym = similarExercises.toList();
     String availableText;
     String notAvailableText;
@@ -2117,7 +2162,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                 ],
               ),
             ),
-            content: Container(
+            content: SizedBox(
               width: MediaQuery.of(context)
                   .size
                   .width, // Adjust the width as needed
@@ -2321,7 +2366,6 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
             .setsPerMuscleGroup[widget.splitDayCardIndex] <
         numSets) {
       numSets--;
-      numSets--;
       setsWeightControllers[setsWeightControllers.length - 1].dispose();
       setsWeightControllers.removeLast();
       setsRepsControllers[setsRepsControllers.length - 1].dispose();
@@ -2344,8 +2388,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
-    final greyLabelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+    // final greyLabelStyle = theme.textTheme.labelSmall!
+    //     .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     // print(appState.splitDayExerciseIndices);
 
@@ -2424,583 +2468,687 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         previousWeights[0].isNotEmpty &&
         previousReps[0].isNotEmpty);
 
-    String expectedWaitTime;
-    if (appState.userGym == null || widget.gymOpeningHours == null) {
-      expectedWaitTime = 'No gym selected';
-    } else {
-      String currentlyOpenString;
-      DateTime now = DateTime.now();
-      double percentCapacity =
-          appState.avgGymCrowdData[now.weekday - 1][now.hour] / 12.0;
-      if (appState.userGym!.openingHours == null) {
-        // Assume it's open
-        // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
-        expectedWaitTime = (WAIT_MULTIPLIER_TO_MINUTES *
-                currentExercise.waitMultiplier *
-                percentCapacity)
-            .toStringAsFixed(0);
-      } else {
-        currentlyOpenString = widget.gymOpeningHours!.getCurrentlyOpenString();
-        // 'Open - ...' or 'Open 24 hours'
-        if (currentlyOpenString.startsWith('Open ')) {
-          // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
-          expectedWaitTime = (WAIT_MULTIPLIER_TO_MINUTES *
-                  currentExercise.waitMultiplier *
-                  percentCapacity)
-              .toStringAsFixed(0);
-        } else {
-          // Closed
-          expectedWaitTime = '${appState.userGym!.name} is currently closed';
-        }
-      }
+    // String expectedWaitTime;
+    // if (appState.userGym == null || widget.gymOpeningHours == null) {
+    //   expectedWaitTime = 'No gym selected';
+    // } else {
+    //   String currentlyOpenString;
+    //   DateTime now = DateTime.now();
+    //   double percentCapacity =
+    //       appState.avgGymCrowdData[now.weekday - 1][now.hour] / 12.0;
+    //   if (appState.userGym!.openingHours == null) {
+    //     // Assume it's open
+    //     // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
+    //     expectedWaitTime = (WAIT_MULTIPLIER_TO_MINUTES *
+    //             currentExercise.waitMultiplier *
+    //             percentCapacity)
+    //         .toStringAsFixed(0);
+    //   } else {
+    //     currentlyOpenString = widget.gymOpeningHours!.getCurrentlyOpenString();
+    //     // 'Open - ...' or 'Open 24 hours'
+    //     if (currentlyOpenString.startsWith('Open ')) {
+    //       // print('Estimated ${(percentCapacity * 100).toInt()}% capactiy');
+    //       expectedWaitTime = (WAIT_MULTIPLIER_TO_MINUTES *
+    //               currentExercise.waitMultiplier *
+    //               percentCapacity)
+    //           .toStringAsFixed(0);
+    //     } else {
+    //       // Closed
+    //       expectedWaitTime = '${appState.userGym!.name} is currently closed';
+    //     }
+    //   }
+    // }
+
+    // Create musclesWorkedImage if not yet created
+    musclesWorkedImage ??= Image.memory(img.encodePng(applyFloodFill(
+        appState.defaultMuscleWorkedImage!,
+        currentExercise.musclesWorked,
+        currentExercise.musclesWorkedActivation,
+        appState.imageMuscleLocations)));
+
+    if (similarExercises.isEmpty) {
+      similarExercises = appState.muscleGroups[currentExercise.mainMuscleGroup]!
+          .where((element) =>
+              element.musclesWorked.isNotEmpty &&
+              element.musclesWorkedActivation.isNotEmpty &&
+              currentExercise.musclesWorked.isNotEmpty &&
+              currentExercise.musclesWorkedActivation.isNotEmpty &&
+              element.musclesWorked[0] ==
+                  currentExercise.musclesWorked[0]) // &&
+          // element.musclesWorkedActivation[0] ==
+          // previousExercise.musclesWorkedActivation[0])
+          .toList();
     }
 
     if (!widget.isDraggable) {
-      return Column(
-        children: [
-          if (widget.addSupersetOption)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (widget.split.trainingDays[widget.dayIndex]
-                    .setNames[widget.splitDayCardIndex].isNotEmpty)
-                  Text(
-                      '${widget.split.trainingDays[widget.dayIndex].setNames[widget.splitDayCardIndex]}   ',
-                      style: headingStyle,
-                      textAlign: TextAlign.center),
-                if (widget.split.trainingDays[widget.dayIndex]
-                    .setNames[widget.splitDayCardIndex].isEmpty)
-                  Text('${widget.muscleGroup}   ',
-                      style: headingStyle, textAlign: TextAlign.center),
-                if (numSets != 1)
-                  Text(
-                    '-  $numSets Sets',
-                    textAlign: TextAlign.center,
-                    style: textStyle,
-                  ),
-                if (numSets == 1)
-                  Text(
-                    '-  1 Set',
-                    textAlign: TextAlign.center,
-                    style: textStyle,
-                  ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                  child: Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          // Increment number of sets
-                          if (numSets < 10) {
-                            setState(() {
-                              widget.split.trainingDays[widget.dayIndex]
-                                      .setsPerMuscleGroup[
-                                  widget.splitDayCardIndex]++;
-                              numSets++;
-                              setsWeightControllers
-                                  .add(TextEditingController());
-                              setsRepsControllers.add(TextEditingController());
-                              previousWeights.add('');
-                              previousReps.add('');
-                              weightSuffixIcons.add(null);
-                              repsSuffixIcons.add(null);
-                            });
-                            appState.storeSplitInSharedPreferences();
-                          }
-                        },
-                        child: Icon(
-                          Icons.keyboard_arrow_up,
-                          color: theme.colorScheme.primary,
-                          size: 14,
+      return SizedBox(
+        width: MediaQuery.of(context).size.width,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (widget.addSupersetOption)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.split.trainingDays[widget.dayIndex]
+                      .setNames[widget.splitDayCardIndex].isNotEmpty)
+                    Text(
+                        '${widget.split.trainingDays[widget.dayIndex].setNames[widget.splitDayCardIndex]}   ',
+                        style: headingStyle,
+                        textAlign: TextAlign.center),
+                  if (widget.split.trainingDays[widget.dayIndex]
+                      .setNames[widget.splitDayCardIndex].isEmpty)
+                    Text('${widget.muscleGroup}   ',
+                        style: headingStyle, textAlign: TextAlign.center),
+                  if (numSets != 1)
+                    Text(
+                      '-  $numSets Sets',
+                      textAlign: TextAlign.center,
+                      style: textStyle,
+                    ),
+                  if (numSets == 1)
+                    Text(
+                      '-  1 Set',
+                      textAlign: TextAlign.center,
+                      style: textStyle,
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            // Increment number of sets
+                            if (numSets < 10) {
+                              setState(() {
+                                widget.split.trainingDays[widget.dayIndex]
+                                        .setsPerMuscleGroup[
+                                    widget.splitDayCardIndex]++;
+                                numSets++;
+                                setsWeightControllers
+                                    .add(TextEditingController());
+                                setsRepsControllers
+                                    .add(TextEditingController());
+                                previousWeights.add('');
+                                previousReps.add('');
+                                weightSuffixIcons.add(null);
+                                repsSuffixIcons.add(null);
+                              });
+                              appState.storeSplitInSharedPreferences();
+                            }
+                          },
+                          child: Icon(
+                            Icons.keyboard_arrow_up,
+                            color: theme.colorScheme.primary,
+                            size: 14,
+                          ),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // Decrement number of sets
-                          if (numSets > 1) {
-                            setState(() {
-                              widget.split.trainingDays[widget.dayIndex]
-                                      .setsPerMuscleGroup[
-                                  widget.splitDayCardIndex]--;
-                              numSets--;
-                              setsWeightControllers[
-                                      setsWeightControllers.length - 1]
-                                  .dispose();
-                              setsWeightControllers.removeLast();
-                              setsRepsControllers[
-                                      setsRepsControllers.length - 1]
-                                  .dispose();
-                              setsRepsControllers.removeLast();
-                              previousWeights.removeLast();
-                              previousReps.removeLast();
-                              weightSuffixIcons.removeLast();
-                              repsSuffixIcons.removeLast();
-                            });
-                            appState.storeSplitInSharedPreferences();
-                          }
-                        },
-                        child: Icon(
-                          Icons.keyboard_arrow_down,
-                          color: theme.colorScheme.primary,
-                          size: 14,
+                        GestureDetector(
+                          onTap: () {
+                            // Decrement number of sets
+                            if (numSets > 1) {
+                              setState(() {
+                                widget.split.trainingDays[widget.dayIndex]
+                                        .setsPerMuscleGroup[
+                                    widget.splitDayCardIndex]--;
+                                numSets--;
+                                setsWeightControllers[
+                                        setsWeightControllers.length - 1]
+                                    .dispose();
+                                setsWeightControllers.removeLast();
+                                setsRepsControllers[
+                                        setsRepsControllers.length - 1]
+                                    .dispose();
+                                setsRepsControllers.removeLast();
+                                previousWeights.removeLast();
+                                previousReps.removeLast();
+                                weightSuffixIcons.removeLast();
+                                repsSuffixIcons.removeLast();
+                              });
+                              appState.storeSplitInSharedPreferences();
+                            }
+                          },
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            color: theme.colorScheme.primary,
+                            size: 14,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          if (widget.addSupersetOption) SizedBox(height: 5),
-          Container(
-            // height: 300,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              color: theme.colorScheme.primaryContainer,
-            ),
-            child: DefaultTabController(
-              length: 2,
+                ],
+              ),
+            // if (widget.addSupersetOption) SizedBox(height: 5),
+            Container(
+              // height: 300,
+              decoration: BoxDecoration(
+                // borderRadius: BorderRadius.circular(5),
+                color: theme.colorScheme.primaryContainer,
+              ),
+              // child: DefaultTabController(
+              //   animationDuration: Duration.zero,
+              //   initialIndex: 1,
+              //   length: 2,
               child: SizedBox(
                 // height: 300,
-                child: Column(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!widget.addSupersetOption) SizedBox(height: 10),
-                    if (!widget.addSupersetOption)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (widget.split.trainingDays[widget.dayIndex]
-                              .setNames[widget.splitDayCardIndex].isNotEmpty)
-                            Text(
-                                widget.split.trainingDays[widget.dayIndex]
-                                    .setNames[widget.splitDayCardIndex],
-                                style: headingStyle,
-                                textAlign: TextAlign.center),
-                          if (widget.split.trainingDays[widget.dayIndex]
-                              .setNames[widget.splitDayCardIndex].isEmpty)
-                            Text(widget.muscleGroup,
-                                style: headingStyle,
-                                textAlign: TextAlign.center),
-                        ],
-                      ),
-                    TabBar(
-                      unselectedLabelColor: theme.colorScheme.onBackground,
-                      tabs: [
-                        Tab(text: 'Overview'),
-                        Tab(text: 'Sets'),
+                    Row(
+                      children: [
+                        RotatedBox(
+                          quarterTurns: 3,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Color.fromRGBO(16, 16, 16, 1)),
+                            height: 40,
+                            width: 250,
+                            child: TabBar(
+                              controller: _tabController,
+                              dividerColor: Colors.transparent,
+                              unselectedLabelColor:
+                                  theme.colorScheme.onBackground,
+                              tabs: [Tab(text: 'Sets'), Tab(text: 'Overview')],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: Color.fromRGBO(16, 16, 16, 1)),
+                          width: 5,
+                          height: 250,
+                        )
                       ],
                     ),
                     SizedBox(
-                      // IMPORTANT
-                      height: 276,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: TabBarView(
-                            physics: NeverScrollableScrollPhysics(),
+                      width: MediaQuery.of(context).size.width - 45,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SizedBox(
-                                // height: 300,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Column(
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    toExercise(appState,
-                                                        currentExercise);
-                                                  },
-                                                  child: Column(children: [
-                                                    SizedBox(
-                                                      width: 150,
-                                                      child: Text(
-                                                          // exercise index
-                                                          currentExercise.name,
-                                                          style: labelStyle,
-                                                          textAlign:
-                                                              TextAlign.center),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Container(
-                                                      color: theme.colorScheme
-                                                          .onBackground,
-                                                      height: 120,
-                                                      width: 120,
-                                                      child: ImageContainer(
-                                                          exercise:
-                                                              currentExercise),
-                                                    ),
-                                                  ]),
-                                                ),
-                                                SizedBox(
-                                                  height: 10,
-                                                ),
-                                                SizedBox(
-                                                  width: 120,
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      showPopUpSimilarExercises(
-                                                          context,
-                                                          appState,
-                                                          setState,
-                                                          currentExercise);
-                                                    },
-                                                    style: ButtonStyle(
-                                                        backgroundColor:
-                                                            resolveColor(theme
-                                                                .colorScheme
-                                                                .primary),
-                                                        surfaceTintColor:
-                                                            resolveColor(theme
-                                                                .colorScheme
-                                                                .primary)),
-                                                    child: Text(
-                                                      'Similar Exercises',
-                                                      style: labelStyle,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        Column(
-                                          children: [
-                                            Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                ElevatedButton.icon(
-                                                  style: ButtonStyle(
-                                                    backgroundColor:
-                                                        resolveColor(
-                                                      theme.colorScheme
-                                                          .secondaryContainer,
-                                                    ),
-                                                    surfaceTintColor:
-                                                        resolveColor(
-                                                      theme.colorScheme
-                                                          .secondaryContainer,
-                                                    ),
-                                                  ),
-                                                  onPressed: () {
-                                                    launchUrl(Uri.parse(
-                                                        currentExercise
-                                                            .videoLink));
-                                                  },
-                                                  icon: Icon(
-                                                      Icons.video_collection,
-                                                      size: 16),
-                                                  label: Text('Tutorial',
-                                                      style: labelStyle),
-                                                ),
-                                                IconButton(
-                                                  alignment:
-                                                      Alignment.centerRight,
-                                                  padding: EdgeInsets.zero,
-                                                  onPressed: () {
-                                                    toExercise(appState,
-                                                        currentExercise);
-                                                  },
-                                                  icon: Icon(
-                                                    Icons.info_outline,
-                                                    size: 20,
-                                                    color: theme
-                                                        .colorScheme.primary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 40),
-                                            Text(
-                                              'Expected Wait Time',
-                                              style: formHeadingStyle,
-                                            ),
-                                            SizedBox(height: 5),
-                                            if (expectedWaitTime !=
-                                                    'No gym selected' &&
-                                                expectedWaitTime !=
-                                                    '${appState.userGym!.name} is currently closed')
-                                              SizedBox(
-                                                width: 150,
-                                                child: Text(
-                                                  '$expectedWaitTime Minutes',
-                                                  style: labelStyle.copyWith(
-                                                      color: int.parse(
-                                                                  expectedWaitTime) <
-                                                              4
-                                                          ? theme.colorScheme
-                                                              .primary
-                                                          : (int.parse(
-                                                                      expectedWaitTime) <
-                                                                  7
-                                                              ? Colors.yellow
-                                                              : theme
-                                                                  .colorScheme
-                                                                  .secondary)),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                            if (expectedWaitTime ==
-                                                    'No gym selected' ||
-                                                expectedWaitTime ==
-                                                    '${appState.userGym!.name} is currently closed')
-                                              SizedBox(
-                                                width: 150,
-                                                child: Text(
-                                                  expectedWaitTime,
-                                                  style: greyLabelStyle,
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                          ],
-                                        )
-                                        // Placeholder(
-                                        //   fallbackHeight: 180,
-                                        //   fallbackWidth: 180,
-                                        // ),
-                                      ],
-                                    ),
-                                    if (widget
-                                                .split
-                                                .trainingDays[widget.dayIndex]
-                                                .isSupersettedWithLast
-                                                .length >
-                                            widget.splitDayCardIndex &&
-                                        widget
-                                                .split
-                                                .trainingDays[widget.dayIndex]
-                                                .isSupersettedWithLast[
-                                            widget.splitDayCardIndex])
-                                      Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              setState(() {
-                                                widget
-                                                        .split
-                                                        .trainingDays[
-                                                            widget.dayIndex]
-                                                        .isSupersettedWithLast[
-                                                    widget
-                                                        .splitDayCardIndex] = false;
-                                              });
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    .8,
-                                                backgroundColor: theme
-                                                    .colorScheme.onBackground,
-                                                content: SizedBox(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            .8,
-                                                    child: Text(
-                                                        'Detached superset!',
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: TextStyle(
-                                                            color: theme
-                                                                .colorScheme
-                                                                .background))),
-                                                duration: Duration(
-                                                    milliseconds: 1500),
-                                              ));
-                                            },
-                                            child: Text(
-                                              'Detach superset',
-                                              style: labelStyle.copyWith(
-                                                  color: theme
-                                                      .colorScheme.primary),
-                                            ),
-                                          )),
-                                    if (widget.addSupersetOption)
-                                      Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              _showSearchExercisesWindow(
-                                                  context,
-                                                  appState,
-                                                  appState.muscleGroups.values
-                                                      .toList()
-                                                      .expand((innerList) =>
-                                                          innerList)
-                                                      .toList()
-                                                      .where((element) =>
-                                                          !widget
-                                                              .split
-                                                              .trainingDays[
-                                                                  widget
-                                                                      .dayIndex]
-                                                              .exerciseNames
-                                                              .contains(
-                                                                  element.name))
-                                                      .toList(),
-                                                  widget.dayIndex,
-                                                  widget.splitDayCardIndex + 1,
-                                                  widget
-                                                          .split
-                                                          .trainingDays[
-                                                              widget.dayIndex]
-                                                          .setsPerMuscleGroup[
-                                                      widget
-                                                          .splitDayCardIndex]);
-                                            },
-                                            child: Text(
-                                              'Add superset',
-                                              style: labelStyle.copyWith(
-                                                  color: theme
-                                                      .colorScheme.primary),
-                                            ),
-                                          )),
-                                  ],
+                              if (!widget.addSupersetOption) Spacer(flex: 4),
+                              if (!widget.addSupersetOption)
+                                Center(
+                                  child: Text(
+                                      widget
+                                              .split
+                                              .trainingDays[widget.dayIndex]
+                                              .setNames[
+                                                  widget.splitDayCardIndex]
+                                              .isNotEmpty
+                                          ? widget
+                                                  .split
+                                                  .trainingDays[widget.dayIndex]
+                                                  .setNames[
+                                              widget.splitDayCardIndex]
+                                          : widget.muscleGroup,
+                                      style: headingStyle,
+                                      textAlign: TextAlign.center),
                                 ),
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      if (!showMoreSets)
-                                        Text(
-                                          'Track Top Set',
-                                          style: formHeadingStyle,
-                                        ),
-                                      if (showMoreSets)
-                                        Text(
-                                          'Track Sets',
-                                          style: formHeadingStyle,
-                                        ),
-                                      SizedBox(
-                                        height: 10,
+                              Spacer(flex: 3),
+                              GestureDetector(
+                                  onTapDown: (tapDownDetails) {
+                                    showOptionsDropdown(
+                                        context,
+                                        tapDownDetails.globalPosition,
+                                        appState);
+                                  },
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                    child: Container(
+                                      decoration: BoxDecoration(),
+                                      child: Icon(
+                                        Icons.more_horiz,
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65),
+                                        size: 30,
                                       ),
-                                      Form(
-                                        key: _trackTopSetFormKey,
-                                        child: SizedBox(
-                                          height: 200,
-                                          child: SingleChildScrollView(
-                                            physics:
-                                                AlwaysScrollableScrollPhysics(),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Column(
-                                                      children: [
-                                                        Container(
-                                                          // width: 80,
-                                                          // height: 44,
-                                                          decoration: BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .tertiaryContainer),
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .fromLTRB(
-                                                                    8, 0, 8, 2),
-                                                            child: Row(
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: 42,
-                                                                  height: 38,
-                                                                  child:
-                                                                      TextFormField(
-                                                                    maxLength:
-                                                                        3,
-                                                                    style:
-                                                                        formTextStyle,
-                                                                    controller:
-                                                                        setsWeightControllers[
-                                                                            0],
-                                                                    inputFormatters: [
-                                                                      FilteringTextInputFormatter
-                                                                          .digitsOnly
-                                                                    ],
-                                                                    keyboardType:
-                                                                        TextInputType
-                                                                            .number,
-                                                                    // textInputAction:
-                                                                    //     TextInputAction
-                                                                    //         .done,
-                                                                    decoration:
-                                                                        InputDecoration(
-                                                                      counterText:
-                                                                          '',
-                                                                      border: InputBorder
-                                                                          .none,
-                                                                      floatingLabelBehavior:
-                                                                          FloatingLabelBehavior
-                                                                              .never,
-                                                                      labelStyle: labelStyle.copyWith(
-                                                                          color: theme
-                                                                              .colorScheme
-                                                                              .onBackground
-                                                                              .withOpacity(.65)),
-                                                                      labelText:
-                                                                          previousWeights[
-                                                                              0],
-                                                                      // suffix: weightSuffixIcon,
-                                                                      // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                    ),
+                                  ))
+                            ],
+                          ),
+                          // Container(width: 10,height: 10,color: Colors.pink,),
+                          // SizedBox(height: 5),
+                          // if (!widget.addSupersetOption) SizedBox(height: 10),
+
+                          // RotatedBox(
+                          //   quarterTurns: 1,
+                          //   child: TabBar(
+                          //     unselectedLabelColor: theme.colorScheme.onBackground,
+                          //     tabs: [
+                          //       Tab(text: 'Overview'),
+                          //       Tab(text: 'Sets'),
+                          //     ],
+                          //   ),
+                          // ),
+                          SizedBox(
+                            // IMPORTANT
+                            height: 220,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                              child: PageView(
+                                  scrollDirection: Axis.vertical,
+                                  controller: _pageController,
+                                  onPageChanged: (index) {
+                                    _tabController
+                                        .animateTo(index == 0 ? 1 : 0);
+                                  },
+                                  physics: NeverScrollableScrollPhysics(),
+                                  children: [
+                                    SizedBox(
+                                      // height: 300,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Column(
+                                                    children: [
+                                                      GestureDetector(
+                                                        onTap: () {
+                                                          toExercise(appState,
+                                                              currentExercise);
+                                                        },
+                                                        child: Column(
+                                                            children: [
+                                                              SizedBox(
+                                                                width: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width -
+                                                                    110,
+                                                                child: Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .spaceBetween,
+                                                                  children: [
+                                                                    Container(
+                                                                      decoration: BoxDecoration(
+                                                                          color: Colors
+                                                                              .white,
+                                                                          borderRadius:
+                                                                              BorderRadius.circular(5)),
+                                                                      height:
+                                                                          150,
+                                                                      width:
+                                                                          150,
+                                                                      // Actual size: width: 496, height: 496
+                                                                      child:
+                                                                          Padding(
+                                                                        padding:
+                                                                            const EdgeInsets.all(2),
+                                                                        child: ImageContainer(
+                                                                            exercise:
+                                                                                currentExercise),
+                                                                      ),
                                                                     ),
-                                                                  ),
+                                                                    Spacer(),
+                                                                    if (musclesWorkedImage !=
+                                                                        null)
+                                                                      Hero(
+                                                                        tag: 'sdp${widget
+                                                                            .splitDayCardIndex}',
+                                                                        child:
+                                                                            GestureDetector(
+                                                                          onTap:
+                                                                              () {
+                                                                            Navigator.push(
+                                                                              context,
+                                                                              MaterialPageRoute(
+                                                                                builder: (context) => FullScreenPhoto(photoTag: 'sdp${widget
+                                                                            .splitDayCardIndex}', photo: musclesWorkedImage!),
+                                                                              ),
+                                                                            );
+                                                                          },
+                                                                          child:
+                                                                              Container(
+                                                                            decoration:
+                                                                                BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
+                                                                            height:
+                                                                                150,
+                                                                            width:
+                                                                                150,
+                                                                            // Actual size: width: 496, height: 496
+                                                                            child:
+                                                                                Padding(
+                                                                              padding: const EdgeInsets.all(2),
+                                                                              child: musclesWorkedImage,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                  ],
                                                                 ),
-                                                                if (weightSuffixIcons[
-                                                                        0] !=
-                                                                    null)
-                                                                  weightSuffixIcons[
-                                                                      0]!,
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        if (showMoreSets)
-                                                          for (int i = 1;
-                                                              i < numSets;
-                                                              i++)
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .fromLTRB(
-                                                                      0,
-                                                                      10,
-                                                                      0,
-                                                                      0),
-                                                              child: Container(
+                                                              ),
+                                                              SizedBox(
+                                                                  height: 10),
+                                                              SizedBox(
+                                                                width: 150,
+                                                                // width: MediaQuery.of(
+                                                                //             context)
+                                                                //         .size
+                                                                //         .width -
+                                                                //     110,
+                                                                child: Text(
+                                                                    // exercise index
+                                                                    currentExercise
+                                                                        .name,
+                                                                    style:
+                                                                        labelStyle,
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .center),
+                                                              ),
+                                                            ]),
+                                                      ),
+                                                      // SizedBox(
+                                                      //   height: 10,
+                                                      // ),
+                                                      // SizedBox(
+                                                      //   width: 120,
+                                                      //   child: ElevatedButton(
+                                                      //     onPressed: () {
+                                                      //       showPopUpSimilarExercises(
+                                                      //           context,
+                                                      //           appState,
+                                                      //           setState,
+                                                      //           currentExercise);
+                                                      //     },
+                                                      //     style: ButtonStyle(
+                                                      //         backgroundColor:
+                                                      //             resolveColor(theme
+                                                      //                 .colorScheme
+                                                      //                 .primary),
+                                                      //         surfaceTintColor:
+                                                      //             resolveColor(theme
+                                                      //                 .colorScheme
+                                                      //                 .primary)),
+                                                      //     child: Text(
+                                                      //       'Similar Exercises',
+                                                      //       style: labelStyle,
+                                                      //       textAlign: TextAlign
+                                                      //           .center,
+                                                      //     ),
+                                                      //   ),
+                                                      // ),
+                                                    ],
+                                                  ),
+                                                  // SizedBox(width: 45),
+                                                ],
+                                              ),
+                                              // Column(
+                                              //   children: [
+                                              //     Row(
+                                              //       crossAxisAlignment:
+                                              //           CrossAxisAlignment.end,
+                                              //       children: [
+                                              //         ElevatedButton.icon(
+                                              //           style: ButtonStyle(
+                                              //             backgroundColor:
+                                              //                 resolveColor(
+                                              //               theme.colorScheme
+                                              //                   .secondaryContainer,
+                                              //             ),
+                                              //             surfaceTintColor:
+                                              //                 resolveColor(
+                                              //               theme.colorScheme
+                                              //                   .secondaryContainer,
+                                              //             ),
+                                              //           ),
+                                              //           onPressed: () {
+                                              //             launchUrl(Uri.parse(
+                                              //                 currentExercise
+                                              //                     .videoLink));
+                                              //           },
+                                              //           icon: Icon(
+                                              //               Icons
+                                              //                   .video_collection,
+                                              //               size: 16),
+                                              //           label: Text('Tutorial',
+                                              //               style: labelStyle),
+                                              //         ),
+                                              //         IconButton(
+                                              //           alignment:
+                                              //               Alignment.centerRight,
+                                              //           padding: EdgeInsets.zero,
+                                              //           onPressed: () {
+                                              //             toExercise(appState,
+                                              //                 currentExercise);
+                                              //           },
+                                              //           icon: Icon(
+                                              //             Icons.info_outline,
+                                              //             size: 20,
+                                              //             color: theme.colorScheme
+                                              //                 .primary,
+                                              //           ),
+                                              //         ),
+                                              //       ],
+                                              //     ),
+                                              //     SizedBox(height: 40),
+                                              //     Text(
+                                              //       'Expected Wait Time',
+                                              //       style: formHeadingStyle,
+                                              //     ),
+                                              //     SizedBox(height: 5),
+                                              //     if (expectedWaitTime !=
+                                              //             'No gym selected' &&
+                                              //         expectedWaitTime !=
+                                              //             '${appState.userGym!.name} is currently closed')
+                                              //       SizedBox(
+                                              //         width: 150,
+                                              //         child: Text(
+                                              //           '$expectedWaitTime Minute${expectedWaitTime != '1' ? 's' : ''}',
+                                              //           style: labelStyle.copyWith(
+                                              //               color: int.parse(
+                                              //                           expectedWaitTime) <
+                                              //                       4
+                                              //                   ? theme
+                                              //                       .colorScheme
+                                              //                       .primary
+                                              //                   : (int.parse(
+                                              //                               expectedWaitTime) <
+                                              //                           7
+                                              //                       ? Colors
+                                              //                           .yellow
+                                              //                       : theme
+                                              //                           .colorScheme
+                                              //                           .secondary)),
+                                              //           textAlign:
+                                              //               TextAlign.center,
+                                              //         ),
+                                              //       ),
+                                              //     if (expectedWaitTime ==
+                                              //             'No gym selected' ||
+                                              //         expectedWaitTime ==
+                                              //             '${appState.userGym!.name} is currently closed')
+                                              //       SizedBox(
+                                              //         width: 150,
+                                              //         child: Text(
+                                              //           expectedWaitTime,
+                                              //           style: greyLabelStyle,
+                                              //           textAlign:
+                                              //               TextAlign.center,
+                                              //         ),
+                                              //       ),
+                                              //   ],
+                                              // )
+                                            ],
+                                          ),
+                                          // if (widget
+                                          //             .split
+                                          //             .trainingDays[
+                                          //                 widget.dayIndex]
+                                          //             .isSupersettedWithLast
+                                          //             .length >
+                                          //         widget.splitDayCardIndex &&
+                                          //     widget
+                                          //             .split
+                                          //             .trainingDays[widget.dayIndex]
+                                          //             .isSupersettedWithLast[
+                                          //         widget.splitDayCardIndex])
+                                          //   Align(
+                                          //       alignment:
+                                          //           Alignment.bottomRight,
+                                          //       child: GestureDetector(
+                                          //         onTap: () {
+                                          //           setState(() {
+                                          //             widget
+                                          //                     .split
+                                          //                     .trainingDays[
+                                          //                         widget.dayIndex]
+                                          //                     .isSupersettedWithLast[
+                                          //                 widget
+                                          //                     .splitDayCardIndex] = false;
+                                          //           });
+                                          //           ScaffoldMessenger.of(
+                                          //                   context)
+                                          //               .showSnackBar(SnackBar(
+                                          //             behavior: SnackBarBehavior
+                                          //                 .floating,
+                                          //             width:
+                                          //                 MediaQuery.of(context)
+                                          //                         .size
+                                          //                         .width *
+                                          //                     .8,
+                                          //             backgroundColor: theme
+                                          //                 .colorScheme
+                                          //                 .onBackground,
+                                          //             content: SizedBox(
+                                          //                 width: MediaQuery.of(
+                                          //                             context)
+                                          //                         .size
+                                          //                         .width *
+                                          //                     .8,
+                                          //                 child: Text(
+                                          //                     'Detached superset!',
+                                          //                     textAlign:
+                                          //                         TextAlign
+                                          //                             .center,
+                                          //                     style: TextStyle(
+                                          //                         color: theme
+                                          //                             .colorScheme
+                                          //                             .background))),
+                                          //             duration: Duration(
+                                          //                 milliseconds: 1500),
+                                          //           ));
+                                          //         },
+                                          //         child: Text(
+                                          //           'Detach superset',
+                                          //           style: labelStyle.copyWith(
+                                          //               color: theme.colorScheme
+                                          //                   .primary),
+                                          //         ),
+                                          //       )),
+                                          // if (widget.addSupersetOption)
+                                          //   Expanded(
+                                          //     child: Align(
+                                          //         alignment:
+                                          //             Alignment.bottomRight,
+                                          //         child: GestureDetector(
+                                          //           onTap: () {
+                                          //             _showSearchExercisesWindow(
+                                          //                 context,
+                                          //                 appState,
+                                          //                 appState.muscleGroups
+                                          //                     .values
+                                          //                     .toList()
+                                          //                     .expand(
+                                          //                         (innerList) =>
+                                          //                             innerList)
+                                          //                     .toList()
+                                          //                     .where((element) => !widget
+                                          //                         .split
+                                          //                         .trainingDays[
+                                          //                             widget
+                                          //                                 .dayIndex]
+                                          //                         .exerciseNames
+                                          //                         .contains(
+                                          //                             element
+                                          //                                 .name))
+                                          //                     .toList(),
+                                          //                 widget.dayIndex,
+                                          //                 widget.splitDayCardIndex +
+                                          //                     1,
+                                          //                 widget
+                                          //                         .split
+                                          //                         .trainingDays[
+                                          //                             widget
+                                          //                                 .dayIndex]
+                                          //                         .setsPerMuscleGroup[
+                                          //                     widget
+                                          //                         .splitDayCardIndex]);
+                                          //           },
+                                          //           child: Text(
+                                          //             'Add superset',
+                                          //             style:
+                                          //                 labelStyle.copyWith(
+                                          //                     color: theme
+                                          //                         .colorScheme
+                                          //                         .primary),
+                                          //           ),
+                                          //         )),
+                                          //   ),
+                                        ],
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            if (!showMoreSets)
+                                              Text(
+                                                'Track Top Set',
+                                                style: formHeadingStyle,
+                                              ),
+                                            if (showMoreSets)
+                                              Text(
+                                                'Track Sets',
+                                                style: formHeadingStyle,
+                                              ),
+                                            SizedBox(
+                                              height: 10,
+                                            ),
+                                            Form(
+                                              key: _trackTopSetFormKey,
+                                              child: SizedBox(
+                                                height: 175,
+                                                child: SingleChildScrollView(
+                                                  physics:
+                                                      AlwaysScrollableScrollPhysics(),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Column(
+                                                            children: [
+                                                              Container(
                                                                 // width: 80,
                                                                 // height: 44,
                                                                 decoration: BoxDecoration(
@@ -3017,7 +3165,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           8,
                                                                           0,
                                                                           8,
-                                                                          0),
+                                                                          2),
                                                                   child: Row(
                                                                     children: [
                                                                       SizedBox(
@@ -3032,7 +3180,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           style:
                                                                               formTextStyle,
                                                                           controller:
-                                                                              setsWeightControllers[i],
+                                                                              setsWeightControllers[0],
                                                                           inputFormatters: [
                                                                             FilteringTextInputFormatter.digitsOnly
                                                                           ],
@@ -3052,125 +3200,101 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                             labelStyle:
                                                                                 labelStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(.65)),
                                                                             labelText:
-                                                                                previousWeights[i],
+                                                                                previousWeights[0],
                                                                             // suffix: weightSuffixIcon,
                                                                             // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       if (weightSuffixIcons[
-                                                                              i] !=
+                                                                              0] !=
                                                                           null)
                                                                         weightSuffixIcons[
-                                                                            i]!,
+                                                                            0]!,
                                                                     ],
                                                                   ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                        SizedBox(
-                                                          height: 5,
-                                                        ),
-                                                        Text(
-                                                          'Weight (lbs)',
-                                                          style: labelStyle,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    SizedBox(
-                                                      width: 5,
-                                                    ),
-                                                    Column(
-                                                      children: [
-                                                        Container(
-                                                          // width: 80,
-                                                          // height: 44,
-                                                          decoration: BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .tertiaryContainer),
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .fromLTRB(
-                                                                    8, 0, 8, 2),
-                                                            child: Row(
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: 42,
-                                                                  height: 38,
-                                                                  child:
-                                                                      TextFormField(
-                                                                    maxLength:
-                                                                        2,
-                                                                    validator:
-                                                                        (value) {
-                                                                      return validateRepsInput(
-                                                                          value);
-                                                                    },
-                                                                    style:
-                                                                        formTextStyle,
-                                                                    controller:
-                                                                        setsRepsControllers[
-                                                                            0],
-                                                                    inputFormatters: [
-                                                                      FilteringTextInputFormatter
-                                                                          .digitsOnly
-                                                                    ],
-                                                                    keyboardType:
-                                                                        TextInputType
-                                                                            .number,
-                                                                    // textInputAction:
-                                                                    //     TextInputAction
-                                                                    //         .done,
-                                                                    decoration:
-                                                                        InputDecoration(
-                                                                      counterText:
-                                                                          '',
-                                                                      border: InputBorder
-                                                                          .none,
-                                                                      floatingLabelBehavior:
-                                                                          FloatingLabelBehavior
-                                                                              .never,
-                                                                      labelStyle: labelStyle.copyWith(
+                                                              if (showMoreSets)
+                                                                for (int i = 1;
+                                                                    i < numSets;
+                                                                    i++)
+                                                                  Padding(
+                                                                    padding:
+                                                                        const EdgeInsets.fromLTRB(
+                                                                            0,
+                                                                            10,
+                                                                            0,
+                                                                            0),
+                                                                    child:
+                                                                        Container(
+                                                                      // width: 80,
+                                                                      // height: 44,
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                              10),
                                                                           color: theme
                                                                               .colorScheme
-                                                                              .onBackground
-                                                                              .withOpacity(.65)),
-                                                                      labelText:
-                                                                          previousReps[
-                                                                              0],
-                                                                      // suffix: repsSuffixIcon,
-                                                                      // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                                                              .tertiaryContainer),
+                                                                      child:
+                                                                          Padding(
+                                                                        padding: const EdgeInsets.fromLTRB(
+                                                                            8,
+                                                                            0,
+                                                                            8,
+                                                                            0),
+                                                                        child:
+                                                                            Row(
+                                                                          children: [
+                                                                            SizedBox(
+                                                                              width: 42,
+                                                                              height: 38,
+                                                                              child: TextFormField(
+                                                                                maxLength: 3,
+                                                                                style: formTextStyle,
+                                                                                controller: setsWeightControllers[i],
+                                                                                inputFormatters: [
+                                                                                  FilteringTextInputFormatter.digitsOnly
+                                                                                ],
+                                                                                keyboardType: TextInputType.number,
+                                                                                // textInputAction:
+                                                                                //     TextInputAction
+                                                                                //         .done,
+                                                                                decoration: InputDecoration(
+                                                                                  counterText: '',
+                                                                                  border: InputBorder.none,
+                                                                                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                                                                                  labelStyle: labelStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(.65)),
+                                                                                  labelText: previousWeights[i],
+                                                                                  // suffix: weightSuffixIcon,
+                                                                                  // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                            if (weightSuffixIcons[i] !=
+                                                                                null)
+                                                                              weightSuffixIcons[i]!,
+                                                                          ],
+                                                                        ),
+                                                                      ),
                                                                     ),
                                                                   ),
-                                                                ),
-                                                                if (repsSuffixIcons[
-                                                                        0] !=
-                                                                    null)
-                                                                  repsSuffixIcons[
-                                                                      0]!,
-                                                              ],
-                                                            ),
+                                                              SizedBox(
+                                                                height: 5,
+                                                              ),
+                                                              Text(
+                                                                'Weight (lbs)',
+                                                                style:
+                                                                    labelStyle,
+                                                              ),
+                                                            ],
                                                           ),
-                                                        ),
-                                                        if (showMoreSets)
-                                                          for (int i = 1;
-                                                              i < numSets;
-                                                              i++)
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .fromLTRB(
-                                                                      0,
-                                                                      10,
-                                                                      0,
-                                                                      0),
-                                                              child: Container(
+                                                          SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Column(
+                                                            children: [
+                                                              Container(
                                                                 // width: 80,
                                                                 // height: 44,
                                                                 decoration: BoxDecoration(
@@ -3187,7 +3311,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           8,
                                                                           0,
                                                                           8,
-                                                                          0),
+                                                                          2),
                                                                   child: Row(
                                                                     children: [
                                                                       SizedBox(
@@ -3206,7 +3330,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                           style:
                                                                               formTextStyle,
                                                                           controller:
-                                                                              setsRepsControllers[i],
+                                                                              setsRepsControllers[0],
                                                                           inputFormatters: [
                                                                             FilteringTextInputFormatter.digitsOnly
                                                                           ],
@@ -3226,365 +3350,509 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
                                                                             labelStyle:
                                                                                 labelStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(.65)),
                                                                             labelText:
-                                                                                previousReps[i],
+                                                                                previousReps[0],
                                                                             // suffix: repsSuffixIcon,
                                                                             // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       if (repsSuffixIcons[
-                                                                              i] !=
+                                                                              0] !=
                                                                           null)
                                                                         repsSuffixIcons[
-                                                                            i]!,
+                                                                            0]!,
                                                                     ],
                                                                   ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                        SizedBox(
-                                                          height: 5,
-                                                        ),
-                                                        Text(
-                                                          'Reps',
-                                                          style: theme.textTheme
-                                                              .labelSmall!
-                                                              .copyWith(
-                                                                  color: theme
-                                                                      .colorScheme
-                                                                      .onBackground),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    // if (!showMoreSets)
-                                                    SizedBox(
-                                                      width: 5,
-                                                    ),
-                                                    // if (!showMoreSets)
-                                                    Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        SizedBox(
-                                                          height: 40,
-                                                          child: IconButton(
-                                                            style: ButtonStyle(
-                                                                backgroundColor:
-                                                                    resolveColor(theme
-                                                                        .colorScheme
-                                                                        .secondaryContainer),
-                                                                surfaceTintColor:
-                                                                    resolveColor(theme
-                                                                        .colorScheme
-                                                                        .secondaryContainer)),
-                                                            onPressed: () {
-                                                              saveTopSet(
-                                                                  appState,
-                                                                  currentExercise,
-                                                                  showMoreSets);
-                                                            },
-                                                            // label: Text(
-                                                            //   'Save',
-                                                            //   style: labelStyle,
-                                                            // ),
-                                                            icon: Icon(
-                                                              Icons.save_alt,
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .primary,
-                                                              size: 20,
-                                                            ),
+                                                              if (showMoreSets)
+                                                                for (int i = 1;
+                                                                    i < numSets;
+                                                                    i++)
+                                                                  Padding(
+                                                                    padding:
+                                                                        const EdgeInsets.fromLTRB(
+                                                                            0,
+                                                                            10,
+                                                                            0,
+                                                                            0),
+                                                                    child:
+                                                                        Container(
+                                                                      // width: 80,
+                                                                      // height: 44,
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                              10),
+                                                                          color: theme
+                                                                              .colorScheme
+                                                                              .tertiaryContainer),
+                                                                      child:
+                                                                          Padding(
+                                                                        padding: const EdgeInsets.fromLTRB(
+                                                                            8,
+                                                                            0,
+                                                                            8,
+                                                                            0),
+                                                                        child:
+                                                                            Row(
+                                                                          children: [
+                                                                            SizedBox(
+                                                                              width: 42,
+                                                                              height: 38,
+                                                                              child: TextFormField(
+                                                                                maxLength: 2,
+                                                                                validator: (value) {
+                                                                                  return validateRepsInput(value);
+                                                                                },
+                                                                                style: formTextStyle,
+                                                                                controller: setsRepsControllers[i],
+                                                                                inputFormatters: [
+                                                                                  FilteringTextInputFormatter.digitsOnly
+                                                                                ],
+                                                                                keyboardType: TextInputType.number,
+                                                                                // textInputAction:
+                                                                                //     TextInputAction
+                                                                                //         .done,
+                                                                                decoration: InputDecoration(
+                                                                                  counterText: '',
+                                                                                  border: InputBorder.none,
+                                                                                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                                                                                  labelStyle: labelStyle.copyWith(color: theme.colorScheme.onBackground.withOpacity(.65)),
+                                                                                  labelText: previousReps[i],
+                                                                                  // suffix: repsSuffixIcon,
+                                                                                  // suffixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                            if (repsSuffixIcons[i] !=
+                                                                                null)
+                                                                              repsSuffixIcons[i]!,
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                              SizedBox(
+                                                                height: 5,
+                                                              ),
+                                                              Text(
+                                                                'Reps',
+                                                                style: theme
+                                                                    .textTheme
+                                                                    .labelSmall!
+                                                                    .copyWith(
+                                                                        color: theme
+                                                                            .colorScheme
+                                                                            .onBackground),
+                                                              ),
+                                                            ],
                                                           ),
-                                                        ),
-                                                        if (hasSavedTopSet)
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .fromLTRB(
-                                                                    0, 5, 0, 0),
-                                                            child: Text(
-                                                              'Saved',
-                                                              style: labelStyle
-                                                                  .copyWith(
+                                                          // if (!showMoreSets)
+                                                          SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          // if (!showMoreSets)
+                                                          Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              SizedBox(
+                                                                height: 40,
+                                                                child:
+                                                                    IconButton(
+                                                                  style: ButtonStyle(
+                                                                      backgroundColor: resolveColor(theme
+                                                                          .colorScheme
+                                                                          .secondaryContainer),
+                                                                      surfaceTintColor: resolveColor(theme
+                                                                          .colorScheme
+                                                                          .secondaryContainer)),
+                                                                  onPressed:
+                                                                      () {
+                                                                    saveTopSet(
+                                                                        appState,
+                                                                        currentExercise,
+                                                                        showMoreSets);
+                                                                  },
+                                                                  // label: Text(
+                                                                  //   'Save',
+                                                                  //   style: labelStyle,
+                                                                  // ),
+                                                                  icon: Icon(
+                                                                    Icons
+                                                                        .save_alt,
+                                                                    color: theme
+                                                                        .colorScheme
+                                                                        .primary,
+                                                                    size: 20,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              if (hasSavedTopSet)
+                                                                Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                              .fromLTRB(
+                                                                          0,
+                                                                          5,
+                                                                          0,
+                                                                          0),
+                                                                  child: Text(
+                                                                    'Saved',
+                                                                    style: labelStyle
+                                                                        .copyWith(
+                                                                      color: theme
+                                                                          .colorScheme
+                                                                          .onBackground
+                                                                          .withOpacity(
+                                                                              .65),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          children: [
+                                            Text(
+                                              'Set Rest Period',
+                                              style: formHeadingStyle,
+                                            ),
+                                            SizedBox(height: 10),
+                                            Row(children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: theme.colorScheme
+                                                        .tertiaryContainer),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          8, 0, 8, 2),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 28,
+                                                        height: 35,
+                                                        child: TextFormField(
+                                                          maxLength: 2,
+                                                          style: formTextStyle,
+                                                          controller:
+                                                              restFormMinutesController,
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            counterText: '',
+                                                            border: InputBorder
+                                                                .none,
+                                                            floatingLabelBehavior:
+                                                                FloatingLabelBehavior
+                                                                    .never,
+                                                            labelStyle: labelStyle.copyWith(
                                                                 color: theme
                                                                     .colorScheme
                                                                     .onBackground
                                                                     .withOpacity(
-                                                                        .65),
-                                                              ),
-                                                            ),
+                                                                        .65)),
+                                                            labelText:
+                                                                previousRestMinutes ??
+                                                                    '00',
                                                           ),
-                                                      ],
-                                                    )
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Text(
-                                        'Set Rest Period',
-                                        style: formHeadingStyle,
-                                      ),
-                                      SizedBox(height: 10),
-                                      Row(children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: theme.colorScheme
-                                                  .tertiaryContainer),
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                8, 0, 8, 2),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 28,
-                                                  height: 35,
-                                                  child: TextFormField(
-                                                    maxLength: 2,
-                                                    style: formTextStyle,
-                                                    controller:
-                                                        restFormMinutesController,
-                                                    inputFormatters: [
-                                                      FilteringTextInputFormatter
-                                                          .digitsOnly
+                                                        ),
+                                                      ),
+                                                      if (restMinutesSuffixIcon !=
+                                                          null)
+                                                        restMinutesSuffixIcon!,
                                                     ],
-                                                    keyboardType:
-                                                        TextInputType.number,
-                                                    decoration: InputDecoration(
-                                                      counterText: '',
-                                                      border: InputBorder.none,
-                                                      floatingLabelBehavior:
-                                                          FloatingLabelBehavior
-                                                              .never,
-                                                      labelStyle:
-                                                          labelStyle.copyWith(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .onBackground
-                                                                  .withOpacity(
-                                                                      .65)),
-                                                      labelText:
-                                                          previousRestMinutes ??
-                                                              '00',
-                                                    ),
                                                   ),
                                                 ),
-                                                if (restMinutesSuffixIcon !=
-                                                    null)
-                                                  restMinutesSuffixIcon!,
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          ' : ',
-                                          style: TextStyle(
-                                              color: theme
-                                                  .colorScheme.onBackground,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w500),
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: theme.colorScheme
-                                                  .tertiaryContainer),
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                8, 0, 8, 2),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 28,
-                                                  height: 35,
-                                                  child: TextFormField(
-                                                    maxLength: 2,
-                                                    style: formTextStyle,
-                                                    controller:
-                                                        restFormSecondsController,
-                                                    inputFormatters: [
-                                                      FilteringTextInputFormatter
-                                                          .digitsOnly
+                                              ),
+                                              Text(
+                                                ' : ',
+                                                style: TextStyle(
+                                                    color: theme.colorScheme
+                                                        .onBackground,
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: theme.colorScheme
+                                                        .tertiaryContainer),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          8, 0, 8, 2),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 28,
+                                                        height: 35,
+                                                        child: TextFormField(
+                                                          maxLength: 2,
+                                                          style: formTextStyle,
+                                                          controller:
+                                                              restFormSecondsController,
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .number,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            counterText: '',
+                                                            border: InputBorder
+                                                                .none,
+                                                            floatingLabelBehavior:
+                                                                FloatingLabelBehavior
+                                                                    .never,
+                                                            labelStyle: labelStyle.copyWith(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .onBackground
+                                                                    .withOpacity(
+                                                                        .65)),
+                                                            labelText:
+                                                                previousRestSeconds ??
+                                                                    '00',
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (restSecondsSuffixIcon !=
+                                                          null)
+                                                        restSecondsSuffixIcon!,
                                                     ],
-                                                    keyboardType:
-                                                        TextInputType.number,
-                                                    decoration: InputDecoration(
-                                                      counterText: '',
-                                                      border: InputBorder.none,
-                                                      floatingLabelBehavior:
-                                                          FloatingLabelBehavior
-                                                              .never,
-                                                      labelStyle:
-                                                          labelStyle.copyWith(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .onBackground
-                                                                  .withOpacity(
-                                                                      .65)),
-                                                      labelText:
-                                                          previousRestSeconds ??
-                                                              '00',
-                                                    ),
                                                   ),
                                                 ),
-                                                if (restSecondsSuffixIcon !=
-                                                    null)
-                                                  restSecondsSuffixIcon!,
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ]),
-                                      SizedBox(height: 5),
-                                      ElevatedButton.icon(
-                                          style: ButtonStyle(
-                                              backgroundColor: resolveColor(
-                                                  theme.colorScheme
-                                                      .secondaryContainer),
-                                              surfaceTintColor: resolveColor(
-                                                  theme.colorScheme
-                                                      .secondaryContainer)),
-                                          onPressed: () {
-                                            try {
-                                              int? seconds;
-                                              String minutesText =
-                                                  restFormMinutesController
-                                                      .text;
-                                              String secondsText =
-                                                  restFormSecondsController
-                                                      .text;
-                                              if ((minutesText.isNotEmpty &&
-                                                      secondsText.isEmpty) ||
-                                                  (secondsText.isNotEmpty &&
-                                                      int.parse(secondsText) <
-                                                          60)) {
-                                                if (restMinutesSuffixIcon !=
-                                                        null ||
-                                                    restSecondsSuffixIcon !=
-                                                        null) {
-                                                  setState(() {
-                                                    restMinutesSuffixIcon =
-                                                        null;
-                                                    restSecondsSuffixIcon =
-                                                        null;
-                                                  });
-                                                }
-                                                if (minutesText.isNotEmpty &&
-                                                    secondsText.isNotEmpty) {
-                                                  seconds = (int.parse(
-                                                              minutesText) *
-                                                          60) +
-                                                      int.parse(secondsText);
-                                                } else if (minutesText
-                                                    .isNotEmpty) {
-                                                  seconds =
-                                                      int.parse(minutesText) *
-                                                              60 +
-                                                          previousSeconds;
-                                                } else if (secondsText
-                                                    .isNotEmpty) {
-                                                  seconds =
-                                                      int.parse(secondsText) +
-                                                          (previousMinutes *
-                                                              60);
-                                                }
-                                                if (seconds != null) {
-                                                  // Don't restore in firebase if already the same value
-                                                  if (widget
+                                              ),
+                                            ]),
+                                            SizedBox(height: 5),
+                                            ElevatedButton.icon(
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        resolveColor(theme
+                                                            .colorScheme
+                                                            .secondaryContainer),
+                                                    surfaceTintColor:
+                                                        resolveColor(theme
+                                                            .colorScheme
+                                                            .secondaryContainer)),
+                                                onPressed: () {
+                                                  try {
+                                                    int? seconds;
+                                                    String minutesText =
+                                                        restFormMinutesController
+                                                            .text;
+                                                    String secondsText =
+                                                        restFormSecondsController
+                                                            .text;
+                                                    if ((minutesText
+                                                                .isNotEmpty &&
+                                                            secondsText
+                                                                .isEmpty) ||
+                                                        (secondsText
+                                                                .isNotEmpty &&
+                                                            int.parse(
+                                                                    secondsText) <
+                                                                60)) {
+                                                      if (restMinutesSuffixIcon !=
+                                                              null ||
+                                                          restSecondsSuffixIcon !=
+                                                              null) {
+                                                        setState(() {
+                                                          restMinutesSuffixIcon =
+                                                              null;
+                                                          restSecondsSuffixIcon =
+                                                              null;
+                                                        });
+                                                      }
+                                                      if (minutesText
+                                                              .isNotEmpty &&
+                                                          secondsText
+                                                              .isNotEmpty) {
+                                                        seconds = (int.parse(
+                                                                    minutesText) *
+                                                                60) +
+                                                            int.parse(
+                                                                secondsText);
+                                                      } else if (minutesText
+                                                          .isNotEmpty) {
+                                                        seconds = int.parse(
+                                                                    minutesText) *
+                                                                60 +
+                                                            previousSeconds;
+                                                      } else if (secondsText
+                                                          .isNotEmpty) {
+                                                        seconds = int.parse(
+                                                                secondsText) +
+                                                            (previousMinutes *
+                                                                60);
+                                                      }
+                                                      if (seconds != null) {
+                                                        // Don't restore in firebase if already the same value
+                                                        if (widget
+                                                                    .split
+                                                                    .trainingDays[
+                                                                        widget
+                                                                            .dayIndex]
+                                                                    .restTimeInSeconds[
+                                                                widget
+                                                                    .splitDayCardIndex] ==
+                                                            seconds) {
+                                                          return;
+                                                        }
+                                                        widget
+                                                                .split
+                                                                .trainingDays[
+                                                                    widget.dayIndex]
+                                                                .restTimeInSeconds[
+                                                            widget
+                                                                .splitDayCardIndex] = seconds;
+                                                        // Update potential supersets
+                                                        if (widget
+                                                                    .split
+                                                                    .trainingDays[
+                                                                        widget
+                                                                            .dayIndex]
+                                                                    .isSupersettedWithLast[
+                                                                widget
+                                                                    .splitDayCardIndex] &&
+                                                            widget.splitDayCardIndex !=
+                                                                0) {
+                                                          widget
                                                               .split
                                                               .trainingDays[
-                                                                  widget.dayIndex]
-                                                              .restTimeInSeconds[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .restTimeInSeconds[widget
+                                                                  .splitDayCardIndex -
+                                                              1] = seconds;
+                                                        } else if (widget
+                                                                    .split
+                                                                    .trainingDays[
+                                                                        widget
+                                                                            .dayIndex]
+                                                                    .isSupersettedWithLast
+                                                                    .length >
+                                                                widget.splitDayCardIndex +
+                                                                    1 &&
+                                                            widget
+                                                                .split
+                                                                .trainingDays[
+                                                                    widget
+                                                                        .dayIndex]
+                                                                .isSupersettedWithLast[widget
+                                                                    .splitDayCardIndex +
+                                                                1]) {
                                                           widget
-                                                              .splitDayCardIndex] ==
-                                                      seconds) {
-                                                    return;
+                                                              .split
+                                                              .trainingDays[
+                                                                  widget
+                                                                      .dayIndex]
+                                                              .restTimeInSeconds[widget
+                                                                  .splitDayCardIndex +
+                                                              1] = seconds;
+                                                        }
+                                                        // Update split data in firestore
+                                                        appState
+                                                            .storeDataInFirestore();
+                                                        updatePreviousSecondsAndMinutes();
+                                                        setState(() {
+                                                          hasSavedRestTimes =
+                                                              true;
+                                                        });
+                                                        _restSavedTimer = Timer(
+                                                            Duration(
+                                                                seconds: 2),
+                                                            () {
+                                                          setState(() {
+                                                            hasSavedRestTimes =
+                                                                false;
+                                                          });
+                                                        });
+                                                      }
+                                                    } else {
+                                                      if (restMinutesSuffixIcon ==
+                                                              null ||
+                                                          restSecondsSuffixIcon ==
+                                                              null) {
+                                                        setState(() {
+                                                          restMinutesSuffixIcon =
+                                                              suffixIcon;
+                                                          restSecondsSuffixIcon =
+                                                              suffixIcon;
+                                                        });
+                                                      }
+                                                    }
+                                                  } catch (e) {
+                                                    print(
+                                                        'ERROR - Saving rest times $e');
                                                   }
-                                                  widget
-                                                              .split
-                                                              .trainingDays[
-                                                                  widget.dayIndex]
-                                                              .restTimeInSeconds[
-                                                          widget
-                                                              .splitDayCardIndex] =
-                                                      seconds;
-                                                  // Update split data in firestore
-                                                  appState
-                                                      .storeDataInFirestore();
-                                                  updatePreviousSecondsAndMinutes();
-                                                  setState(() {
-                                                    hasSavedRestTimes = true;
-                                                  });
-                                                  _restSavedTimer = Timer(
-                                                      Duration(seconds: 2), () {
-                                                    setState(() {
-                                                      hasSavedRestTimes = false;
-                                                    });
-                                                  });
-                                                }
-                                              } else {
-                                                if (restMinutesSuffixIcon ==
-                                                        null ||
-                                                    restSecondsSuffixIcon ==
-                                                        null) {
-                                                  setState(() {
-                                                    restMinutesSuffixIcon =
-                                                        suffixIcon;
-                                                    restSecondsSuffixIcon =
-                                                        suffixIcon;
-                                                  });
-                                                }
-                                              }
-                                            } catch (e) {
-                                              print(
-                                                  'ERROR - Saving rest times $e');
-                                            }
-                                          },
-                                          icon: Icon(Icons.save_alt,
-                                              color: theme.colorScheme.primary,
-                                              size: 16),
-                                          label: Text(
-                                            'Save',
-                                            style: labelStyle.copyWith(
-                                                color:
-                                                    theme.colorScheme.primary),
-                                          )),
-                                      if (hasSavedRestTimes)
-                                        Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              0, 5, 0, 0),
-                                          child: Text(
-                                            'Saved',
-                                            style: labelStyle.copyWith(
-                                              color: theme
-                                                  .colorScheme.onBackground
-                                                  .withOpacity(.65),
-                                            ),
-                                          ),
+                                                },
+                                                icon: Icon(Icons.save_alt,
+                                                    color: theme
+                                                        .colorScheme.primary,
+                                                    size: 16),
+                                                label: Text(
+                                                  'Save',
+                                                  style: labelStyle.copyWith(
+                                                      color: theme
+                                                          .colorScheme.primary),
+                                                )),
+                                            if (hasSavedRestTimes)
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                        0, 5, 0, 0),
+                                                child: Text(
+                                                  'Saved',
+                                                  style: labelStyle.copyWith(
+                                                    color: theme.colorScheme
+                                                        .onBackground
+                                                        .withOpacity(.65),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ]),
+                                      ],
+                                    ),
+                                  ]),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            // ),
+          ],
+        ),
       );
     } else {
       // Draggable
@@ -3642,8 +3910,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
             width: 20,
           ),
           SizedBox(
-            width: 220,
+            width: 200,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -3675,6 +3944,226 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard> {
         ]),
       );
     }
+  }
+
+  void showOptionsDropdown(
+      BuildContext context, Offset tapPosition, MyAppState appState) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Info',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            leading: Icon(Icons.info_outline,
+                color: theme.colorScheme.primary, size: 16),
+            title: Text('Info',
+                style:
+                    labelStyle.copyWith(color: theme.colorScheme.onBackground)),
+          ),
+        ),
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Tutorial',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            leading: Icon(Icons.video_collection,
+                color: theme.colorScheme.primary, size: 16),
+            title: Text('Tutorial',
+                style:
+                    labelStyle.copyWith(color: theme.colorScheme.onBackground)),
+          ),
+        ),
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Change Exercise',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            leading: Icon(Icons.swap_vert,
+                color: theme.colorScheme.primary, size: 16),
+            title: Text('Change Exercise',
+                style:
+                    labelStyle.copyWith(color: theme.colorScheme.onBackground)),
+          ),
+        ),
+        if (widget.addSupersetOption)
+          PopupMenuItem(
+            padding: EdgeInsets.zero,
+            value: 'Add superset',
+            child: ListTile(
+              visualDensity: VisualDensity(
+                  vertical: VisualDensity.minimumDensity,
+                  horizontal: VisualDensity.minimumDensity),
+              dense: true,
+              leading:
+                  Icon(Icons.add, color: theme.colorScheme.primary, size: 16),
+              title: Text('Add superset',
+                  style: labelStyle.copyWith(
+                      color: theme.colorScheme.onBackground)),
+            ),
+          ),
+        if (widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast
+                    .length >
+                widget.splitDayCardIndex + 1 &&
+            widget.split.trainingDays[widget.dayIndex]
+                .isSupersettedWithLast[widget.splitDayCardIndex + 1])
+          PopupMenuItem(
+            padding: EdgeInsets.zero,
+            value: 'Detach superset A',
+            child: ListTile(
+              visualDensity: VisualDensity(
+                  vertical: VisualDensity.minimumDensity,
+                  horizontal: VisualDensity.minimumDensity),
+              dense: true,
+              leading: Icon(Icons.splitscreen,
+                  color: theme.colorScheme.primary, size: 16),
+              title: Text('Detach superset',
+                  style: labelStyle.copyWith(
+                      color: theme.colorScheme.onBackground)),
+            ),
+          ),
+        if (widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast
+                    .length >
+                widget.splitDayCardIndex &&
+            widget.split.trainingDays[widget.dayIndex]
+                .isSupersettedWithLast[widget.splitDayCardIndex])
+          PopupMenuItem(
+            padding: EdgeInsets.zero,
+            value: 'Detach superset B',
+            child: ListTile(
+              visualDensity: VisualDensity(
+                  vertical: VisualDensity.minimumDensity,
+                  horizontal: VisualDensity.minimumDensity),
+              dense: true,
+              leading: Icon(Icons.splitscreen,
+                  color: theme.colorScheme.primary, size: 16),
+              title: Text('Detach superset',
+                  style: labelStyle.copyWith(
+                      color: theme.colorScheme.onBackground)),
+            ),
+          ),
+      ],
+    ).then((value) {
+      if (value == 'Change Exercise') {
+        _showSwapExercisesWindow(
+          context,
+          appState,
+          appState.muscleGroups.values
+              .toList()
+              .expand((innerList) => innerList)
+              .toList(),
+          similarExercises,
+          currentExercise,
+          widget.dayIndex,
+          widget.splitDayCardIndex,
+          getPercentCapacity(appState),
+        );
+      } else if (value == 'Add superset') {
+        _showSearchExercisesWindow(
+            context,
+            appState,
+            appState.muscleGroups.values
+                .toList()
+                .expand((innerList) => innerList)
+                .toList()
+                .where((element) => !widget
+                    .split.trainingDays[widget.dayIndex].exerciseNames
+                    .contains(element.name))
+                .toList(),
+            widget.dayIndex,
+            widget.splitDayCardIndex + 1,
+            widget.split.trainingDays[widget.dayIndex]
+                .setsPerMuscleGroup[widget.splitDayCardIndex]);
+      } else if (value == 'Detach superset A') {
+        widget.setSplitDayPageState(() {
+          widget.split.trainingDays[widget.dayIndex]
+              .isSupersettedWithLast[widget.splitDayCardIndex + 1] = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          width: MediaQuery.of(context).size.width * .8,
+          backgroundColor: theme.colorScheme.onBackground,
+          content: SizedBox(
+              width: MediaQuery.of(context).size.width * .8,
+              child: Text('Detached superset!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: theme.colorScheme.background))),
+          duration: Duration(milliseconds: 1500),
+        ));
+      } else if (value == 'Detach superset B') {
+        widget.setSplitDayPageState(() {
+          widget.split.trainingDays[widget.dayIndex]
+              .isSupersettedWithLast[widget.splitDayCardIndex] = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          width: MediaQuery.of(context).size.width * .8,
+          backgroundColor: theme.colorScheme.onBackground,
+          content: SizedBox(
+              width: MediaQuery.of(context).size.width * .8,
+              child: Text('Detached superset!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: theme.colorScheme.background))),
+          duration: Duration(milliseconds: 1500),
+        ));
+      } else if (value == 'Info') {
+        toExercise(appState, currentExercise);
+      } else if (value == 'Tutorial') {
+        launchUrl(Uri.parse(currentExercise.videoLink));
+      }
+    });
+  }
+
+  double? getPercentCapacity(MyAppState appState) {
+    if (appState.userGym == null || widget.gymOpeningHours == null) {
+      return null;
+    } else {
+      String currentlyOpenString;
+      DateTime now = DateTime.now();
+      double percentCapacity =
+          appState.avgGymCrowdData[now.weekday - 1][now.hour] / 12.0;
+      if (appState.userGym!.openingHours != null) {
+        currentlyOpenString = widget.gymOpeningHours!.getCurrentlyOpenString();
+        // 'Open - ...' or 'Open 24 hours'
+        if (currentlyOpenString.startsWith('Open ')) {
+          return percentCapacity;
+        } else {
+          return null;
+        }
+      } else {
+        return percentCapacity;
+      }
+    }
+  }
+
+  String calculateExpectedWaitTimeForExercise(
+      double percentCapacity, Exercise exercise) {
+    return (WAIT_MULTIPLIER_TO_MINUTES *
+            exercise.waitMultiplier *
+            percentCapacity)
+        .toStringAsFixed(0);
   }
 }
 
@@ -4651,3 +5140,461 @@ class _SearchExercisesState extends State<SearchExercises>
 //   // ...,
 //   onSelectNotification: handleNotificationAction,
 // );
+
+void _showSwapExercisesWindow(
+  BuildContext context,
+  MyAppState appState,
+  List<Exercise> allExercises,
+  List<Exercise> similarExercises,
+  Exercise oldExercise,
+  int dayIndex,
+  int exerciseNum,
+  final double? percentCapacity,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      String initialFilterOption = 'Similar Exercises';
+      // if (appState.currentSplit.equipmentLevel < 2) {
+      //   initialFilterOption = appState.currentSplit.equipmentLevel == 1
+      //       ? 'Dumbbell-Only'
+      //       : 'No Equipment';
+      // }
+      return SwapExercise(appState, allExercises, similarExercises, oldExercise,
+          initialFilterOption, dayIndex, exerciseNum, percentCapacity);
+    },
+  );
+}
+
+// ignore: must_be_immutable
+class SwapExercise extends StatefulWidget {
+  final MyAppState appState;
+  final List<Exercise> allExercises;
+  final List<Exercise> similarExercises;
+  final Exercise oldExercise;
+  String selectedFilterOption;
+  final int dayIndex;
+  final int exerciseNum;
+  final double? percentCapacity;
+
+  SwapExercise(
+      this.appState,
+      this.allExercises,
+      this.similarExercises,
+      this.oldExercise,
+      this.selectedFilterOption,
+      this.dayIndex,
+      this.exerciseNum,
+      this.percentCapacity);
+
+  @override
+  _SwapExerciseState createState() => _SwapExerciseState();
+}
+
+class _SwapExerciseState extends State<SwapExercise>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+  String pattern = '';
+  final ScrollController scrollController = ScrollController();
+
+  List<String> filterOptions = [
+    'Similar Exercises',
+    'Dumbbell-Only',
+    'No Equipment',
+    'Machine-Only',
+  ];
+
+  late TextEditingController searchController;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _showSnackBar(ThemeData theme, Exercise newExercise) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: MediaQuery.of(context).size.width * .8,
+        backgroundColor: theme.colorScheme.onBackground,
+        content: SizedBox(
+            width: MediaQuery.of(context).size.width * .8,
+            child: Text(
+                '${widget.oldExercise.name} replaced by ${newExercise.name}!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.background))),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchController = TextEditingController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    MyAppState appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelSmall!
+        .copyWith(color: theme.colorScheme.onBackground);
+
+    List<Exercise> filteredExercises = [];
+    if (widget.selectedFilterOption == 'Similar Exercises') {
+      filteredExercises = widget.similarExercises.toList();
+    } else if (widget.selectedFilterOption == 'Dumbbell-Only') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('Dumbbells');
+        }
+        return true;
+      }).toList();
+    } else if (widget.selectedFilterOption == 'No Equipment') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('None') ||
+              exercise.resourcesRequired!.contains('Pull-Up Bar') ||
+              exercise.resourcesRequired!.contains('Parallel Bars');
+        }
+        return true;
+      }).toList();
+    } else if (widget.selectedFilterOption == 'Machine-Only') {
+      filteredExercises = widget.allExercises.where((exercise) {
+        if (exercise.resourcesRequired != null) {
+          return exercise.resourcesRequired!.contains('Machine');
+        }
+        return true;
+      }).toList();
+    } else {
+      // No filter option
+      filteredExercises = widget.allExercises;
+    }
+
+    List<Exercise> searchFilteredExercises;
+    if (pattern.isNotEmpty) {
+      searchFilteredExercises = filteredExercises
+          .where((element) =>
+              element.name.toLowerCase().contains(pattern.toLowerCase()) ||
+              element.mainMuscleGroup
+                  .toLowerCase()
+                  .contains(pattern.toLowerCase()) ||
+              element.musclesWorked[0]
+                  .toLowerCase()
+                  .contains(pattern.toLowerCase()))
+          .toList();
+    } else {
+      searchFilteredExercises = filteredExercises.toList();
+    }
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            key: _scaffoldKey,
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Cancel',
+                            style: TextStyle(
+                                color: theme.colorScheme.onBackground)),
+                      ),
+                    ],
+                  ),
+                ),
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: theme.colorScheme.primaryContainer),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
+                            child: TextField(
+                              style: TextStyle(
+                                  color: theme.colorScheme.onBackground),
+                              controller: searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  // If value is empty, no search query
+                                  pattern = value;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  icon: Icon(
+                                    Icons.search,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        pattern = '';
+                                      });
+                                      searchController
+                                          .clear(); // Clear the text field
+                                    },
+                                  ),
+                                  labelText:
+                                      'Search for an exercise or muscle group',
+                                  labelStyle: labelStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65)),
+                                  floatingLabelStyle: labelStyle.copyWith(
+                                      color: theme.colorScheme.onBackground
+                                          .withOpacity(0.65))),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 5, // Buffer space from left
+                      ),
+                      ...filterOptions.map((option) {
+                        bool isSelected = option == widget.selectedFilterOption;
+                        if (isSelected) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  scrollController.animateTo(
+                                    0.0,
+                                    duration: Duration(milliseconds: 500),
+                                    curve: Curves.easeInOut,
+                                  );
+                                  if (!isSelected) {
+                                    widget.selectedFilterOption = option;
+                                  } else {
+                                    widget.selectedFilterOption = 'None';
+                                  }
+                                });
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor:
+                                      resolveColor(theme.colorScheme.primary),
+                                  surfaceTintColor:
+                                      resolveColor(theme.colorScheme.primary)),
+                              label: Text(
+                                option,
+                                style: labelStyle,
+                              ),
+                              icon: Icon(Icons.cancel,
+                                  color: theme.colorScheme.onBackground,
+                                  size: 16),
+                            ),
+                          );
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  scrollController.animateTo(
+                                    0.0,
+                                    duration: Duration(milliseconds: 500),
+                                    curve: Curves.easeInOut,
+                                  );
+                                  widget.selectedFilterOption = option;
+                                });
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              child: Text(
+                                option,
+                                style: labelStyle,
+                              ),
+                            ),
+                          );
+                        }
+                      }).toList(),
+                      SizedBox(
+                        width: 5, // Buffer space from right
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: searchFilteredExercises.length,
+                    itemBuilder: (context, index) {
+                      Exercise exercise = searchFilteredExercises[index];
+                      int? expectedWaitTime;
+                      if (widget.percentCapacity != null) {
+                        expectedWaitTime = int.parse(
+                            calculateExpectedWaitTimeForExercise(
+                                widget.percentCapacity!, exercise));
+                      }
+                      return ListTile(
+                        onTap: () {
+                          Split split = appState.currentSplit;
+                          final List<dynamic> exerciseInfo =
+                              appState.removeMuscleGroupFromSplit(
+                                  split, widget.dayIndex, widget.exerciseNum);
+                          appState.addMuscleGroupToSplit(
+                            split,
+                            widget.dayIndex,
+                            widget.exerciseNum,
+                            exercise.mainMuscleGroup,
+                            appState.muscleGroups[exercise.mainMuscleGroup]!
+                                .indexOf(exercise),
+                            exerciseInfo[2], // numSets
+                            '',
+                            exercise.musclesWorked.length < 2
+                                ? exercise.musclesWorked[0]
+                                : (exercise.musclesWorkedActivation[1] >= 2
+                                    ? '${exercise.musclesWorked[0]}/${exercise.musclesWorked[1]}'
+                                    : exercise.musclesWorked[0]),
+                            exercise.name,
+                            exerciseInfo[6], // isSuperset
+                            exerciseInfo[7], // Rest time
+                          );
+                          _showSnackBar(theme, exercise);
+                          Navigator.of(context).pop();
+                        },
+                        leading: Container(
+                          height: 60,
+                          width: 60,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              color: theme.colorScheme.onBackground),
+                          child: Padding(
+                            padding: const EdgeInsets.all(1.0),
+                            child: ImageContainer(exercise: exercise),
+                          ),
+                        ),
+                        title: Row(children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width - 230,
+                            child: Text(
+                              exercise.name,
+                              style: labelStyle,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ]),
+                        subtitle: Row(
+                          children: [
+                            Text(
+                              '${exercise.mainMuscleGroup} ',
+                              style: labelStyle.copyWith(
+                                  color: theme.colorScheme.primary),
+                            ),
+                            if (exercise.mainMuscleGroup !=
+                                exercise.musclesWorked[0])
+                              Text(
+                                '(${exercise.musclesWorked[0]})',
+                                style: labelStyle.copyWith(
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(.65)),
+                              ),
+                          ],
+                        ),
+                        trailing: widget.percentCapacity != null &&
+                                expectedWaitTime != null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Expected wait',
+                                    style: labelStyle.copyWith(
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65),
+                                        fontSize: 10),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    '$expectedWaitTime minute${expectedWaitTime != 1 ? 's' : ''}',
+                                    style: labelStyle.copyWith(
+                                        color: expectedWaitTime < 4
+                                            ? theme.colorScheme.primary
+                                            : (expectedWaitTime < 7
+                                                ? Colors.yellow
+                                                : theme.colorScheme.secondary),
+                                        fontSize: 10),
+                                  ),
+                                ],
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String calculateExpectedWaitTimeForExercise(
+      double percentCapacity, Exercise exercise) {
+    return (WAIT_MULTIPLIER_TO_MINUTES *
+            exercise.waitMultiplier *
+            percentCapacity)
+        .toStringAsFixed(0);
+  }
+}

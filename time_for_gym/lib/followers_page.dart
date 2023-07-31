@@ -180,7 +180,25 @@ class _FollowersPageState extends State<FollowersPage> {
                               username,
                               style: labelStyle,
                               maxLines: 2,
-                            ));
+                            ),
+                            trailing: widget.user! == appState.currentUser
+                                ? GestureDetector(
+                                    onTapDown: (tapDownDetails) {
+                                      showFollowerOptionsDropdown(
+                                          context,
+                                          tapDownDetails.globalPosition,
+                                          appState,
+                                          user);
+                                    },
+                                    child: Container(
+                                        decoration: BoxDecoration(),
+                                        child: Icon(
+                                          Icons.more_horiz,
+                                          color: theme.colorScheme.onBackground
+                                              .withOpacity(.65),
+                                        )),
+                                  )
+                                : null);
                       },
                     ),
                   ),
@@ -243,6 +261,53 @@ class _FollowersPageState extends State<FollowersPage> {
         ),
       ),
     );
+  }
+
+  void showFollowerOptionsDropdown(BuildContext context, Offset tapPosition,
+      MyAppState appState, User otherUser) {
+    final theme = Theme.of(context);
+    final labelStyle =
+        TextStyle(color: theme.colorScheme.onBackground, fontSize: 10);
+
+    showMenu<String>(
+      color: theme.colorScheme.primaryContainer,
+      surfaceTintColor: theme.colorScheme.primaryContainer,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Remove Follower',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            leading: Icon(Icons.remove_circle_outline,
+                color: theme.colorScheme.secondary, size: 16),
+            title: Text('Remove Follower',
+                style: labelStyle.copyWith(color: theme.colorScheme.secondary)),
+          ),
+        ),
+      ],
+    ).then((value) async {
+      if (value == 'Remove Follower') {
+        bool success = await appState.currentUser.removeFromFollowers(
+            appState.currentUser.followers.indexOf(otherUser.username));
+        if (success) {
+          // Update in memory
+          setState(() {
+            appState.currentUser.followers;
+            otherUser.following.remove(appState.currentUser.username);
+          });
+        }
+      }
+    });
   }
 
   void tryChangePageToOwnProfile(MyAppState appState) {

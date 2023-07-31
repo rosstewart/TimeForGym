@@ -154,8 +154,7 @@ class _AuthPageState extends State<AuthPage> {
         print('User is successfully signed in with email');
         hideAllErrorText();
         authUser = user;
-          appState.authUsername = user.displayName;
-          appState.initEverythingAfterAuthentication();
+        appState.authUsername = user.displayName;
         appState.initEverythingAfterAuthentication();
         widget.setAuthenticationState(() {
           isAuthenticated = true;

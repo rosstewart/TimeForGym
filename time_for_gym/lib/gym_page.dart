@@ -563,7 +563,7 @@ class _GymPageState extends State<GymPage> {
                       ),
                     );
                   },
-                  child: SizedBox(height: 175, width: 175, child: photo),
+                  child: SizedBox(height: 175, child: photo),
                 ),
               ),
             ),
