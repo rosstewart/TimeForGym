@@ -63,4 +63,10 @@ class ActiveWorkout {
   List<Timer?> timers = [];
   List<int?> restTimesInSeconds = [];
   List<int?> timersSecondsLeft = [];
+  String? completionTitle;
+  String? completionDescription;
+  String? completionPostOption;
+  String? completionImageErrorText;
+  String? completionPickedFilePath;
+  String? completionErrorText;
 }

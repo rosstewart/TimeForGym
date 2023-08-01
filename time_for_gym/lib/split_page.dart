@@ -842,7 +842,7 @@ class DayOfWeekButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
-        height: 60,
+        height: 45,
         child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: resolveColor(theme.colorScheme.primaryContainer),
@@ -851,37 +851,34 @@ class DayOfWeekButton extends StatelessWidget {
           onPressed: () {
             viewDayOfWeek(appState, i);
           },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${daysOfWeek[i]}:',
-                  style: headingStyle.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: dayColor,
-                  ),
-                  textAlign: TextAlign.left,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${daysOfWeek[i]}:',
+                style: headingStyle.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: dayColor,
                 ),
-                Spacer(),
-                Expanded(
-                  child: Text(
-                    split.trainingDays[i].toString(),
-                    style: textStyle.copyWith(color: dayColor),
-                    textAlign: TextAlign.right,
+                textAlign: TextAlign.left,
+              ),
+              Spacer(),
+              Expanded(
+                child: Text(
+                  split.trainingDays[i].toString(),
+                  style: textStyle.copyWith(color: dayColor),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              if (appState.splitWeekEditMode)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 0, 0, 0),
+                  child: Icon(
+                    Icons.reorder,
+                    color: theme.colorScheme.onBackground,
                   ),
                 ),
-                if (appState.splitWeekEditMode)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(30, 0, 0, 0),
-                    child: Icon(
-                      Icons.reorder,
-                      color: theme.colorScheme.onBackground,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

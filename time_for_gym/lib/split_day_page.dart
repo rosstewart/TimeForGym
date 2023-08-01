@@ -184,10 +184,10 @@ class _SplitDayPageState extends State<SplitDayPage> {
     // var exercises = appState.muscleGroups[appState.currentMuscleGroup];
 
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleMedium!.copyWith(
+    final titleStyle = theme.textTheme.titleSmall!.copyWith(
       color: theme.colorScheme.onBackground,
     );
-    final textStyle = theme.textTheme.titleSmall!.copyWith(
+    final textStyle = theme.textTheme.bodyMedium!.copyWith(
       color: theme.colorScheme.onBackground,
     );
 
@@ -2378,9 +2378,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
 
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headingStyle = theme.textTheme.titleMedium!.copyWith(
+    final headingStyle = theme.textTheme.titleSmall!.copyWith(
         color: theme.colorScheme.onBackground, fontWeight: FontWeight.w600);
-    final textStyle = theme.textTheme.titleSmall!
+    final textStyle = theme.textTheme.bodyMedium!
         .copyWith(color: theme.colorScheme.onBackground);
     final formHeadingStyle = theme.textTheme.bodyMedium!
         .copyWith(color: theme.colorScheme.onBackground);
@@ -2666,7 +2666,6 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                       child: Column(
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               if (!widget.addSupersetOption) Spacer(flex: 4),
                               if (!widget.addSupersetOption)
@@ -2700,12 +2699,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                         const EdgeInsets.fromLTRB(0, 0, 5, 0),
                                     child: Container(
                                       decoration: BoxDecoration(),
-                                      child: Icon(
-                                        Icons.more_horiz,
-                                        color: theme.colorScheme.onBackground
-                                            .withOpacity(.65),
-                                        size: 30,
-                                      ),
+                                      child: Icon(Icons.more_horiz,
+                                          color: theme.colorScheme.onBackground
+                                              .withOpacity(.65)),
                                     ),
                                   ))
                             ],
@@ -2728,7 +2724,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                             // IMPORTANT
                             height: 220,
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
+                              padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
                               child: PageView(
                                   scrollDirection: Axis.vertical,
                                   controller: _pageController,
@@ -2770,11 +2766,11 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                             context)
                                                                         .size
                                                                         .width -
-                                                                    110,
+                                                                    55,
                                                                 child: Row(
                                                                   mainAxisAlignment:
                                                                       MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          .spaceEvenly,
                                                                   children: [
                                                                     Container(
                                                                       decoration: BoxDecoration(
@@ -2783,9 +2779,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                           borderRadius:
                                                                               BorderRadius.circular(5)),
                                                                       height:
-                                                                          150,
+                                                                          140,
                                                                       width:
-                                                                          150,
+                                                                          140,
                                                                       // Actual size: width: 496, height: 496
                                                                       child:
                                                                           Padding(
@@ -2796,12 +2792,11 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                                 currentExercise),
                                                                       ),
                                                                     ),
-                                                                    Spacer(),
                                                                     if (musclesWorkedImage !=
                                                                         null)
                                                                       Hero(
-                                                                        tag: 'sdp${widget
-                                                                            .splitDayCardIndex}',
+                                                                        tag:
+                                                                            'sdp${widget.splitDayCardIndex}',
                                                                         child:
                                                                             GestureDetector(
                                                                           onTap:
@@ -2809,8 +2804,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                             Navigator.push(
                                                                               context,
                                                                               MaterialPageRoute(
-                                                                                builder: (context) => FullScreenPhoto(photoTag: 'sdp${widget
-                                                                            .splitDayCardIndex}', photo: musclesWorkedImage!),
+                                                                                builder: (context) => FullScreenPhoto(photoTag: 'sdp${widget.splitDayCardIndex}', photo: musclesWorkedImage!),
                                                                               ),
                                                                             );
                                                                           },
@@ -2819,9 +2813,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                             decoration:
                                                                                 BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
                                                                             height:
-                                                                                150,
+                                                                                140,
                                                                             width:
-                                                                                150,
+                                                                                140,
                                                                             // Actual size: width: 496, height: 496
                                                                             child:
                                                                                 Padding(
@@ -2837,12 +2831,12 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                               SizedBox(
                                                                   height: 10),
                                                               SizedBox(
-                                                                width: 150,
-                                                                // width: MediaQuery.of(
-                                                                //             context)
-                                                                //         .size
-                                                                //         .width -
-                                                                //     110,
+                                                                // width: 150,
+                                                                width: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width -
+                                                                    55,
                                                                 child: Text(
                                                                     // exercise index
                                                                     currentExercise

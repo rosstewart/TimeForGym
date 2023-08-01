@@ -466,12 +466,12 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
         .copyWith(color: theme.colorScheme.onBackground);
     final greyTitleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final labelMediumStyle = theme.textTheme.labelMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
+    // final labelMediumStyle = theme.textTheme.labelMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground);
     final greyLabelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final formHeadingStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
+    // final formHeadingStyle = theme.textTheme.bodyMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground);
     final formTextStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
@@ -1284,22 +1284,8 @@ class _ActiveWorkoutTimerPageState extends State<ActiveWorkoutTimerPage> {
   Widget build(BuildContext context) {
     MyAppState appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final largeTitleStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final titleStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final greyTitleStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final labelMediumStyle = theme.textTheme.labelMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
     final greyLabelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final formHeadingStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final formTextStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final labelStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -1727,6 +1713,36 @@ class _ActiveWorkoutCompletionPageState
         : 'Your followers';
     postOptions = [yourFollowersOrFriends, 'Only you'];
     selectedPostOption = yourFollowersOrFriends;
+
+    if (widget.appState.activeWorkout != null) {
+      if (widget.appState.activeWorkout!.completionTitle != null) {
+        _liftTitleController.text =
+            widget.appState.activeWorkout!.completionTitle!;
+      }
+      if (widget.appState.activeWorkout!.completionDescription != null) {
+        _liftDescriptionController.text =
+            widget.appState.activeWorkout!.completionDescription!;
+      }
+      if (widget.appState.activeWorkout!.completionErrorText != null) {
+        errorText = widget.appState.activeWorkout!.completionErrorText;
+      }
+      if (widget.appState.activeWorkout!.completionImageErrorText != null) {
+        imageErrorText =
+            widget.appState.activeWorkout!.completionImageErrorText;
+      }
+      if (widget.appState.activeWorkout!.completionPickedFilePath != null) {
+        pickedFilePath =
+            widget.appState.activeWorkout!.completionPickedFilePath!;
+      }
+      if (widget.appState.activeWorkout!.completionPostOption != null) {
+        if (postOptions
+            .contains(widget.appState.activeWorkout!.completionPostOption)) {
+          selectedPostOption =
+              widget.appState.activeWorkout!.completionPostOption!;
+        } // else
+        // Changed profile settings, selectedPostOption doesn't change
+      }
+    }
   }
 
   @override
@@ -1739,14 +1755,14 @@ class _ActiveWorkoutCompletionPageState
         .copyWith(color: theme.colorScheme.onBackground);
     final greyTitleStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final labelMediumStyle = theme.textTheme.labelMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
+    // final labelMediumStyle = theme.textTheme.labelMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground);
     final greyLabelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final formHeadingStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
-    final formTextStyle = theme.textTheme.labelSmall!
-        .copyWith(color: theme.colorScheme.onBackground);
+    // final formHeadingStyle = theme.textTheme.bodyMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground);
+    // final formTextStyle = theme.textTheme.labelSmall!
+    //     .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
 
@@ -1821,6 +1837,10 @@ class _ActiveWorkoutCompletionPageState
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
                       child: TextField(
+                        onChanged: (value) {
+                          // Save in memory
+                          appState.activeWorkout!.completionTitle = value;
+                        },
                         style: TextStyle(color: theme.colorScheme.onBackground),
                         controller: _liftTitleController,
                         decoration: InputDecoration(
@@ -1856,6 +1876,10 @@ class _ActiveWorkoutCompletionPageState
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
                       child: TextField(
+                        onChanged: (value) {
+                          // Save in memory
+                          appState.activeWorkout!.completionDescription = value;
+                        },
                         maxLines: 2,
                         style: TextStyle(
                             color: theme.colorScheme.onBackground,
@@ -1928,12 +1952,31 @@ class _ActiveWorkoutCompletionPageState
             ),
             if (imageErrorText != null) SizedBox(height: 5),
             if (imageErrorText != null)
-              Center(
-                child: Text(imageErrorText!,
-                    style: labelStyle.copyWith(
-                        color: imageErrorText! == 'Attached'
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.secondary)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(imageErrorText!,
+                      style: labelStyle.copyWith(
+                          color: imageErrorText! == 'Attached'
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.secondary)),
+                  if (imageErrorText! == 'Attached') SizedBox(width: 5),
+                  if (imageErrorText! == 'Attached')
+                    GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            pickedFilePath = null;
+                            imageErrorText = null;
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Icon(Icons.close,
+                              color: theme.colorScheme.onBackground
+                                  .withOpacity(.65),
+                              size: 12),
+                        ))
+                ],
               ),
             SizedBox(height: 30),
             Center(child: Text('New PRs hit', style: largeTitleStyle)),
@@ -1991,6 +2034,9 @@ class _ActiveWorkoutCompletionPageState
                           setState(() {
                             selectedPostOption = option;
                           });
+                          // Save in memory
+                          widget.appState.activeWorkout!.completionPostOption =
+                              option;
                         },
                         style: ButtonStyle(
                             backgroundColor: resolveColor(
@@ -2022,18 +2068,24 @@ class _ActiveWorkoutCompletionPageState
                     setState(() {
                       errorText = 'Please enter a title';
                     });
+                    // Save in memory
+                    appState.activeWorkout!.completionErrorText = errorText;
                     return;
                   }
                   if (_liftTitleController.text.length > 150) {
                     setState(() {
                       errorText = 'Please enter a shorter title';
                     });
+                    // Save in memory
+                    appState.activeWorkout!.completionErrorText = errorText;
                     return;
                   }
                   if (_liftDescriptionController.text.length > 500) {
                     setState(() {
                       errorText = 'Description is too long';
                     });
+                    // Save in memory
+                    appState.activeWorkout!.completionErrorText = errorText;
                     return;
                   }
                   uploadNewActivity(appState).then((value) {
@@ -2245,6 +2297,9 @@ class _ActiveWorkoutCompletionPageState
         imageErrorText = 'Attached';
       });
     }
+    // Save in memory
+    widget.appState.activeWorkout!.completionImageErrorText = imageErrorText;
+    widget.appState.activeWorkout!.completionPickedFilePath = pickedFilePath;
   }
 
   Future<String> setActivityPicture(bool fromGallery) async {
@@ -2341,8 +2396,8 @@ class _EditTimerWindowState extends State<EditTimerWindow>
   Widget build(BuildContext context) {
     MyAppState appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final bodyStyle = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
+    // final bodyStyle = theme.textTheme.bodyMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
     final labelStyle = theme.textTheme.labelSmall!
         .copyWith(color: theme.colorScheme.onBackground);
     final greyLabelStyle = theme.textTheme.labelSmall!
@@ -3158,7 +3213,6 @@ class _SwapExercisesState extends State<SwapExercises>
         .toStringAsFixed(0);
   }
 }
-
 
 // class CustomAdWidget extends StatefulWidget {
 //   @override
