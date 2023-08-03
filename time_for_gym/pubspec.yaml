@@ -38,7 +38,8 @@ dependencies:
   google_mobile_ads: ^3.0.0  # Replace with the latest version
   firebase_storage: ^11.2.4
   firebase_auth: ^4.6.3
-  cloud_firestore: ^4.8.2
+  # cloud_firestore: ^4.8.2
+  cloud_firestore: ^4.8.4
   intl: ^0.18.1
   image_picker: ^1.0.1
   flutter_image_compress: ^2.0.3
@@ -54,6 +55,7 @@ dependencies:
   #     path: packages/google_mobile_ads
   #     # ref: feature/suamusica
   image: ^4.0.17
+  firebase_crashlytics: ^3.3.4
 
 dev_dependencies:
   flutter_test:

@@ -63,6 +63,7 @@ class _HomePageState extends State<HomePage> {
     if (currentlyOpenString == null) {
       if (appState.userGym == null || appState.userGym!.openingHours == null) {
         currentlyOpenString = '';
+        initializeWeightedAverageString(appState);
       } else {
         final GymOpeningHours gymOpeningHours =
             GymOpeningHours(appState.userGym!.openingHours!);
@@ -71,29 +72,7 @@ class _HomePageState extends State<HomePage> {
       if (currentlyOpenString!.contains('Open ') ||
           (appState.userGym != null &&
               appState.userGym!.openingHours == null)) {
-        double currentHourPctCapacity =
-            (appState.avgGymCrowdData[currentTime.weekday - 1]
-                        [currentTime.hour] /
-                    13.0) *
-                100;
-        double nextHourPctCapacity;
-        if (currentTime.hour + 1 == 24) {
-          // Next day, 12 AM
-          nextHourPctCapacity =
-              (appState.avgGymCrowdData[currentTime.weekday % 7][0] / 13.0) *
-                  100;
-        } else {
-          nextHourPctCapacity =
-              (appState.avgGymCrowdData[currentTime.weekday - 1]
-                          [currentTime.hour + 1] /
-                      13.0) *
-                  100;
-        }
-        double weight = currentTime.minute /
-            60.0; // Calculate the weight based on the current minute (0 to 1)
-        double weightedAverage = currentHourPctCapacity * (1 - weight) +
-            nextHourPctCapacity * weight; // Calculate the weighted average
-        weightedAverageString = '${weightedAverage.toInt()}%';
+        initializeWeightedAverageString(appState);
       }
     }
     currentlyOpenString ??= '';
@@ -170,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                             (currentlyOpenString != null &&
                                 currentlyOpenString!.isEmpty))
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(0,3,0,0),
+                            padding: const EdgeInsets.fromLTRB(0, 3, 0, 0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -184,7 +163,8 @@ class _HomePageState extends State<HomePage> {
                                     strokeWidth: 1.5,
                                     size: 9.0),
                                 SizedBox(width: 6),
-                                Text('Estimated $weightedAverageString capacity',
+                                Text(
+                                    'Estimated $weightedAverageString capacity',
                                     style: labelStyle),
                               ],
                             ),
@@ -281,10 +261,40 @@ class _HomePageState extends State<HomePage> {
             GymSearchBar(
               textEditingController: _searchTextController,
             ),
+          //               TextButton(
+          //                 onPressed: () => throw Exception(),
+          //                 child: Text("Throw Test Exception", style: titleStyle),
+          //               ),
           ],
         ),
       ),
     );
+  }
+
+  void initializeWeightedAverageString(MyAppState appState) {
+    double currentHourPctCapacity =
+        (appState.avgGymCrowdData[currentTime.weekday - 1]
+                    [currentTime.hour] /
+                13.0) *
+            100;
+    double nextHourPctCapacity;
+    if (currentTime.hour + 1 == 24) {
+      // Next day, 12 AM
+      nextHourPctCapacity =
+          (appState.avgGymCrowdData[currentTime.weekday % 7][0] / 13.0) *
+              100;
+    } else {
+      nextHourPctCapacity =
+          (appState.avgGymCrowdData[currentTime.weekday - 1]
+                      [currentTime.hour + 1] /
+                  13.0) *
+              100;
+    }
+    double weight = currentTime.minute /
+        60.0; // Calculate the weight based on the current minute (0 to 1)
+    double weightedAverage = currentHourPctCapacity * (1 - weight) +
+        nextHourPctCapacity * weight; // Calculate the weighted average
+    weightedAverageString = '${weightedAverage.toInt()}%';
   }
 
   // void showOptionsDropdown(

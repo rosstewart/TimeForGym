@@ -725,7 +725,7 @@ class _SplitCardState extends State<SplitCard> {
                     surfaceTintColor:
                         resolveColor(theme.colorScheme.primaryContainer)),
                 icon: Icon(
-                  Icons.edit,
+                  Icons.edit_outlined,
                   color: theme.colorScheme.primary,
                 ),
                 onPressed: () {
@@ -842,7 +842,7 @@ class DayOfWeekButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
-        height: 45,
+        height: 50,
         child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: resolveColor(theme.colorScheme.primaryContainer),
@@ -866,7 +866,10 @@ class DayOfWeekButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   split.trainingDays[i].toString(),
-                  style: textStyle.copyWith(color: dayColor),
+                  style: theme.textTheme.labelSmall!
+                      .copyWith(color: dayColor, fontSize: 10),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,
                 ),
               ),

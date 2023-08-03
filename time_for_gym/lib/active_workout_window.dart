@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
-import 'package:image/image.dart' as img;
+// import 'package:image/image.dart' as img;
 import 'package:time_for_gym/active_workout.dart';
 import 'package:time_for_gym/activity.dart';
 import 'package:time_for_gym/exercise.dart';
@@ -121,14 +121,18 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
           // Add superset, then timer page
           addExercisePage(exercise, j, i, true, totalSetCount, setIndex++);
           addExercisePage(newExercise, j, i, false, totalSetCount, setIndex++);
-          addTimerPage(
-              j,
-              i,
-              totalSetCount,
-              newExercise,
-              j < widget.workout.trainingDay.setsPerMuscleGroup[i] - 1
-                  ? exercise
-                  : getExercise(i + 2));
+          if (j != widget.workout.trainingDay.setsPerMuscleGroup[i] - 1 ||
+              i < widget.workout.trainingDay.muscleGroups.length - 2) {
+            // Last set don't add timer, account i for superset
+            addTimerPage(
+                j,
+                i,
+                // totalSetCount,
+                newExercise,
+                j < widget.workout.trainingDay.setsPerMuscleGroup[i] - 1
+                    ? exercise
+                    : getExercise(i + 2));
+          }
         }
         // Account for superset
         i++;
@@ -140,11 +144,11 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
           addExercisePage(exercise, j, i, null, totalSetCount, setIndex++);
           if (i != widget.workout.trainingDay.muscleGroups.length - 1 ||
               j != widget.workout.trainingDay.setsPerMuscleGroup[i] - 1) {
-            // Last set, don't add timer
+            // Last set don't add timer
             addTimerPage(
                 j,
                 i,
-                totalSetCount,
+                // totalSetCount,
                 exercise,
                 j < widget.workout.trainingDay.setsPerMuscleGroup[i] - 1
                     ? exercise
@@ -169,23 +173,23 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
     }
 
     widget.workout.areBannersAndTimersInitialized = true;
+    widget.appState.startWorkout(widget.workout);
   }
 
-  void addTimerPage(
-      int j, int i, int totalSetCount, Exercise previous, Exercise next) {
+  void addTimerPage(int j, int i, Exercise previous, Exercise next) {
     pages.add(ActiveWorkoutTimerPage(
       scrollController: widget.scrollController,
-      set: j,
-      numSets: widget.workout.trainingDay.setsPerMuscleGroup[i],
-      trainingDay: widget.workout.trainingDay,
-      totalSecondsTimer: widget.workout.trainingDay.restTimeInSeconds[i],
+      // set: j,
+      // numSets: widget.workout.trainingDay.setsPerMuscleGroup[i],
+      // trainingDay: widget.workout.trainingDay,
+      // totalSecondsTimer: widget.workout.trainingDay.restTimeInSeconds[i],
       exerciseNum: i,
-      totalSetCount: totalSetCount,
+      // totalSetCount: totalSetCount,
       pageController: _pageController,
       workout: widget.workout,
-      previousExercise: previous,
-      upNext: next,
-      appState: widget.appState,
+      // previousExercise: previous,
+      // upNext: next,
+      // appState: widget.appState,
       relativePageIndex: pages.length,
       pages: pages,
     ));
@@ -265,6 +269,9 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
           child: PageView(
               controller: _pageController,
               onPageChanged: (int index) {
+                if (_pageController.page == 0) {
+                  widget.appState.notifyTheListeners();
+                }
                 widget.appState.updateWorkoutBannerPageIndex(index);
                 if (widget.workout.areBannersAndTimersInitialized &&
                     widget.workout.bannerTitles[index].startsWith('Resting') &&
@@ -393,11 +400,12 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
   void initState() {
     super.initState();
     similarExercises = findSimilarExercises(widget.exercise, widget.appState);
-    musclesWorkedImage = Image.memory(img.encodePng(applyFloodFill(
-        widget.appState.defaultMuscleWorkedImage!,
-        widget.exercise.musclesWorked,
-        widget.exercise.musclesWorkedActivation,
-        widget.appState.imageMuscleLocations)));
+    musclesWorkedImage = widget.appState.getMusclesWorkedImage(widget.exercise);
+    //  Image.memory(img.encodePng(applyFloodFill(
+    //     widget.appState.defaultMuscleWorkedImage!,
+    //     widget.exercise.musclesWorked,
+    //     widget.exercise.musclesWorkedActivation,
+    //     widget.appState.imageMuscleLocations)));
     // if (widget.setAppPageState != null) {
     //   widget.setAppPageState!(() {
     //     widget.appState.changeActiveWorkoutTitles(widget.exercise.name,
@@ -459,6 +467,9 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
   @override
   Widget build(BuildContext context) {
     MyAppState appState = context.watch<MyAppState>();
+    if (appState.activeWorkout == null) {
+      return Scaffold();
+    }
     final theme = Theme.of(context);
     final largeTitleStyle = theme.textTheme.titleMedium!
         .copyWith(color: theme.colorScheme.onBackground);
@@ -969,7 +980,7 @@ class _ActiveWorkoutExercisePageState extends State<ActiveWorkoutExercisePage> {
     ).then((value) {
       if (value == 'Cancel workout') {
         Navigator.of(context).pop();
-        appState.cancelWorkout();
+        appState.cancelWorkout(false);
       } else if (value == 'Change Exercise') {
         _showSwapExerciseWindow(
           context,
@@ -1245,34 +1256,34 @@ class ProgressBar extends StatelessWidget {
 }
 
 class ActiveWorkoutTimerPage extends StatefulWidget {
-  final TrainingDay trainingDay;
-  final int totalSecondsTimer;
+  // final TrainingDay trainingDay;
+  // final int totalSecondsTimer;
   final ScrollController scrollController;
-  final int set;
-  final int numSets;
+  // final int set;
+  // final int numSets;
   final int exerciseNum;
-  final int totalSetCount;
+  // final int totalSetCount;
   final PageController pageController;
   final ActiveWorkout workout;
-  final Exercise previousExercise;
-  final Exercise upNext;
-  final MyAppState appState;
+  // final Exercise previousExercise;
+  // final Exercise upNext;
+  // final MyAppState appState;
   final int relativePageIndex;
   final List<Widget> pages;
 
   ActiveWorkoutTimerPage(
       {required this.scrollController,
-      required this.set,
-      required this.numSets,
-      required this.trainingDay,
-      required this.totalSecondsTimer,
+      // required this.set,
+      // required this.numSets,
+      // required this.trainingDay,
+      // required this.totalSecondsTimer,
       required this.exerciseNum,
-      required this.totalSetCount,
+      // required this.totalSetCount,
       required this.pageController,
       required this.workout,
-      required this.previousExercise,
-      required this.upNext,
-      required this.appState,
+      // required this.previousExercise,
+      // required this.upNext,
+      // required this.appState,
       required this.relativePageIndex,
       required this.pages});
   @override
@@ -1288,261 +1299,265 @@ class _ActiveWorkoutTimerPageState extends State<ActiveWorkoutTimerPage> {
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
 
     return Scaffold(
-      body: SingleChildScrollView(
-        controller: widget.scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 45),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(width: 10),
-                GestureDetector(
-                  onTap: Navigator.of(context).pop,
-                  child: Container(
-                    decoration: BoxDecoration(),
-                    child: Icon(Icons.keyboard_arrow_down,
-                        color: theme.colorScheme.onBackground, size: 35),
+      body: appState.activeWorkout == null
+          ? null
+          : SingleChildScrollView(
+              controller: widget.scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 45),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: Navigator.of(context).pop,
+                        child: Container(
+                          decoration: BoxDecoration(),
+                          child: Icon(Icons.keyboard_arrow_down,
+                              color: theme.colorScheme.onBackground, size: 35),
+                        ),
+                      ),
+                      Spacer(),
+                      GestureDetector(
+                          // onPressed: () {wef
+                          //   print('ergiouerguioioeg');
+                          // },
+                          onTapDown: (tapDownDetails) {
+                            showOptionsDropdown(context,
+                                tapDownDetails.globalPosition, appState);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(),
+                            child: Icon(Icons.more_horiz,
+                                color: theme.colorScheme.onBackground,
+                                size: 40),
+                          )),
+                      SizedBox(width: 10),
+                    ],
                   ),
-                ),
-                Spacer(),
-                GestureDetector(
-                    // onPressed: () {wef
-                    //   print('ergiouerguioioeg');
-                    // },
-                    onTapDown: (tapDownDetails) {
-                      showOptionsDropdown(
-                          context, tapDownDetails.globalPosition, appState);
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(),
-                      child: Icon(Icons.more_horiz,
-                          color: theme.colorScheme.onBackground, size: 40),
-                    )),
-                SizedBox(width: 10),
-              ],
-            ),
-            Center(
-              child: Text(
-                '${formatSecondsString(widget.workout.restTimesInSeconds[widget.relativePageIndex])} Rest'
-                    .replaceAll('min', 'Minute')
-                    .replaceAll('sec', 'Second'),
-                style: theme.textTheme.headlineSmall!
-                    .copyWith(color: theme.colorScheme.onBackground),
-              ),
-            ),
-            SizedBox(height: 5),
-            Center(
-              child: Text(
-                  appState
-                      .activeWorkout!.bannerSubtitles[widget.relativePageIndex],
-                  style: greyLabelStyle,
-                  textAlign: TextAlign.center),
-            ),
-            SizedBox(height: 50),
-            if (appState.activeWorkout!
-                        .timersSecondsLeft[widget.relativePageIndex] !=
-                    null &&
-                appState.activeWorkout!
-                        .restTimesInSeconds[widget.relativePageIndex] !=
-                    null)
-              Center(
-                child: Stack(
-                  children: [
-                    TimerProgressIndicator(
-                        fill: theme.colorScheme.primary,
-                        background: Colors.grey[300]!,
-                        percentCapacity:
-                            appState.activeWorkout!.restTimesInSeconds[
-                                        widget.relativePageIndex]! !=
-                                    0
-                                ? appState.activeWorkout!.timersSecondsLeft[
-                                        widget.relativePageIndex]! /
-                                    appState.activeWorkout!.restTimesInSeconds[
-                                        widget.relativePageIndex]!
-                                : 0,
-                        size: 200,
-                        strokeWidth: 8),
-                    Positioned(
-                      width: 200,
-                      height: 200,
-                      child: Center(
-                        child: Text(
-                            appState.activeWorkout!
-                                .bannerTitles[widget.relativePageIndex]
-                                .replaceFirst(' • ', '\n'),
-                            style: theme.textTheme.titleMedium!.copyWith(
-                                color: theme.colorScheme.onBackground),
-                            textAlign: TextAlign.center),
+                  Center(
+                    child: Text(
+                      '${formatSecondsString(widget.workout.restTimesInSeconds[widget.relativePageIndex])} Rest'
+                          .replaceAll('min', 'Minute')
+                          .replaceAll('sec', 'Second'),
+                      style: theme.textTheme.headlineSmall!
+                          .copyWith(color: theme.colorScheme.onBackground),
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Center(
+                    child: Text(
+                        appState.activeWorkout!
+                            .bannerSubtitles[widget.relativePageIndex],
+                        style: greyLabelStyle,
+                        textAlign: TextAlign.center),
+                  ),
+                  SizedBox(height: 50),
+                  if (appState.activeWorkout!
+                              .timersSecondsLeft[widget.relativePageIndex] !=
+                          null &&
+                      appState.activeWorkout!
+                              .restTimesInSeconds[widget.relativePageIndex] !=
+                          null)
+                    Center(
+                      child: Stack(
+                        children: [
+                          TimerProgressIndicator(
+                              fill: theme.colorScheme.primary,
+                              background: Colors.grey[300]!,
+                              percentCapacity: appState.activeWorkout!
+                                              .restTimesInSeconds[
+                                          widget.relativePageIndex]! !=
+                                      0
+                                  ? appState.activeWorkout!.timersSecondsLeft[
+                                          widget.relativePageIndex]! /
+                                      appState.activeWorkout!
+                                              .restTimesInSeconds[
+                                          widget.relativePageIndex]!
+                                  : 0,
+                              size: 200,
+                              strokeWidth: 8),
+                          Positioned(
+                            width: 200,
+                            height: 200,
+                            child: Center(
+                              child: Text(
+                                  appState.activeWorkout!
+                                      .bannerTitles[widget.relativePageIndex]
+                                      .replaceFirst(' • ', '\n'),
+                                  style: theme.textTheme.titleMedium!.copyWith(
+                                      color: theme.colorScheme.onBackground),
+                                  textAlign: TextAlign.center),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            SizedBox(height: 50),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  style: ButtonStyle(
-                      backgroundColor:
-                          resolveColor(theme.colorScheme.primaryContainer),
-                      surfaceTintColor:
-                          resolveColor(theme.colorScheme.primaryContainer)),
-                  onPressed: () {
-                    if (appState.activeWorkout!
-                            .restTimesInSeconds[widget.relativePageIndex] !=
-                        null) {
-                      int totalSeconds = appState.activeWorkout!
-                          .restTimesInSeconds[widget.relativePageIndex]!;
-                      appState.activeWorkout!
-                              .timersSecondsLeft[widget.relativePageIndex] =
-                          totalSeconds;
-                      // Change the timer's message
-                      appState.updateWorkoutBannerAtIndex(
-                          widget.relativePageIndex,
-                          totalSeconds > 0
-                              ? 'Resting • ${formatSecondsString(totalSeconds)}'
-                              : 'Timer complete');
-                    }
-                  },
-                  icon: Icon(Icons.replay,
-                      color: theme.colorScheme.primary, size: 40),
-                ),
-                if (appState.activeWorkout!
-                            .timersSecondsLeft[widget.relativePageIndex] !=
-                        null &&
-                    appState.activeWorkout!
-                            .restTimesInSeconds[widget.relativePageIndex] !=
-                        null)
-                  IconButton(
-                    style: ButtonStyle(
-                        backgroundColor:
-                            resolveColor(theme.colorScheme.primary),
-                        surfaceTintColor:
-                            resolveColor(theme.colorScheme.primary)),
-                    onPressed: () {
-                      if (appState.activeWorkout!
-                              .timers[widget.relativePageIndex] !=
-                          null) {
-                        // Pause
-                        appState.cancelTimerAtIndex(widget.relativePageIndex);
-                      } else {
-                        // Play
-                        appState.decrementTimer(widget.relativePageIndex);
-                      }
-                    },
-                    icon: Icon(
-                        appState.activeWorkout!
+                  SizedBox(height: 50),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        style: ButtonStyle(
+                            backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer),
+                            surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer)),
+                        onPressed: () {
+                          if (appState.activeWorkout!.restTimesInSeconds[
+                                  widget.relativePageIndex] !=
+                              null) {
+                            int totalSeconds = appState.activeWorkout!
+                                .restTimesInSeconds[widget.relativePageIndex]!;
+                            appState.activeWorkout!.timersSecondsLeft[
+                                widget.relativePageIndex] = totalSeconds;
+                            // Change the timer's message
+                            appState.updateWorkoutBannerAtIndex(
+                                widget.relativePageIndex,
+                                totalSeconds > 0
+                                    ? 'Resting • ${formatSecondsString(totalSeconds)}'
+                                    : 'Timer complete');
+                          }
+                        },
+                        icon: Icon(Icons.replay,
+                            color: theme.colorScheme.primary, size: 40),
+                      ),
+                      if (appState.activeWorkout!.timersSecondsLeft[
+                                  widget.relativePageIndex] !=
+                              null &&
+                          appState.activeWorkout!.restTimesInSeconds[
+                                  widget.relativePageIndex] !=
+                              null)
+                        IconButton(
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  resolveColor(theme.colorScheme.primary),
+                              surfaceTintColor:
+                                  resolveColor(theme.colorScheme.primary)),
+                          onPressed: () {
+                            if (appState.activeWorkout!
                                     .timers[widget.relativePageIndex] !=
-                                null
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                        color: theme.colorScheme.onBackground,
-                        size: 50),
+                                null) {
+                              // Pause
+                              appState
+                                  .cancelTimerAtIndex(widget.relativePageIndex);
+                            } else {
+                              // Play
+                              appState.decrementTimer(widget.relativePageIndex);
+                            }
+                          },
+                          icon: Icon(
+                              appState.activeWorkout!
+                                          .timers[widget.relativePageIndex] !=
+                                      null
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: theme.colorScheme.onBackground,
+                              size: 50),
+                        ),
+                      IconButton(
+                        style: ButtonStyle(
+                            backgroundColor: resolveColor(
+                                theme.colorScheme.primaryContainer),
+                            surfaceTintColor: resolveColor(
+                                theme.colorScheme.primaryContainer)),
+                        onPressed: () {
+                          appState.activeWorkout!
+                              .timersSecondsLeft[widget.relativePageIndex] = 0;
+                          appState.cancelTimerAtIndex(widget.relativePageIndex);
+                          appState.updateWorkoutBannerAtIndex(
+                              widget.relativePageIndex, 'Timer complete');
+                          widget.pageController.nextPage(
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.easeInOut);
+                        },
+                        icon: Icon(Icons.skip_next,
+                            color: theme.colorScheme.primary, size: 40),
+                      ),
+                    ],
                   ),
-                IconButton(
-                  style: ButtonStyle(
-                      backgroundColor:
-                          resolveColor(theme.colorScheme.primaryContainer),
-                      surfaceTintColor:
-                          resolveColor(theme.colorScheme.primaryContainer)),
-                  onPressed: () {
-                    appState.activeWorkout!
-                        .timersSecondsLeft[widget.relativePageIndex] = 0;
-                    appState.cancelTimerAtIndex(widget.relativePageIndex);
-                    appState.updateWorkoutBannerAtIndex(
-                        widget.relativePageIndex, 'Timer complete');
-                    widget.pageController.nextPage(
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.easeInOut);
-                  },
-                  icon: Icon(Icons.skip_next,
-                      color: theme.colorScheme.primary, size: 40),
-                ),
-              ],
+                  SizedBox(height: 100),
+                  // CustomAdWidget(),
+                  // Center(
+                  //   child: SizedBox(
+                  //     height: 100,
+                  //     width: 300,
+                  //     child: ListTile(
+                  //       dense: true,
+                  //       visualDensity: VisualDensity(
+                  //           vertical: VisualDensity.minimumDensity,
+                  //           horizontal: VisualDensity.minimumDensity),
+                  //       minVerticalPadding: 0,
+                  //       titleAlignment: ListTileTitleAlignment.titleHeight,
+                  //       leading: appState.activeWorkout!.timersSecondsLeft[widget.relativePageIndex] != null &&
+                  //               appState.activeWorkout!.restTimesInSeconds[
+                  //                       widget.relativePageIndex] !=
+                  //                   null
+                  //           ? TimerProgressIndicator(
+                  //               fill: theme.colorScheme.primary,
+                  //               background: theme.colorScheme.onBackground,
+                  //               percentCapacity: appState.activeWorkout!.restTimesInSeconds[
+                  //                           widget.relativePageIndex]! !=
+                  //                       0
+                  //                   ? appState.activeWorkout!.timersSecondsLeft[
+                  //                           widget.relativePageIndex]! /
+                  //                       appState.activeWorkout!
+                  //                           .restTimesInSeconds[widget.relativePageIndex]!
+                  //                   : 0,
+                  //               size: 30,
+                  //               strokeWidth: 4)
+                  //           : null,
+                  //       title: Text(
+                  //           appState.activeWorkout!
+                  //               .bannerTitles[widget.relativePageIndex],
+                  //           style: theme.textTheme.titleMedium!
+                  //               .copyWith(color: theme.colorScheme.onBackground),
+                  //           textAlign: TextAlign.center),
+                  //       subtitle: Text(
+                  //           appState.activeWorkout!
+                  //               .bannerSubtitles[widget.relativePageIndex],
+                  //           style: theme.textTheme.labelSmall!
+                  //               .copyWith(color: theme.colorScheme.onBackground),
+                  //           textAlign: TextAlign.center),
+                  //       trailing: appState.activeWorkout!.timersSecondsLeft[
+                  //                       widget.relativePageIndex] !=
+                  //                   null &&
+                  //               appState.activeWorkout!.restTimesInSeconds[
+                  //                       widget.relativePageIndex] !=
+                  //                   null
+                  //           ? GestureDetector(
+                  //               onTap: () {
+                  //                 if (appState.activeWorkout!
+                  //                         .timers[widget.relativePageIndex] !=
+                  //                     null) {
+                  //                   // Pause
+                  //                   appState
+                  //                       .cancelTimerAtIndex(widget.relativePageIndex);
+                  //                 } else {
+                  //                   // Play
+                  //                   appState.decrementTimer(widget.relativePageIndex);
+                  //                 }
+                  //               },
+                  //               child: Container(
+                  //                 decoration: BoxDecoration(),
+                  //                 child: Icon(
+                  //                     appState.activeWorkout!
+                  //                                 .timers[widget.relativePageIndex] !=
+                  //                             null
+                  //                         ? Icons.pause
+                  //                         : Icons.play_arrow,
+                  //                     color: theme.colorScheme.onBackground,
+                  //                     size: 30),
+                  //               ))
+                  //           : null,
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
             ),
-            SizedBox(height: 100),
-            // CustomAdWidget(),
-            // Center(
-            //   child: SizedBox(
-            //     height: 100,
-            //     width: 300,
-            //     child: ListTile(
-            //       dense: true,
-            //       visualDensity: VisualDensity(
-            //           vertical: VisualDensity.minimumDensity,
-            //           horizontal: VisualDensity.minimumDensity),
-            //       minVerticalPadding: 0,
-            //       titleAlignment: ListTileTitleAlignment.titleHeight,
-            //       leading: appState.activeWorkout!.timersSecondsLeft[widget.relativePageIndex] != null &&
-            //               appState.activeWorkout!.restTimesInSeconds[
-            //                       widget.relativePageIndex] !=
-            //                   null
-            //           ? TimerProgressIndicator(
-            //               fill: theme.colorScheme.primary,
-            //               background: theme.colorScheme.onBackground,
-            //               percentCapacity: appState.activeWorkout!.restTimesInSeconds[
-            //                           widget.relativePageIndex]! !=
-            //                       0
-            //                   ? appState.activeWorkout!.timersSecondsLeft[
-            //                           widget.relativePageIndex]! /
-            //                       appState.activeWorkout!
-            //                           .restTimesInSeconds[widget.relativePageIndex]!
-            //                   : 0,
-            //               size: 30,
-            //               strokeWidth: 4)
-            //           : null,
-            //       title: Text(
-            //           appState.activeWorkout!
-            //               .bannerTitles[widget.relativePageIndex],
-            //           style: theme.textTheme.titleMedium!
-            //               .copyWith(color: theme.colorScheme.onBackground),
-            //           textAlign: TextAlign.center),
-            //       subtitle: Text(
-            //           appState.activeWorkout!
-            //               .bannerSubtitles[widget.relativePageIndex],
-            //           style: theme.textTheme.labelSmall!
-            //               .copyWith(color: theme.colorScheme.onBackground),
-            //           textAlign: TextAlign.center),
-            //       trailing: appState.activeWorkout!.timersSecondsLeft[
-            //                       widget.relativePageIndex] !=
-            //                   null &&
-            //               appState.activeWorkout!.restTimesInSeconds[
-            //                       widget.relativePageIndex] !=
-            //                   null
-            //           ? GestureDetector(
-            //               onTap: () {
-            //                 if (appState.activeWorkout!
-            //                         .timers[widget.relativePageIndex] !=
-            //                     null) {
-            //                   // Pause
-            //                   appState
-            //                       .cancelTimerAtIndex(widget.relativePageIndex);
-            //                 } else {
-            //                   // Play
-            //                   appState.decrementTimer(widget.relativePageIndex);
-            //                 }
-            //               },
-            //               child: Container(
-            //                 decoration: BoxDecoration(),
-            //                 child: Icon(
-            //                     appState.activeWorkout!
-            //                                 .timers[widget.relativePageIndex] !=
-            //                             null
-            //                         ? Icons.pause
-            //                         : Icons.play_arrow,
-            //                     color: theme.colorScheme.onBackground,
-            //                     size: 30),
-            //               ))
-            //           : null,
-            //     ),
-            //   ),
-            // ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1644,7 +1659,7 @@ class _ActiveWorkoutTimerPageState extends State<ActiveWorkoutTimerPage> {
     ).then((value) {
       if (value == 'Cancel workout') {
         Navigator.of(context).pop();
-        appState.cancelWorkout();
+        appState.cancelWorkout(false);
       } else if (value == 'Edit Timer') {
         _showEditTimerWindow(
             context, appState, widget.relativePageIndex, widget.exerciseNum);
@@ -1748,6 +1763,9 @@ class _ActiveWorkoutCompletionPageState
   @override
   Widget build(BuildContext context) {
     MyAppState appState = context.watch<MyAppState>();
+    if (appState.activeWorkout == null) {
+      return Scaffold();
+    }
     final theme = Theme.of(context);
     final largeTitleStyle = theme.textTheme.titleMedium!
         .copyWith(color: theme.colorScheme.onBackground);
@@ -2090,7 +2108,7 @@ class _ActiveWorkoutCompletionPageState
                   }
                   uploadNewActivity(appState).then((value) {
                     Navigator.of(context).pop();
-                    appState.cancelWorkout();
+                    appState.cancelWorkout(false);
                   });
                 },
                 style: ButtonStyle(
@@ -2171,7 +2189,7 @@ class _ActiveWorkoutCompletionPageState
     ).then((value) {
       if (value == 'Cancel workout') {
         Navigator.of(context).pop();
-        appState.cancelWorkout();
+        appState.cancelWorkout(false);
       } else if (value == 'Jump to first page') {
         widget.pageController.jumpToPage(0);
       }
@@ -2245,7 +2263,8 @@ class _ActiveWorkoutCompletionPageState
         i++) {
       int min = 9999;
       int max = -1;
-      Exercise exercise = getExercise(i, appState.activeWorkout!.trainingDay);
+      Exercise exercise =
+          getExercise(i, appState.activeWorkout!.trainingDay, appState);
       for (int j = 0; j < exercise.splitRepsPerSet.length; j++) {
         min = math.min(exercise.splitRepsPerSet[j], min);
         max = math.max(exercise.splitRepsPerSet[j], max);
@@ -2264,15 +2283,20 @@ class _ActiveWorkoutCompletionPageState
     return repRanges;
   }
 
-  Exercise getExercise(int i, TrainingDay trainingDay) {
-    Exercise exercise =
-        widget.appState.muscleGroups[trainingDay.muscleGroups[i]]![
-            widget.appState.splitDayExerciseIndices[trainingDay.dayOfWeek][i]];
+  Exercise getExercise(int i, TrainingDay trainingDay, MyAppState appState) {
+    if (i >= appState.splitDayExerciseIndices[trainingDay.dayOfWeek].length) {
+      print("ERROR - exercise index is out of bounds");
+      return appState.muscleGroups[trainingDay.muscleGroups[i]]!.firstWhere(
+          (element) => element.name == trainingDay.exerciseNames[i]);
+    }
+    Exercise exercise = appState.muscleGroups[trainingDay.muscleGroups[i]]![
+        appState.splitDayExerciseIndices[trainingDay.dayOfWeek][i]];
     if (exercise.name != trainingDay.exerciseNames[i]) {
+      print(
+          'Exercise name: ${exercise.name}, saved exercise name: ${trainingDay.exerciseNames[i]}');
       print("ERROR - exercise name isn't same as exercise index");
-      exercise = widget.appState.muscleGroups[trainingDay.muscleGroups[0]]!
-          .firstWhere(
-              (element) => element.name == trainingDay.exerciseNames[0]);
+      exercise = appState.muscleGroups[trainingDay.muscleGroups[i]]!.firstWhere(
+          (element) => element.name == trainingDay.exerciseNames[i]);
     }
     return exercise;
   }
@@ -3118,6 +3142,26 @@ class _SwapExercisesState extends State<SwapExercises>
                               });
                               appState.updateWorkoutBannerAtIndex(
                                   i, exercise.name);
+                              // widget.workout.split.trainingDays[widget.dayIndex]
+                              //     .setNames[widget.exerciseNum] = exercise.name;
+                              // if (appState
+                              //         .splitDayExerciseIndices[widget.dayIndex]
+                              //         .length <=
+                              //     widget.exerciseNum) {
+                              //   appState
+                              //       .splitDayExerciseIndices[widget.dayIndex]
+                              //       .add(appState
+                              //           .muscleGroups[exercise.mainMuscleGroup]!
+                              //           .indexOf(exercise));
+                              // } else {
+                              //   appState.splitDayExerciseIndices[
+                              //           widget.dayIndex][widget.exerciseNum] =
+                              //       appState
+                              //           .muscleGroups[exercise.mainMuscleGroup]!
+                              //           .indexOf(exercise);
+                              // }
+                              // appState.storeSplitInSharedPreferences();
+                              // appState.saveSplitDayExerciseIndicesData();
                             }
                           }
                           // if (widget.pageController.page != null) {

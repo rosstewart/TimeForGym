@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
-import 'package:numberpicker/numberpicker.dart';
+// import 'package:numberpicker/numberpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -114,6 +114,7 @@ class _GymPageState extends State<GymPage> {
 
   late List<List<String>> typesOfResources;
   late Map<String, int> resourceLimitsMap;
+  late List<String> allResources;
 
   // List<int> resourceLimits = [20, 200, 20, 20, 20, 50, 10, 20, 10, 10];
 
@@ -167,6 +168,8 @@ class _GymPageState extends State<GymPage> {
         resourceLimitsMap[resource] = limit;
       }
     }
+    allResources = resourceLimitsMap.keys.toList();
+    allResources.remove('Machine');
 
     // textEditingControllers =
     // List.filled(resourceKeys.length, TextEditingController());
@@ -316,13 +319,10 @@ class _GymPageState extends State<GymPage> {
                   ),
                   IconButton(
                     style: ButtonStyle(
-                      backgroundColor: resolveColor(
-                        theme.colorScheme.primaryContainer,
-                      ),
-                      surfaceTintColor: resolveColor(
-                        theme.colorScheme.primaryContainer,
-                      ),
-                    ),
+                        backgroundColor:
+                            resolveColor(theme.colorScheme.primaryContainer),
+                        surfaceTintColor:
+                            resolveColor(theme.colorScheme.primaryContainer)),
                     onPressed: () {
                       // Close the dialog
                       Navigator.of(context).pop();
@@ -429,6 +429,7 @@ class _GymPageState extends State<GymPage> {
                           displayExercises[index].machineAltName ??
                               displayExercises[index].name,
                           maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.labelSmall!
                               .copyWith(color: theme.colorScheme.onBackground),
@@ -463,6 +464,10 @@ class _GymPageState extends State<GymPage> {
       // print('If on a simulator, ignore next error:');
       // print('ERROR - Invalid phone number $url');
     }
+  }
+
+  void updateResourcesAvailable(Map newResourcesAvailable) {
+    resourcesAvailable = Map.from(newResourcesAvailable);
   }
 
   @override
@@ -593,8 +598,8 @@ class _GymPageState extends State<GymPage> {
             : theme.colorScheme.primary);
     final subHeadlineStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onBackground.withOpacity(.65));
-    final bodyMedium = theme.textTheme.bodyMedium!
-        .copyWith(color: theme.colorScheme.onBackground);
+    // final bodyMedium = theme.textTheme.bodyMedium!
+    //     .copyWith(color: theme.colorScheme.onBackground);
     final textStyle = theme.textTheme.bodySmall!
         .copyWith(color: theme.colorScheme.onBackground);
     final labelStyle = theme.textTheme.labelSmall!
@@ -604,955 +609,1228 @@ class _GymPageState extends State<GymPage> {
     Widget selectButtonIcon;
     if (!isSelectedGym) {
       selectButtonIcon = Icon(Icons.check_box_outline_blank,
-          size: 16, color: theme.colorScheme.onBackground);
+          size: 15, color: theme.colorScheme.onBackground);
       selectButtonLabel = Text('Select gym', style: textStyle);
     } else {
-      selectButtonIcon = Icon(Icons.check_box, size: 16);
+      selectButtonIcon = Icon(Icons.check_box, size: 15);
       selectButtonLabel = Text('Selected gym', style: textStyle);
     }
 
-    double resourceWidth = editResourcesMode ? 100 : 90;
-    double resourceHeight = editResourcesMode ? 145 : 120;
+    // double resourceWidth = editResourcesMode ? 100 : 90;
+    // double resourceHeight = editResourcesMode ? 145 : 120;
 
     // print(machinesAvailable);
+
+    List<String> resourcesInGym = [];
+    List<String> resourcesNotInGym = [];
+    for (String resource in allResources) {
+      if (resourcesAvailable[resource] != null &&
+          resourcesAvailable[resource]! > 0) {
+        resourcesInGym.add(resource);
+      } else {
+        resourcesNotInGym.add(resource);
+      }
+    }
 
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
       },
-      child: SwipeBack(
-        swipe: true,
-        appState: appState,
-        index: backIndex,
-        child: Scaffold(
-          appBar: AppBar(
-            leading: Back(appState: appState, index: backIndex),
-            leadingWidth: 70,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: DefaultTabController(
+        length: 2,
+        child: SwipeBack(
+          swipe: true,
+          appState: appState,
+          index: backIndex,
+          child: Scaffold(
+              appBar: AppBar(
+                // leading: ,
+                // leadingWidth: 0,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Spacer(flex: 1),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 120),
-                      child: Text(
-                        widget.gym!.name,
-                        style: titleStyle,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Spacer(flex: 2),
-                  ],
-                ),
-                Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                  if (currentlyOpenString.isEmpty) Spacer(),
-                  if (widget.gym!.googleMapsRating != null &&
-                      widget.gym!.googleMapsRating! > 4.0)
-                    Text(
-                      '${widget.gym!.googleMapsRating ?? 0}',
-                      style: textStyle.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.65)),
-                    ),
-                  if (widget.gym!.googleMapsRating != null &&
-                      (widget.gym!.googleMapsRating! <= 4.0 &&
-                          widget.gym!.googleMapsRating! > 2.5))
-                    Text(
-                      '${widget.gym!.googleMapsRating ?? 0}',
-                      style: textStyle.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.65)),
-                    ),
-                  if (widget.gym!.googleMapsRating != null &&
-                      widget.gym!.googleMapsRating! <= 2.5)
-                    Text(
-                      '${widget.gym!.googleMapsRating ?? 0}',
-                      style: textStyle.copyWith(
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(0.65)),
-                    ),
-                  if (widget.gym!.googleMapsRating == null)
-                    Text(
-                      'No rating available',
-                      style: textStyle.copyWith(
-                        color: theme.colorScheme.onBackground.withOpacity(0.65),
-                      ),
-                    ),
-                  if (widget.gym!.googleMapsRating != null) SizedBox(width: 3),
-                  for (int i = 0; i < 5; i++)
-                    if (i + 1 <= widget.gym!.googleMapsRating!)
-                      Icon(Icons.star,
-                          color: theme.colorScheme.primary, size: 14)
-                    else if (i + 0.5 <= widget.gym!.googleMapsRating!)
-                      Icon(Icons.star_half,
-                          color: theme.colorScheme.primary, size: 14)
-                    else
-                      Icon(Icons.star_border,
-                          color: theme.colorScheme.primary, size: 14),
-                  // There is openingHours data for the gym
-                  Spacer(),
-                  if (currentlyOpenString.isNotEmpty)
-                    if (!currentlyOpenString.contains('-'))
-                      Text(currentlyOpenString, style: headlineStyle),
-                  if (currentlyOpenString.isNotEmpty)
-                    if (currentlyOpenString.contains('-'))
-                      Text(currentlyOpenString.split('-')[0],
-                          style: headlineStyle),
-                  if (currentlyOpenString.isNotEmpty)
-                    if (currentlyOpenString.contains('-'))
-                      Text('-${currentlyOpenString.split('-')[1]}',
-                          style: subHeadlineStyle),
-                  if (currentlyOpenString.isNotEmpty)
-                    GestureDetector(
-                        onTapDown: (tapDownDetails) {
-                          setState(() {
-                            showPopupMenu(context, widget.gym!.openingHours!,
-                                tapDownDetails.globalPosition);
-                          });
-                        },
-                        child: Icon(
-                          Icons.keyboard_arrow_down,
-                          color:
-                              theme.colorScheme.onBackground.withOpacity(.65),
-                        )),
-                  Spacer(),
-                ]),
-                SizedBox(height: 5),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Spacer(flex: 1),
-                      Text(
-                        widget.gym!.formattedAddress,
-                        style: labelStyle.copyWith(
-                            color: labelStyle.color!.withOpacity(.65)),
-                      ),
-                      Spacer(flex: 4),
-                    ]),
-              ],
-            ),
-            backgroundColor: theme.scaffoldBackgroundColor,
-            toolbarHeight: 90,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Row(
                       children: [
-                        SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          style: ButtonStyle(
-                              backgroundColor: resolveColor(
-                                  (isSelectedGym || appState.userGym != null)
-                                      ? theme.colorScheme.primaryContainer
-                                      : theme.colorScheme.primary),
-                              surfaceTintColor: resolveColor(
-                                  (isSelectedGym || appState.userGym != null)
-                                      ? theme.colorScheme.primaryContainer
-                                      : theme.colorScheme.primary)),
-                          onPressed: () {
-                            if (isSelectedGym) {
-                              setState(() {
-                                isSelectedGym = false;
-                                appState.userGym = null;
-                              });
-                              appState.removeUserGymFromSharedPreferences();
-                            } else {
-                              setState(() {
-                                isSelectedGym = true;
-                                appState.userGym = widget.gym;
-                              });
-                              appState.storeUserGymInSharedPreferences();
-                            }
-                            print(isSelectedGym);
-                          },
-                          label: selectButtonLabel,
-                          icon: selectButtonIcon,
-                        ),
-                        SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          style: ButtonStyle(
-                              backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer),
-                              surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer)),
-                          onPressed: () {
-                            launchUrl(Uri.parse(widget.gym!.url));
-                          },
-                          icon: Icon(Icons.location_pin, size: 16),
-                          label: Text('Map', style: labelStyle),
-                        ),
-                        if (widget.gym!.gymUrl != null) SizedBox(width: 10),
-                        if (widget.gym!.gymUrl != null)
-                          ElevatedButton.icon(
-                            style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                    theme.colorScheme.primaryContainer),
-                                surfaceTintColor: resolveColor(
-                                    theme.colorScheme.primaryContainer)),
-                            onPressed: () {
-                              launchUrl(Uri.parse(widget.gym!.gymUrl!));
-                            },
-                            icon: Icon(Icons.web, size: 16),
-                            label: Text('Website', style: labelStyle),
-                          ),
-                        if (widget.gym!.internationalPhoneNumber != null)
-                          SizedBox(width: 10),
-                        if (widget.gym!.internationalPhoneNumber != null)
-                          ElevatedButton.icon(
-                            style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                    theme.colorScheme.primaryContainer),
-                                surfaceTintColor: resolveColor(
-                                    theme.colorScheme.primaryContainer)),
-                            onPressed: () {
-                              _launchPhoneCall(
-                                  widget.gym!.internationalPhoneNumber!);
-                            },
-                            icon: Icon(Icons.call, size: 16),
-                            label: Text('Call', style: labelStyle),
-                          ),
-                        SizedBox(width: 10),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                // Photo
-                // if (appState.currentGymPhotos.isNotEmpty)
-                Center(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                        child: photosRow),
-                  ),
-                ),
-                SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Current expected occupancy', style: titleStyle),
-                      SizedBox(
-                          height: weightedAverageString.isEmpty &&
-                                  currentlyOpenString.isNotEmpty
-                              ? 10
-                              : 15),
-                      if (weightedAverageString.isEmpty &&
-                          currentlyOpenString.isNotEmpty)
-                        Text('Closed',
-                            style: labelStyle.copyWith(
-                                color: labelStyle.color!.withOpacity(.65))),
-                      if (weightedAverageString.isNotEmpty ||
-                          currentlyOpenString.isEmpty)
-                        Row(
-                          children: [
-                            SizedBox(width: 5),
-                            Column(
+                        Back(appState: appState, index: backIndex),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width - 80,
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                CustomCircularProgressIndicator(
-                                    percentCapacity: double.parse(
-                                            weightedAverageString.substring(
-                                                0,
-                                                weightedAverageString.length -
-                                                    1)) /
-                                        100.0,
-                                    strokeWidth: 4,
-                                    size: 30.0),
-                                SizedBox(height: 5),
-                                Text(weightedAverageString,
-                                    style: headlineStyle.copyWith(
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            SizedBox(width: 15),
-                            SizedBox(
-                              height: 50,
-                              child: Column(
-                                children: [
-                                  Text('Percent',
-                                      style: labelStyle.copyWith(
-                                          color: labelStyle.color!
-                                              .withOpacity(.65))),
-                                  Text('capacity',
-                                      style: labelStyle.copyWith(
-                                          color: labelStyle.color!
-                                              .withOpacity(.65))),
-                                ],
-                              ),
-                            ),
-                            if (widget.gym!.placeId ==
-                                'ChIJ4dr6hsa22YgR42TJ1LneeRU')
-                              Spacer(),
-                            // Herbert wellness center
-                            if (widget.gym!.placeId ==
-                                'ChIJ4dr6hsa22YgR42TJ1LneeRU')
-                              ElevatedButton.icon(
-                                  style: ButtonStyle(
-                                    backgroundColor: resolveColor(
-                                      theme.colorScheme.primaryContainer,
-                                    ),
-                                    surfaceTintColor: resolveColor(
-                                      theme.colorScheme.primaryContainer,
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    appState.changePage(3);
-                                  },
-                                  icon: Icon(Icons.people, size: 16),
-                                  label: Text('Live occupancy',
-                                      style: labelStyle)),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: SizedBox(
-                    height: 400,
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    child: GymCrowdednessChart(appState.avgGymCrowdData,
-                        chartOpeningTimes, chartClosingTimes),
-                  ),
-                ),
-                SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Gym Resources',
-                            style: titleStyle,
-                          ),
-                          SizedBox(width: 10),
-                          if (!editResourcesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  editResourcesMode = true;
-                                });
-                              },
-                              icon: Icon(Icons.edit,
-                                  color: theme.colorScheme.primary, size: 16),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
-                            ),
-                          if (editResourcesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  print(resourcesAvailable);
-                                  print(widget.gym!.resourcesAvailable);
-                                  resourcesAvailable =
-                                      Map.from(widget.gym!.resourcesAvailable);
-                                  editResourcesMode = false;
-                                });
-                              },
-                              icon: Icon(Icons.cancel,
-                                  color: theme.colorScheme.primary, size: 20),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
-                            ),
-                          if (editResourcesMode) SizedBox(width: 10),
-                          if (editResourcesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  widget.gym!.resourcesAvailable =
-                                      Map.from(resourcesAvailable);
-                                  editResourcesMode = false;
-                                  // Submit updated gym data to firebase
-                                  appState.submitGymDataToFirebase(widget.gym!);
-                                });
-                              },
-                              icon: Icon(Icons.check,
-                                  color: theme.colorScheme.primary, size: 24),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
-                            ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(20)),
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          children: [
-                            for (int i = 0; i < resourceNames.length; i++)
-                              Column(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        showResources[i] = !showResources[i];
-                                      });
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          resourceNames[i],
-                                          style: textStyle,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Icon(
-                                          showResources[i]
-                                              ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
-                                          color: theme.colorScheme.primary,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(height: showResources[i] ? 10 : 5),
-                                  if (showResources[i])
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          for (int j = 0;
-                                              j < typesOfResources[i].length;
-                                              j++)
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  height: resourceHeight,
-                                                  width: resourceWidth,
-                                                  child: Column(
-                                                    children: [
-                                                      Container(
-                                                        height: 25,
-                                                        width: 25,
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5)),
-                                                        child: Image.asset(
-                                                            'assets/images/resource_icons/${typesOfResources[i][j]}.png'),
-                                                      ),
-                                                      SizedBox(height: 5),
-                                                      if (typesOfResources[i][j]
-                                                          .endsWith('h'))
-                                                        Text(
-                                                          '${typesOfResources[i][j]}es',
-                                                          style: labelStyle,
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          maxLines: 2,
-                                                        ),
-                                                      if (typesOfResources[i][j]
-                                                          .endsWith('s'))
-                                                        Text(
-                                                            typesOfResources[i]
-                                                                [j],
-                                                            style: labelStyle,
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            maxLines: 2),
-                                                      if (!typesOfResources[i]
-                                                                  [j]
-                                                              .endsWith('h') &&
-                                                          !typesOfResources[i]
-                                                                  [j]
-                                                              .endsWith('s'))
-                                                        Text(
-                                                          '${typesOfResources[i][j]}s',
-                                                          style: labelStyle,
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          maxLines: 2,
-                                                        ),
-                                                      Spacer(),
-                                                      if (!editResourcesMode)
-                                                        Container(
-                                                            decoration: BoxDecoration(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .secondaryContainer,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            10)),
-                                                            child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .fromLTRB(
-                                                                        12,
-                                                                        10,
-                                                                        12,
-                                                                        10),
-                                                                child: Text(
-                                                                  '${resourcesAvailable[typesOfResources[i][j]] ?? 'No value'}',
-                                                                  style:
-                                                                      labelStyle,
-                                                                ))),
-                                                      if ((typesOfResources[i]
-                                                                      [j] ==
-                                                                  'Dumbbells' ||
-                                                              typesOfResources[
-                                                                      i][j] ==
-                                                                  'Kettlebell') &&
-                                                          editResourcesMode)
-                                                        Container(
-                                                          decoration: BoxDecoration(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .secondaryContainer,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10)),
-                                                          child: NumberPicker(
-                                                            textStyle: labelStyle.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onBackground
-                                                                    .withOpacity(
-                                                                        .4)),
-                                                            selectedTextStyle:
-                                                                bodyMedium,
-                                                            value: resourcesAvailable[
-                                                                    typesOfResources[
-                                                                            i]
-                                                                        [j]] ??
-                                                                0,
-                                                            minValue: 0,
-                                                            maxValue: resourceLimitsMap[
-                                                                    typesOfResources[
-                                                                            i]
-                                                                        [j]] ??
-                                                                20,
-                                                            step: 5,
-                                                            onChanged: (value) {
-                                                              setState(() {
-                                                                resourcesAvailable[
-                                                                    typesOfResources[
-                                                                            i][
-                                                                        j]] = value;
-                                                              });
-                                                            },
-                                                            itemHeight:
-                                                                20, // Customize the height of each item
-                                                            // itemCount: 2,
-                                                          ),
-                                                        ),
-                                                      if (typesOfResources[i]
-                                                                  [j] ==
-                                                              'Dumbbells' ||
-                                                          typesOfResources[i]
-                                                                  [j] ==
-                                                              'Kettlebell')
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .fromLTRB(
-                                                                  0, 3, 0, 0),
-                                                          child: Text(
-                                                            'Max Weight',
-                                                            style: labelStyle.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onBackground
-                                                                    .withOpacity(
-                                                                        .65)),
-                                                          ),
-                                                        ),
-                                                      if (typesOfResources[i]
-                                                                  [j] !=
-                                                              'Dumbbells' &&
-                                                          typesOfResources[i]
-                                                                  [j] !=
-                                                              'Kettlebell' &&
-                                                          editResourcesMode)
-                                                        Container(
-                                                          decoration: BoxDecoration(
-                                                              color: theme
-                                                                  .colorScheme
-                                                                  .secondaryContainer,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10)),
-                                                          child: NumberPicker(
-                                                            textStyle: labelStyle.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onBackground
-                                                                    .withOpacity(
-                                                                        .4)),
-                                                            selectedTextStyle:
-                                                                bodyMedium,
-                                                            value: resourcesAvailable[
-                                                                    typesOfResources[
-                                                                            i]
-                                                                        [j]] ??
-                                                                0,
-                                                            minValue: 0,
-                                                            maxValue: resourceLimitsMap[
-                                                                    typesOfResources[
-                                                                            i]
-                                                                        [j]] ??
-                                                                20,
-                                                            step: 1,
-                                                            onChanged: (value) {
-                                                              setState(() {
-                                                                resourcesAvailable[
-                                                                    typesOfResources[
-                                                                            i][
-                                                                        j]] = value;
-                                                              });
-                                                            },
-                                                            itemHeight:
-                                                                20, // Customize the height of each item
-                                                          ),
-                                                        ),
-                                                      if (typesOfResources[i]
-                                                                  [j] !=
-                                                              'Dumbbells' &&
-                                                          typesOfResources[i]
-                                                                  [j] !=
-                                                              'Kettlebell')
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .fromLTRB(
-                                                                  0, 3, 0, 0),
-                                                          child: Text(
-                                                            'Count',
-                                                            style: labelStyle.copyWith(
-                                                                color: theme
-                                                                    .colorScheme
-                                                                    .onBackground
-                                                                    .withOpacity(
-                                                                        .65)),
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                if (j <
-                                                    typesOfResources[i].length -
-                                                        1)
-                                                  // if (editResourcesMode)
-                                                  SizedBox(width: 10),
-                                              ],
-                                            ),
-                                        ],
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Spacer(flex: 1),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                          maxWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width -
+                                              120),
+                                      child: Text(
+                                        widget.gym!.name,
+                                        style: titleStyle,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  SizedBox(height: showResources[i] ? 10 : 0),
-                                ],
+                                    Spacer(flex: 2),
+                                  ],
+                                ),
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      if (currentlyOpenString.isEmpty) Spacer(),
+                                      if (widget.gym!.googleMapsRating !=
+                                              null &&
+                                          widget.gym!.googleMapsRating! > 4.0)
+                                        Text(
+                                          '${widget.gym!.googleMapsRating ?? 0}',
+                                          style: textStyle.copyWith(
+                                              color: theme
+                                                  .colorScheme.onBackground
+                                                  .withOpacity(0.65)),
+                                        ),
+                                      if (widget.gym!.googleMapsRating !=
+                                              null &&
+                                          (widget.gym!.googleMapsRating! <=
+                                                  4.0 &&
+                                              widget.gym!.googleMapsRating! >
+                                                  2.5))
+                                        Text(
+                                          '${widget.gym!.googleMapsRating ?? 0}',
+                                          style: textStyle.copyWith(
+                                              color: theme
+                                                  .colorScheme.onBackground
+                                                  .withOpacity(0.65)),
+                                        ),
+                                      if (widget.gym!.googleMapsRating !=
+                                              null &&
+                                          widget.gym!.googleMapsRating! <= 2.5)
+                                        Text(
+                                          '${widget.gym!.googleMapsRating ?? 0}',
+                                          style: textStyle.copyWith(
+                                              color: theme
+                                                  .colorScheme.onBackground
+                                                  .withOpacity(0.65)),
+                                        ),
+                                      if (widget.gym!.googleMapsRating == null)
+                                        Text(
+                                          'No rating available',
+                                          style: textStyle.copyWith(
+                                            color: theme
+                                                .colorScheme.onBackground
+                                                .withOpacity(0.65),
+                                          ),
+                                        ),
+                                      if (widget.gym!.googleMapsRating != null)
+                                        SizedBox(width: 3),
+                                      for (int i = 0; i < 5; i++)
+                                        if (i + 1 <=
+                                            widget.gym!.googleMapsRating!)
+                                          Icon(Icons.star,
+                                              color: theme.colorScheme.primary,
+                                              size: 14)
+                                        else if (i + 0.5 <=
+                                            widget.gym!.googleMapsRating!)
+                                          Icon(Icons.star_half,
+                                              color: theme.colorScheme.primary,
+                                              size: 14)
+                                        else
+                                          Icon(Icons.star_border,
+                                              color: theme.colorScheme.primary,
+                                              size: 14),
+                                      // There is openingHours data for the gym
+                                      Spacer(),
+                                      if (currentlyOpenString.isNotEmpty)
+                                        if (!currentlyOpenString.contains('-'))
+                                          Text(currentlyOpenString,
+                                              style: headlineStyle),
+                                      if (currentlyOpenString.isNotEmpty)
+                                        if (currentlyOpenString.contains('-'))
+                                          Text(
+                                              currentlyOpenString.split('-')[0],
+                                              style: headlineStyle),
+                                      if (currentlyOpenString.isNotEmpty)
+                                        if (currentlyOpenString.contains('-'))
+                                          Text(
+                                              '-${currentlyOpenString.split('-')[1]}',
+                                              style: subHeadlineStyle),
+                                      if (currentlyOpenString.isNotEmpty)
+                                        GestureDetector(
+                                            onTapDown: (tapDownDetails) {
+                                              setState(() {
+                                                showPopupMenu(
+                                                    context,
+                                                    widget.gym!.openingHours!,
+                                                    tapDownDetails
+                                                        .globalPosition);
+                                              });
+                                            },
+                                            child: Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color: theme
+                                                  .colorScheme.onBackground
+                                                  .withOpacity(.65),
+                                            )),
+                                      Spacer(),
+                                    ]),
+                                SizedBox(height: 5),
+                                Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Spacer(flex: 1),
+                                      Text(
+                                        widget.gym!.formattedAddress,
+                                        style: labelStyle.copyWith(
+                                            color: labelStyle.color!
+                                                .withOpacity(.65)),
+                                      ),
+                                      Spacer(flex: 4),
+                                    ]),
+                              ]),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Center(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(width: 10),
+                            TextButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      (isSelectedGym ||
+                                              appState.userGym != null)
+                                          ? theme.colorScheme.primaryContainer
+                                          : theme.colorScheme.primary),
+                                  surfaceTintColor: resolveColor(
+                                      (isSelectedGym ||
+                                              appState.userGym != null)
+                                          ? theme.colorScheme.primaryContainer
+                                          : theme.colorScheme.primary)),
+                              onPressed: () {
+                                if (isSelectedGym) {
+                                  setState(() {
+                                    isSelectedGym = false;
+                                    appState.userGym = null;
+                                  });
+                                  appState.removeUserGymFromSharedPreferences();
+                                } else {
+                                  setState(() {
+                                    isSelectedGym = true;
+                                    appState.userGym = widget.gym;
+                                  });
+                                  appState.storeUserGymInSharedPreferences();
+                                }
+                                print(isSelectedGym);
+                              },
+                              label: selectButtonLabel,
+                              icon: selectButtonIcon,
+                            ),
+                            SizedBox(width: 10),
+                            TextButton.icon(
+                              style: ButtonStyle(
+                                  backgroundColor: resolveColor(
+                                      theme.colorScheme.primaryContainer),
+                                  surfaceTintColor: resolveColor(
+                                      theme.colorScheme.primaryContainer)),
+                              onPressed: () {
+                                launchUrl(Uri.parse(widget.gym!.url));
+                              },
+                              icon: Icon(Icons.location_pin, size: 16),
+                              label: Text('Map', style: labelStyle),
+                            ),
+                            if (widget.gym!.gymUrl != null) SizedBox(width: 10),
+                            if (widget.gym!.gymUrl != null)
+                              TextButton.icon(
+                                style: ButtonStyle(
+                                    backgroundColor: resolveColor(
+                                        theme.colorScheme.primaryContainer),
+                                    surfaceTintColor: resolveColor(
+                                        theme.colorScheme.primaryContainer)),
+                                onPressed: () {
+                                  launchUrl(Uri.parse(widget.gym!.gymUrl!));
+                                },
+                                icon: Icon(Icons.web, size: 16),
+                                label: Text('Website', style: labelStyle),
                               ),
+                            if (widget.gym!.internationalPhoneNumber != null)
+                              SizedBox(width: 10),
+                            if (widget.gym!.internationalPhoneNumber != null)
+                              TextButton.icon(
+                                style: ButtonStyle(
+                                    backgroundColor: resolveColor(
+                                        theme.colorScheme.primaryContainer),
+                                    surfaceTintColor: resolveColor(
+                                        theme.colorScheme.primaryContainer)),
+                                onPressed: () {
+                                  _launchPhoneCall(
+                                      widget.gym!.internationalPhoneNumber!);
+                                },
+                                icon: Icon(Icons.call, size: 16),
+                                label: Text('Call', style: labelStyle),
+                              ),
+                            SizedBox(width: 10),
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Row(
+                    ),
+                  ],
+                ),
+                backgroundColor: theme.scaffoldBackgroundColor,
+                toolbarHeight: 111,
+                bottom: TabBar(
+                  unselectedLabelColor: theme.colorScheme.onBackground,
+                  tabs: [Tab(text: 'Overview'), Tab(text: 'Resources')],
+                ),
+              ),
+              body: TabBarView(
+                  physics: NeverScrollableScrollPhysics(),
+                  children: [
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Machines Available',
-                            style: titleStyle,
+                          SizedBox(height: 5),
+
+                          SizedBox(height: 10),
+                          // Photo
+                          // if (appState.currentGymPhotos.isNotEmpty)
+                          Center(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                  child: photosRow),
+                            ),
                           ),
-                          SizedBox(width: 10),
-                          if (!editMachinesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  editMachinesMode = true;
-                                });
-                              },
-                              icon: Icon(Icons.edit,
-                                  color: theme.colorScheme.primary, size: 16),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Current expected occupancy',
+                                    style: titleStyle),
+                                SizedBox(
+                                    height: weightedAverageString.isEmpty &&
+                                            currentlyOpenString.isNotEmpty
+                                        ? 10
+                                        : 15),
+                                if (weightedAverageString.isEmpty &&
+                                    currentlyOpenString.isNotEmpty)
+                                  Text('Closed',
+                                      style: labelStyle.copyWith(
+                                          color: labelStyle.color!
+                                              .withOpacity(.65))),
+                                if (weightedAverageString.isNotEmpty ||
+                                    currentlyOpenString.isEmpty)
+                                  Row(
+                                    children: [
+                                      SizedBox(width: 5),
+                                      Column(
+                                        children: [
+                                          CustomCircularProgressIndicator(
+                                              percentCapacity: double.parse(
+                                                      weightedAverageString
+                                                          .substring(
+                                                              0,
+                                                              weightedAverageString
+                                                                      .length -
+                                                                  1)) /
+                                                  100.0,
+                                              strokeWidth: 4,
+                                              size: 30.0),
+                                          SizedBox(height: 5),
+                                          Text(weightedAverageString,
+                                              style: headlineStyle.copyWith(
+                                                  fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                      SizedBox(width: 15),
+                                      SizedBox(
+                                        height: 50,
+                                        child: Column(
+                                          children: [
+                                            Text('Percent',
+                                                style: labelStyle.copyWith(
+                                                    color: labelStyle.color!
+                                                        .withOpacity(.65))),
+                                            Text('capacity',
+                                                style: labelStyle.copyWith(
+                                                    color: labelStyle.color!
+                                                        .withOpacity(.65))),
+                                          ],
+                                        ),
+                                      ),
+                                      if (widget.gym!.placeId ==
+                                          'ChIJ4dr6hsa22YgR42TJ1LneeRU')
+                                        Spacer(),
+                                      // Herbert wellness center
+                                      if (widget.gym!.placeId ==
+                                          'ChIJ4dr6hsa22YgR42TJ1LneeRU')
+                                        ElevatedButton.icon(
+                                            style: ButtonStyle(
+                                              backgroundColor: resolveColor(
+                                                theme.colorScheme
+                                                    .primaryContainer,
+                                              ),
+                                              surfaceTintColor: resolveColor(
+                                                theme.colorScheme
+                                                    .primaryContainer,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              appState.changePage(3);
+                                            },
+                                            icon: Icon(Icons.people, size: 16),
+                                            label: Text('Live occupancy',
+                                                style: labelStyle)),
+                                    ],
+                                  ),
+                              ],
                             ),
-                          if (editMachinesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  print(machinesAvailable);
-                                  print(widget.gym!.machinesAvailable);
-                                  machinesAvailable =
-                                      List.from(widget.gym!.machinesAvailable);
-                                  editMachinesMode = false;
-                                });
-                              },
-                              icon: Icon(Icons.cancel,
-                                  color: theme.colorScheme.primary, size: 20),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                          ),
+                          SizedBox(height: 20),
+                          Center(
+                            child: SizedBox(
+                              height: 400,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: GymCrowdednessChart(
+                                  appState.avgGymCrowdData,
+                                  chartOpeningTimes,
+                                  chartClosingTimes),
                             ),
-                          if (editMachinesMode) SizedBox(width: 10),
-                          if (editMachinesMode)
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                                surfaceTintColor: resolveColor(
-                                  theme.colorScheme.primaryContainer,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  widget.gym!.machinesAvailable =
-                                      List.from(machinesAvailable);
-                                  editMachinesMode = false;
-                                  // Submit updated gym data to firebase
-                                  appState.submitGymDataToFirebase(widget.gym!);
-                                });
-                              },
-                              icon: Icon(
-                                Icons.check,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                              // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
-                            ),
+                          ),
+                          // SizedBox(height: 20),
+                          // Padding(
+                          //   padding: const EdgeInsets.fromLTRB(25, 0, 25, 0),
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       Row(
+                          //         children: [
+                          //           Text(
+                          //             'Gym Resources',
+                          //             style: titleStyle,
+                          //           ),
+                          //           SizedBox(width: 10),
+                          //           if (!editResourcesMode)
+                          //             IconButton(
+                          //               style: ButtonStyle(
+                          //                 backgroundColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //                 surfaceTintColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //               ),
+                          //               onPressed: () {
+                          //                 setState(() {
+                          //                   editResourcesMode = true;
+                          //                 });
+                          //               },
+                          //               icon: Icon(Icons.edit_outlined,
+                          //                   color: theme.colorScheme.primary,
+                          //                   size: 16),
+                          //               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                          //             ),
+                          //           if (editResourcesMode)
+                          //             IconButton(
+                          //               style: ButtonStyle(
+                          //                 backgroundColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //                 surfaceTintColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //               ),
+                          //               onPressed: () {
+                          //                 setState(() {
+                          //                   print(resourcesAvailable);
+                          //                   print(
+                          //                       widget.gym!.resourcesAvailable);
+                          //                   resourcesAvailable = Map.from(
+                          //                       widget.gym!.resourcesAvailable);
+                          //                   editResourcesMode = false;
+                          //                 });
+                          //               },
+                          //               icon: Icon(Icons.cancel_outlined,
+                          //                   color: theme.colorScheme.primary,
+                          //                   size: 20),
+                          //               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                          //             ),
+                          //           if (editResourcesMode) SizedBox(width: 10),
+                          //           if (editResourcesMode)
+                          //             IconButton(
+                          //               style: ButtonStyle(
+                          //                 backgroundColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //                 surfaceTintColor: resolveColor(
+                          //                   theme.colorScheme.primaryContainer,
+                          //                 ),
+                          //               ),
+                          //               onPressed: () {
+                          //                 setState(() {
+                          //                   widget.gym!.resourcesAvailable =
+                          //                       Map.from(resourcesAvailable);
+                          //                   editResourcesMode = false;
+                          //                   // Submit updated gym data to firebase
+                          //                   appState.submitGymDataToFirebase(
+                          //                       widget.gym!);
+                          //                 });
+                          //               },
+                          //               icon: Icon(Icons.check,
+                          //                   color: theme.colorScheme.primary,
+                          //                   size: 24),
+                          //               // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                          //             ),
+                          //         ],
+                          //       ),
+                          //       SizedBox(height: 10),
+                          //       Container(
+                          //         decoration: BoxDecoration(
+                          //             color: theme.colorScheme.primaryContainer,
+                          //             borderRadius: BorderRadius.circular(20)),
+                          //         padding: EdgeInsets.all(15),
+                          //         child: Column(
+                          //           children: [
+                          //             for (int i = 0;
+                          //                 i < resourceNames.length;
+                          //                 i++)
+                          //               Column(
+                          //                 children: [
+                          //                   GestureDetector(
+                          //                     onTap: () {
+                          //                       setState(() {
+                          //                         showResources[i] =
+                          //                             !showResources[i];
+                          //                       });
+                          //                     },
+                          //                     child: Row(
+                          //                       children: [
+                          //                         Text(
+                          //                           resourceNames[i],
+                          //                           style: textStyle,
+                          //                         ),
+                          //                         SizedBox(width: 10),
+                          //                         Icon(
+                          //                           showResources[i]
+                          //                               ? Icons
+                          //                                   .keyboard_arrow_up
+                          //                               : Icons
+                          //                                   .keyboard_arrow_down,
+                          //                           color: theme
+                          //                               .colorScheme.primary,
+                          //                         )
+                          //                       ],
+                          //                     ),
+                          //                   ),
+                          //                   SizedBox(
+                          //                       height:
+                          //                           showResources[i] ? 10 : 5),
+                          //                   if (showResources[i])
+                          //                     SingleChildScrollView(
+                          //                       scrollDirection:
+                          //                           Axis.horizontal,
+                          //                       child: Row(
+                          //                         crossAxisAlignment:
+                          //                             CrossAxisAlignment.start,
+                          //                         children: [
+                          //                           for (int j = 0;
+                          //                               j <
+                          //                                   typesOfResources[i]
+                          //                                       .length;
+                          //                               j++)
+                          //                             Row(
+                          //                               children: [
+                          //                                 Container(
+                          //                                   height:
+                          //                                       resourceHeight,
+                          //                                   width:
+                          //                                       resourceWidth,
+                          //                                   child: Column(
+                          //                                     children: [
+                          //                                       Container(
+                          //                                         height: 25,
+                          //                                         width: 25,
+                          //                                         decoration: BoxDecoration(
+                          //                                             color: Colors
+                          //                                                 .white,
+                          //                                             borderRadius:
+                          //                                                 BorderRadius.circular(
+                          //                                                     5)),
+                          //                                         child: Image
+                          //                                             .asset(
+                          //                                                 'assets/images/resource_icons/${typesOfResources[i][j]}.png'),
+                          //                                       ),
+                          //                                       SizedBox(
+                          //                                           height: 5),
+                          //                                       if (typesOfResources[
+                          //                                               i][j]
+                          //                                           .endsWith(
+                          //                                               'h'))
+                          //                                         Text(
+                          //                                           '${typesOfResources[i][j]}es',
+                          //                                           style:
+                          //                                               labelStyle,
+                          //                                           textAlign:
+                          //                                               TextAlign
+                          //                                                   .center,
+                          //                                           maxLines: 2,
+                          //                                           overflow:
+                          //                                               TextOverflow
+                          //                                                   .ellipsis,
+                          //                                         ),
+                          //                                       if (typesOfResources[
+                          //                                               i][j]
+                          //                                           .endsWith(
+                          //                                               's'))
+                          //                                         Text(
+                          //                                           typesOfResources[
+                          //                                               i][j],
+                          //                                           style:
+                          //                                               labelStyle,
+                          //                                           textAlign:
+                          //                                               TextAlign
+                          //                                                   .center,
+                          //                                           maxLines: 2,
+                          //                                           overflow:
+                          //                                               TextOverflow
+                          //                                                   .ellipsis,
+                          //                                         ),
+                          //                                       if (!typesOfResources[i]
+                          //                                                   [j]
+                          //                                               .endsWith(
+                          //                                                   'h') &&
+                          //                                           !typesOfResources[i]
+                          //                                                   [j]
+                          //                                               .endsWith(
+                          //                                                   's'))
+                          //                                         Text(
+                          //                                           '${typesOfResources[i][j]}s',
+                          //                                           style:
+                          //                                               labelStyle,
+                          //                                           textAlign:
+                          //                                               TextAlign
+                          //                                                   .center,
+                          //                                           maxLines: 2,
+                          //                                           overflow:
+                          //                                               TextOverflow
+                          //                                                   .ellipsis,
+                          //                                         ),
+                          //                                       Spacer(),
+                          //                                       if (!editResourcesMode)
+                          //                                         Container(
+                          //                                             decoration: BoxDecoration(
+                          //                                                 color: theme
+                          //                                                     .colorScheme
+                          //                                                     .secondaryContainer,
+                          //                                                 borderRadius:
+                          //                                                     BorderRadius.circular(10)),
+                          //                                             child: Padding(
+                          //                                                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                          //                                                 child: Text(
+                          //                                                   '${resourcesAvailable[typesOfResources[i][j]] ?? 'No value'}',
+                          //                                                   style:
+                          //                                                       labelStyle,
+                          //                                                 ))),
+                          //                                       if ((typesOfResources[i][j] ==
+                          //                                                   'Dumbbells' ||
+                          //                                               typesOfResources[i][j] ==
+                          //                                                   'Kettlebell') &&
+                          //                                           editResourcesMode)
+                          //                                         Container(
+                          //                                           decoration: BoxDecoration(
+                          //                                               color: theme
+                          //                                                   .colorScheme
+                          //                                                   .secondaryContainer,
+                          //                                               borderRadius:
+                          //                                                   BorderRadius.circular(10)),
+                          //                                           child:
+                          //                                               NumberPicker(
+                          //                                             textStyle: labelStyle.copyWith(
+                          //                                                 color: theme
+                          //                                                     .colorScheme
+                          //                                                     .onBackground
+                          //                                                     .withOpacity(.4)),
+                          //                                             selectedTextStyle:
+                          //                                                 bodyMedium,
+                          //                                             value:
+                          //                                                 resourcesAvailable[typesOfResources[i][j]] ??
+                          //                                                     0,
+                          //                                             minValue:
+                          //                                                 0,
+                          //                                             maxValue:
+                          //                                                 resourceLimitsMap[typesOfResources[i][j]] ??
+                          //                                                     20,
+                          //                                             step: 5,
+                          //                                             onChanged:
+                          //                                                 (value) {
+                          //                                               setState(
+                          //                                                   () {
+                          //                                                 resourcesAvailable[typesOfResources[i][j]] =
+                          //                                                     value;
+                          //                                               });
+                          //                                             },
+                          //                                             itemHeight:
+                          //                                                 20, // Customize the height of each item
+                          //                                             // itemCount: 2,
+                          //                                           ),
+                          //                                         ),
+                          //                                       if (typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] ==
+                          //                                               'Dumbbells' ||
+                          //                                           typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] ==
+                          //                                               'Kettlebell')
+                          //                                         Padding(
+                          //                                           padding:
+                          //                                               const EdgeInsets.fromLTRB(
+                          //                                                   0,
+                          //                                                   3,
+                          //                                                   0,
+                          //                                                   0),
+                          //                                           child: Text(
+                          //                                             'Max Weight',
+                          //                                             style: labelStyle.copyWith(
+                          //                                                 color: theme
+                          //                                                     .colorScheme
+                          //                                                     .onBackground
+                          //                                                     .withOpacity(.65)),
+                          //                                           ),
+                          //                                         ),
+                          //                                       if (typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] !=
+                          //                                               'Dumbbells' &&
+                          //                                           typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] !=
+                          //                                               'Kettlebell' &&
+                          //                                           editResourcesMode)
+                          //                                         Container(
+                          //                                           decoration: BoxDecoration(
+                          //                                               color: theme
+                          //                                                   .colorScheme
+                          //                                                   .secondaryContainer,
+                          //                                               borderRadius:
+                          //                                                   BorderRadius.circular(10)),
+                          //                                           child:
+                          //                                               NumberPicker(
+                          //                                             textStyle: labelStyle.copyWith(
+                          //                                                 color: theme
+                          //                                                     .colorScheme
+                          //                                                     .onBackground
+                          //                                                     .withOpacity(.4)),
+                          //                                             selectedTextStyle:
+                          //                                                 bodyMedium,
+                          //                                             value:
+                          //                                                 resourcesAvailable[typesOfResources[i][j]] ??
+                          //                                                     0,
+                          //                                             minValue:
+                          //                                                 0,
+                          //                                             maxValue:
+                          //                                                 resourceLimitsMap[typesOfResources[i][j]] ??
+                          //                                                     20,
+                          //                                             step: 1,
+                          //                                             onChanged:
+                          //                                                 (value) {
+                          //                                               setState(
+                          //                                                   () {
+                          //                                                 resourcesAvailable[typesOfResources[i][j]] =
+                          //                                                     value;
+                          //                                               });
+                          //                                             },
+                          //                                             itemHeight:
+                          //                                                 20, // Customize the height of each item
+                          //                                           ),
+                          //                                         ),
+                          //                                       if (typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] !=
+                          //                                               'Dumbbells' &&
+                          //                                           typesOfResources[i]
+                          //                                                   [
+                          //                                                   j] !=
+                          //                                               'Kettlebell')
+                          //                                         Padding(
+                          //                                           padding:
+                          //                                               const EdgeInsets.fromLTRB(
+                          //                                                   0,
+                          //                                                   3,
+                          //                                                   0,
+                          //                                                   0),
+                          //                                           child: Text(
+                          //                                             'Count',
+                          //                                             style: labelStyle.copyWith(
+                          //                                                 color: theme
+                          //                                                     .colorScheme
+                          //                                                     .onBackground
+                          //                                                     .withOpacity(.65)),
+                          //                                           ),
+                          //                                         ),
+                          //                                     ],
+                          //                                   ),
+                          //                                 ),
+                          //                                 if (j <
+                          //                                     typesOfResources[
+                          //                                                 i]
+                          //                                             .length -
+                          //                                         1)
+                          //                                   // if (editResourcesMode)
+                          //                                   SizedBox(width: 10),
+                          //                               ],
+                          //                             ),
+                          //                         ],
+                          //                       ),
+                          //                     ),
+                          //                   SizedBox(
+                          //                       height:
+                          //                           showResources[i] ? 10 : 0),
+                          //                 ],
+                          //               ),
+                          //           ],
+                          //         ),
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+                          SizedBox(
+                            height: 90,
+                          ), // Extra scrolling buffer
                         ],
                       ),
-                      if (machinesAvailable.isEmpty && !editMachinesMode)
-                        SizedBox(height: 10),
-                      if (!(machinesAvailable.isEmpty && !editMachinesMode))
-                        SizedBox(height: 5),
-                      if (machinesAvailable.isEmpty && !editMachinesMode)
-                        ElevatedButton.icon(
-                          style: ButtonStyle(
-                            backgroundColor: resolveColor(
-                              theme.colorScheme.primaryContainer,
-                            ),
-                            surfaceTintColor: resolveColor(
-                              theme.colorScheme.primaryContainer,
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              editMachinesMode = true;
-                              // Trigger add exercise pop up
-                              showPopUpMachinesDialog(context, appState,
-                                  setState, machinesAvailable);
-                            });
-                            print(machinesAvailable);
-                          },
-                          icon: Icon(
-                            Icons.add,
-                            color: theme.colorScheme.primary,
-                          ),
-                          label: Text(
-                            'Add Machines',
-                            style: TextStyle(
-                              color: theme.colorScheme.onBackground,
-                            ),
-                          ),
-                        ),
-                      if (!(machinesAvailable.isEmpty && !editMachinesMode))
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              if (editMachinesMode)
-                                IconButton(
-                                  style: ButtonStyle(
+                    ),
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 10),
+                          Center(
+                            child: TextButton.icon(
+                                style: ButtonStyle(
                                     backgroundColor: resolveColor(
-                                      theme.colorScheme.primaryContainer,
-                                    ),
+                                        theme.colorScheme.primaryContainer),
                                     surfaceTintColor: resolveColor(
-                                      theme.colorScheme.primaryContainer,
+                                        theme.colorScheme.primaryContainer)),
+                                onPressed: () {
+                                  _showGymResourcesSelector(
+                                      context,
+                                      appState,
+                                      allResources,
+                                      resourcesAvailable,
+                                      widget.gym!,
+                                      setState,
+                                      updateResourcesAvailable);
+                                },
+                                icon: Icon(Icons.edit_outlined,
+                                    color: theme.colorScheme.primary, size: 16),
+                                label:
+                                    Text('Edit Resources', style: labelStyle)),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                                10, 10, 0, resourcesInGym.isEmpty ? 3 : 7),
+                            child: Text('Resources In This Gym',
+                                style: titleStyle),
+                          ),
+                          if (resourcesInGym.isEmpty)
+                            Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(10, 0, 0, 10),
+                                child: Text('No resources set',
+                                    style: labelStyle.copyWith(
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65))))
+                          else
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: List.generate(resourcesInGym.length,
+                                      (index) {
+                                    String resource = resourcesInGym[index];
+                                    return Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height: 70,
+                                            width: 70,
+                                            decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(5)),
+                                            child: Image.asset(
+                                                'assets/images/resource_icons/$resource.png'),
+                                          ),
+                                          SizedBox(height: 3),
+                                          SizedBox(
+                                              width: 75,
+                                              child: Text(resource,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.center,
+                                                  style: labelStyle))
+                                        ],
+                                      ),
+                                    );
+                                  })),
+                            ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                                10, 5, 0, resourcesNotInGym.isEmpty ? 3 : 7),
+                            child: Text('Resources Not In This Gym',
+                                style: titleStyle),
+                          ),
+                          if (resourcesNotInGym.isEmpty)
+                            Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(10, 0, 0, 10),
+                                child: Text('This gym has every resource',
+                                    style: labelStyle.copyWith(
+                                        color: theme.colorScheme.onBackground
+                                            .withOpacity(.65))))
+                          else
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: List.generate(
+                                      resourcesNotInGym.length, (index) {
+                                    String resource = resourcesNotInGym[index];
+                                    return Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                                      child: Column(
+                                        children: [
+                                          Opacity(
+                                            opacity: .25,
+                                            child: Container(
+                                              height: 70,
+                                              width: 70,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5)),
+                                              child: Image.asset(
+                                                  'assets/images/resource_icons/$resource.png'),
+                                            ),
+                                          ),
+                                          SizedBox(height: 3),
+                                          SizedBox(
+                                              width: 75,
+                                              child: Text(resource,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.center,
+                                                  style: labelStyle))
+                                        ],
+                                      ),
+                                    );
+                                  })),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 10, 0, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Machines Available',
+                                      style: titleStyle,
+                                    ),
+                                    SizedBox(width: 10),
+                                    if (!editMachinesMode)
+                                      IconButton(
+                                        style: ButtonStyle(
+                                          backgroundColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                          surfaceTintColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            editMachinesMode = true;
+                                          });
+                                        },
+                                        icon: Icon(Icons.edit_outlined,
+                                            color: theme.colorScheme.primary,
+                                            size: 16),
+                                        // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                                      ),
+                                    if (editMachinesMode)
+                                      IconButton(
+                                        style: ButtonStyle(
+                                          backgroundColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                          surfaceTintColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            print(machinesAvailable);
+                                            print(
+                                                widget.gym!.machinesAvailable);
+                                            machinesAvailable = List.from(
+                                                widget.gym!.machinesAvailable);
+                                            editMachinesMode = false;
+                                          });
+                                        },
+                                        icon: Icon(Icons.cancel_outlined,
+                                            color: theme.colorScheme.primary,
+                                            size: 20),
+                                        // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                                      ),
+                                    if (editMachinesMode) SizedBox(width: 10),
+                                    if (editMachinesMode)
+                                      IconButton(
+                                        style: ButtonStyle(
+                                          backgroundColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                          surfaceTintColor: resolveColor(
+                                            theme.colorScheme.primaryContainer,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            widget.gym!.machinesAvailable =
+                                                List.from(machinesAvailable);
+                                            editMachinesMode = false;
+                                            // Submit updated gym data to firebase
+                                            appState.submitGymDataToFirebase(
+                                                widget.gym!);
+                                          });
+                                        },
+                                        icon: Icon(
+                                          Icons.check,
+                                          color: theme.colorScheme.primary,
+                                          size: 24,
+                                        ),
+                                        // label: Text('Edit', style: TextStyle(color: theme.colorScheme.onBackground),),
+                                      ),
+                                  ],
+                                ),
+                                if (machinesAvailable.isEmpty &&
+                                    !editMachinesMode)
+                                  SizedBox(height: 10),
+                                if (!(machinesAvailable.isEmpty &&
+                                    !editMachinesMode))
+                                  SizedBox(height: 5),
+                                if (machinesAvailable.isEmpty &&
+                                    !editMachinesMode)
+                                  ElevatedButton.icon(
+                                    style: ButtonStyle(
+                                      backgroundColor: resolveColor(
+                                        theme.colorScheme.primaryContainer,
+                                      ),
+                                      surfaceTintColor: resolveColor(
+                                        theme.colorScheme.primaryContainer,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        editMachinesMode = true;
+                                        // Trigger add exercise pop up
+                                        showPopUpMachinesDialog(
+                                            context,
+                                            appState,
+                                            setState,
+                                            machinesAvailable);
+                                      });
+                                      print(machinesAvailable);
+                                    },
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    label: Text(
+                                      'Add Machines',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onBackground,
+                                      ),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      // Trigger add exercise pop up
-                                      showPopUpMachinesDialog(context, appState,
-                                          setState, machinesAvailable);
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.add,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              if (editMachinesMode) SizedBox(width: 10),
-                              if (machinesAvailable.isNotEmpty)
-                                Container(
-                                  // height: 200,
-                                  decoration: BoxDecoration(
-                                      color: theme.colorScheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(20)),
-                                  padding: EdgeInsets.all(15),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      for (int i = 0;
-                                          i < machinesAvailable.length;
-                                          i++)
-                                        // Don't display duplicate machines, e.g. Leg Press & Leg Press Calf Raise
-                                        if (machinesAvailable.indexWhere(
-                                                (element) =>
-                                                    (element.machineAltName ??
-                                                        element.name) ==
-                                                    (machinesAvailable[i]
-                                                            .machineAltName ??
-                                                        machinesAvailable[i]
-                                                            .name)) ==
-                                            i)
+                                if (!(machinesAvailable.isEmpty &&
+                                    !editMachinesMode))
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        if (editMachinesMode)
+                                          IconButton(
+                                            style: ButtonStyle(
+                                              backgroundColor: resolveColor(
+                                                theme.colorScheme
+                                                    .primaryContainer,
+                                              ),
+                                              surfaceTintColor: resolveColor(
+                                                theme.colorScheme
+                                                    .primaryContainer,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                // Trigger add exercise pop up
+                                                showPopUpMachinesDialog(
+                                                    context,
+                                                    appState,
+                                                    setState,
+                                                    machinesAvailable);
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.add,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                          ),
+                                        if (editMachinesMode)
+                                          SizedBox(width: 10),
+                                        if (machinesAvailable.isNotEmpty)
                                           Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              SizedBox(
-                                                height: editMachinesMode
-                                                    ? 192
-                                                    : 168,
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    GestureDetector(
-                                                      onTap: () {
-                                                        appState
-                                                            .changePageToExercise(
+                                              for (int i = 0;
+                                                  i < machinesAvailable.length;
+                                                  i++)
+                                                // Don't display duplicate machines, e.g. Leg Press & Leg Press Calf Raise
+                                                if (machinesAvailable
+                                                        .indexWhere((element) =>
+                                                            (element.machineAltName ??
+                                                                element.name) ==
+                                                            (machinesAvailable[
+                                                                        i]
+                                                                    .machineAltName ??
                                                                 machinesAvailable[
-                                                                    i]);
-                                                      },
-                                                      child: Container(
-                                                        width: 120,
-                                                        height: 120,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              Colors.grey[200],
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(8),
-                                                        ),
-                                                        // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
-                                                        child: ImageContainer(
-                                                            exercise:
+                                                                        i]
+                                                                    .name)) ==
+                                                    i)
+                                                  Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        height: editMachinesMode
+                                                            ? 152
+                                                            : 128,
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            GestureDetector(
+                                                              onTap: () {
+                                                                appState.changePageToExercise(
+                                                                    machinesAvailable[
+                                                                        i]);
+                                                              },
+                                                              child: Container(
+                                                                width: 80,
+                                                                height: 80,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: Colors
+                                                                          .grey[
+                                                                      200],
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8),
+                                                                ),
+                                                                // child: Image.asset('muscle_group_pictures/$name.jpeg', fit: BoxFit.cover,),
+                                                                child: ImageContainer(
+                                                                    exercise:
+                                                                        machinesAvailable[
+                                                                            i]),
+                                                                // child: ,
+                                                              ),
+                                                            ),
+                                                            SizedBox(height: 8),
+                                                            SizedBox(
+                                                              width: 80,
+                                                              child: Text(
                                                                 machinesAvailable[
-                                                                    i]),
-                                                        // child: ,
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 8),
-                                                    SizedBox(
-                                                      width: 120,
-                                                      child: Text(
-                                                        machinesAvailable[i]
-                                                                .machineAltName ??
-                                                            machinesAvailable[i]
-                                                                .name,
-                                                        style: bodyMedium,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ),
-                                                    Spacer(),
-                                                    if (editMachinesMode)
-                                                      GestureDetector(
-                                                        onTap: () {
-                                                          setState(() {
-                                                            // machinesAvailable
-                                                            //     .removeAt(i);
-                                                            machinesAvailable.removeWhere((element) =>
-                                                                (element.machineAltName ??
-                                                                    element
-                                                                        .name) ==
-                                                                (machinesAvailable[
                                                                             i]
                                                                         .machineAltName ??
                                                                     machinesAvailable[
                                                                             i]
-                                                                        .name));
-                                                          });
-                                                          print(
-                                                              machinesAvailable);
-                                                        },
-                                                        child: Icon(
-                                                            Icons
-                                                                .delete_forever,
-                                                            size: 20,
-                                                            color: theme
-                                                                .colorScheme
-                                                                .primary),
-                                                      )
-                                                  ],
-                                                ),
-                                              ),
-                                              if (i <
-                                                  machinesAvailable.length - 1)
-                                                SizedBox(width: 10),
+                                                                        .name,
+                                                                style:
+                                                                    labelStyle,
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                maxLines: 2,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                            Spacer(),
+                                                            if (editMachinesMode)
+                                                              GestureDetector(
+                                                                onTap: () {
+                                                                  setState(() {
+                                                                    // machinesAvailable
+                                                                    //     .removeAt(i);
+                                                                    machinesAvailable.removeWhere((element) =>
+                                                                        (element.machineAltName ??
+                                                                            element
+                                                                                .name) ==
+                                                                        (machinesAvailable[i].machineAltName ??
+                                                                            machinesAvailable[i].name));
+                                                                  });
+                                                                  print(
+                                                                      machinesAvailable);
+                                                                },
+                                                                child: Icon(
+                                                                    Icons
+                                                                        .delete_outlined,
+                                                                    size: 20,
+                                                                    color: theme
+                                                                        .colorScheme
+                                                                        .primary),
+                                                              )
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      if (i <
+                                                          machinesAvailable
+                                                                  .length -
+                                                              1)
+                                                        SizedBox(width: 10),
+                                                    ],
+                                                  ),
                                             ],
                                           ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 40,
-                ), // Extra scrolling buffer
-              ],
-            ),
-          ),
+                        ],
+                      ),
+                    ),
+                  ])),
         ),
       ),
     );
@@ -2655,5 +2933,209 @@ class _GymCrowdednessChartState extends State<GymCrowdednessChart> {
   int calculatePercentage(int value) {
     int result = (value * 100 / 13).round();
     return result;
+  }
+}
+
+void _showGymResourcesSelector(
+    BuildContext context,
+    MyAppState appState,
+    List<String> allResources,
+    Map<String, int> resourcesAvailable,
+    final Gym gym,
+    final StateSetter setGymPageState,
+    void Function(Map<String, dynamic> newResources) updateResources) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return GymResourcesSelector(appState, allResources, resourcesAvailable,
+          gym, setGymPageState, updateResources);
+    },
+  );
+}
+
+// ignore: must_be_immutable
+class GymResourcesSelector extends StatefulWidget {
+  final MyAppState appState;
+  final List<String> allResources;
+  Map<String, int> resourcesAvailable;
+  final Gym gym;
+  final StateSetter setGymPageState;
+  void Function(Map<String, dynamic> newResources) updateResources;
+
+  GymResourcesSelector(
+      this.appState,
+      this.allResources,
+      this.resourcesAvailable,
+      this.gym,
+      this.setGymPageState,
+      this.updateResources);
+
+  @override
+  _GymResourcesSelectorState createState() => _GymResourcesSelectorState();
+}
+
+class _GymResourcesSelectorState extends State<GymResourcesSelector>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+  late Map<String, int> resourcesAvailable;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+    _animation = Tween<Offset>(
+      begin: Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.forward();
+    resourcesAvailable = Map.from(widget.resourcesAvailable);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SlideTransition(
+      position: _animation,
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(),
+                            child: Text('Cancel',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onBackground)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Center(
+                      child: Text('What is available at this Gym?',
+                          style: theme.textTheme.titleSmall!.copyWith(
+                              color: theme.colorScheme.onBackground))),
+                  Center(
+                      child: Text('Tap to select',
+                          style: theme.textTheme.labelSmall!.copyWith(
+                              color: theme.colorScheme.onBackground
+                                  .withOpacity(.65)))),
+                  SizedBox(height: 15),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * .6,
+                    child: GridView.count(
+                      childAspectRatio: 0.89,
+                      crossAxisCount: 4,
+                      children:
+                          List.generate(widget.allResources.length, (index) {
+                        String resource = widget.allResources[index];
+                        return Column(
+                          children: [
+                            Opacity(
+                              opacity: resourcesAvailable[resource] != null &&
+                                      resourcesAvailable[resource]! > 0
+                                  ? 1
+                                  : .25,
+                              child: GestureDetector(
+                                  onTap: () {
+                                    if (resourcesAvailable[resource] != null &&
+                                        resourcesAvailable[resource]! > 0) {
+                                      setState(() {
+                                        resourcesAvailable[resource] = 0;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        resourcesAvailable[resource] = 1;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 80,
+                                    width: 80,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(5)),
+                                    child: Image.asset(
+                                        'assets/images/resource_icons/$resource.png'),
+                                  )),
+                            ),
+                            SizedBox(height: 3),
+                            SizedBox(
+                                width: 100,
+                                child: Text(resource,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.labelSmall!.copyWith(
+                                        color: theme.colorScheme.onBackground)))
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                  Center(
+                    child: ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor:
+                                resolveColor(theme.colorScheme.primary),
+                            surfaceTintColor:
+                                resolveColor(theme.colorScheme.primary)),
+                        onPressed: () {
+                          widget.setGymPageState(() {
+                            widget.gym.resourcesAvailable =
+                                Map.from(resourcesAvailable);
+                            widget.updateResources(resourcesAvailable);
+                            widget.appState.submitGymDataToFirebase(widget.gym);
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Looks Good',
+                            style: theme.textTheme.titleSmall!.copyWith(
+                                color: theme.colorScheme.onBackground))),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

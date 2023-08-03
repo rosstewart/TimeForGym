@@ -1046,6 +1046,10 @@ class Split {
     reverse(0, n - 1);
     reverse(0, k - 1);
     reverse(k, n - 1);
+    // Adjust days of week accordingly
+    for (int i = 0; i < trainingDays.length; i++) {
+      trainingDays[i].dayOfWeek = i;
+    }
   }
 
   void reverse(int start, int end) {

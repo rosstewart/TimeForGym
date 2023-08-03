@@ -185,14 +185,14 @@ class _SearchPageState extends State<SearchPage> {
               isExercise: false,
             ),
             // if (appState.favoriteExercises.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
-                child: Text(
-                  "Favorite Exercises",
-                  style: titleStyle,
-                  textAlign: TextAlign.left,
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+              child: Text(
+                "Favorite Exercises",
+                style: titleStyle,
+                textAlign: TextAlign.left,
               ),
+            ),
             if (appState.favoriteExercises.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
@@ -226,7 +226,10 @@ class SquareButton extends StatelessWidget {
   Widget image = Placeholder();
 
   SquareButton(
-      {required this.name, required this.isExercise, required this.onPressed, required this.exercise});
+      {required this.name,
+      required this.isExercise,
+      required this.onPressed,
+      required this.exercise});
 
   @override
   Widget build(BuildContext context) {
@@ -240,8 +243,8 @@ class SquareButton extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
@@ -252,16 +255,17 @@ class SquareButton extends StatelessWidget {
           ),
           SizedBox(height: 8),
           SizedBox(
-            width: 120,
-            child: Text(
-              name,
-              style: isExercise
-                  ? Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground)
-                  : Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground),
-              textAlign: TextAlign.center,
-            ),
+            width: 100,
+            child: Text(name,
+                style: isExercise
+                    ? Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground,
+                        fontSize: 10)
+                    : Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2),
           ),
         ],
       ),

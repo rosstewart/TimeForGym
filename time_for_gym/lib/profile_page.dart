@@ -136,6 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
         length: 3,
         child: Scaffold(
           appBar: AppBar(
+            toolbarHeight: kToolbarHeight-17,
             leading: widget.fromBottomNavBar
                 ? (appState.userProfileStackFromOwnProfile.isNotEmpty
                     ? Back(appState: appState, index: 12)
@@ -208,7 +209,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           body: Column(
             children: [
-              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,6 +679,7 @@ class _ProfilePageState extends State<ProfilePage> {
             appState.areMuscleGroupImagesInitialized = {};
             appState.prefs.clear();
             appState.visitedUsers = [];
+            // appState.musclesWorkedImages = {};
           });
         }
 
@@ -834,7 +835,7 @@ class _SplitPreviewState extends State<SplitPreview> {
           decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(15)),
-          height: 325,
+          height: 300,
           child: PageView(
               controller: _pageController,
               onPageChanged: (int index) {

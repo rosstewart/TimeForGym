@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:flutter/scheduler.dart';
@@ -116,6 +118,17 @@ void main() async {
     name: 'TimeForGym',
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Pass all uncaught "fatal" errors from the framework to Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   // Ideal time to initialize
   // auth = FirebaseAuth.instanceFor(app: app);
   // auth.authStateChanges()...
@@ -986,6 +999,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         print('Added exercise to day $i, exercise $j');
       }
     }
+    cancelWorkout(true); // Don't notifyListeners twice
     storeSplitInSharedPreferences(); // Also sets the values of exerciseNames
     print(split.trainingDays[0].exerciseNames);
     saveSplitDayExerciseIndicesData();
@@ -2549,14 +2563,24 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   void startWorkout(ActiveWorkout workout) {
     activeWorkout = workout;
     activeWorkoutBannerPageController = PageController();
-    notifyListeners();
+    // notifyListeners();
     prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
   }
 
-  void cancelWorkout() {
+  void cancelWorkout(bool? duringBuild) {
+    // Cancel timers
+    if (activeWorkout != null) {
+      for (Timer? timer in activeWorkout!.timers) {
+        if (timer != null) {
+          timer.cancel();
+        }
+      }
+    }
     activeWorkout = null;
     activeWorkoutBannerPageController = PageController();
-    notifyListeners();
+    if (duringBuild != true) {
+      notifyListeners();
+    }
     prefs.remove('activeWorkout');
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(authUsername);
@@ -2566,7 +2590,12 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   void updateWorkoutBannerPageIndex(int index) {
     if (activeWorkout != null) {
       activeWorkout!.pageIndex = index;
-      activeWorkoutBannerPageController.jumpToPage(index);
+      if (activeWorkoutBannerPageController.hasClients) {
+        activeWorkoutBannerPageController.jumpToPage(index);
+      } else {
+        // Banners have not yet been built
+        activeWorkoutBannerPageController = PageController(initialPage: index);
+      }
       notifyListeners();
       prefs.setString('activeWorkout', json.encode(activeWorkout!.toJson()));
     }
@@ -2672,6 +2701,19 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
     activeWorkout?.timers[index] = null;
     notifyListeners();
   }
+
+  Image getMusclesWorkedImage(Exercise exercise) {
+    musclesWorkedImages[exercise.name] ??= Image.memory(img.encodePng(
+        applyFloodFill(defaultMuscleWorkedImage!, exercise.musclesWorked,
+            exercise.musclesWorkedActivation, imageMuscleLocations)));
+    if (musclesWorkedImages.length > 20) {
+      // Don't have too many images in memory, remove first
+      musclesWorkedImages.remove(musclesWorkedImages.keys.first);
+    }
+    return musclesWorkedImages[exercise.name]!;
+  }
+
+  Map<String, Image> musclesWorkedImages = {};
 
   void notifyTheListeners() {
     notifyListeners();
@@ -3132,6 +3174,12 @@ class _MyHomePageState extends State<MyHomePage> {
     appState.appPages[appState.pageIndex] = page;
 
     return LayoutBuilder(builder: (context, constraints) {
+      // Unknown error
+      if (appState.activeWorkout != null &&
+          appState.activeWorkout!.areBannersAndTimersInitialized &&
+          appState.activeWorkout!.bannerTitles.isEmpty) {
+        appState.cancelWorkout(true);
+      }
       return Scaffold(
         body: Stack(children: [
           page,
@@ -3563,7 +3611,7 @@ class Back extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(width: 15),
+        // SizedBox(width: 15),
         IconButton(
           color: Theme.of(context).colorScheme.onPrimary,
           onPressed: togglePressed,
