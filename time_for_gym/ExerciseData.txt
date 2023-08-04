@@ -95,7 +95,7 @@ Barbell Front Raise|Stand with a barbell held in front of your thighs, palms fac
 Single-Arm Cable Front Raise|Hold a low cable with a neutral grip, and bring your arm up straight in front of you, without bending your elbow.|Front Delts:3, Side Delts:2, Biceps:1|Video Link|0.0|Cable|1
 Pike Push-Up|Start in a downward dog position with your hands on the ground and hips lifted high. Lower your head towards the ground by bending your elbows and then push back up. (Optional - Elevate your feet to increase the difficulty.)|seatedShoulderPress|Video Link|0.0|None|1
 Handstand Push-Up|Kick up into a handstand position against a wall, then lower your body by bending your arms and bring your head towards the ground. Push back up to the starting position.|seatedShoulderPress|Video Link|0.0|None|1
-Smith Machine Shoulder Bench|Sit down on an upright bench, grip the bar and rotate it out of the locked position, lower as far as comfortable, and press up.|seatedShoulderPress|Video Link|0.0|Smith Machine|0
+Smith Machine Shoulder Press|Sit down on an upright bench, grip the bar and rotate it out of the locked position, lower as far as comfortable, and press up.|seatedShoulderPress|Video Link|0.0|Smith Machine|0
 
 MuscleGroup: Side Delts
 
