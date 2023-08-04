@@ -282,7 +282,7 @@ class _SplitDayPageState extends State<SplitDayPage> {
                         //       style: theme.textTheme.labelSmall!.copyWith(
                         //           color: theme.colorScheme.onBackground),
                         //     )),
-                        child: ElevatedButton.icon(
+                        child: TextButton.icon(
                             style: ButtonStyle(
                                 backgroundColor:
                                     resolveColor(theme.colorScheme.primary),
@@ -309,11 +309,12 @@ class _SplitDayPageState extends State<SplitDayPage> {
                             },
                             icon: Icon(Icons.add,
                                 color: theme.colorScheme.onBackground,
-                                size: 16),
+                                size: 14),
                             label: Text(
                               'Add exercise',
                               style: theme.textTheme.labelSmall!.copyWith(
-                                  color: theme.colorScheme.onBackground),
+                                  color: theme.colorScheme.onBackground,
+                                  fontSize: 10),
                             )),
                         // ],
                       ),
@@ -2218,9 +2219,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                     children: [
                                                                       SizedBox(
                                                                         width:
-                                                                            42,
+                                                                            32,
                                                                         height:
-                                                                            38,
+                                                                            28,
                                                                         child:
                                                                             TextFormField(
                                                                           maxLength:
@@ -2295,8 +2296,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                             Row(
                                                                           children: [
                                                                             SizedBox(
-                                                                              width: 42,
-                                                                              height: 38,
+                                                                              width: 32,
+                                                                              height: 28,
                                                                               child: TextFormField(
                                                                                 maxLength: 3,
                                                                                 style: formTextStyle,
@@ -2331,10 +2332,15 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                 height: 5,
                                                               ),
                                                               Text(
-                                                                'Weight (lbs)',
-                                                                style:
-                                                                    labelStyle,
-                                                              ),
+                                                                  'Weight (lbs)',
+                                                                  style: labelStyle.copyWith(
+                                                                      color: theme
+                                                                          .colorScheme
+                                                                          .onBackground
+                                                                          .withOpacity(
+                                                                              .65),
+                                                                      fontSize:
+                                                                          8)),
                                                             ],
                                                           ),
                                                           SizedBox(
@@ -2364,9 +2370,9 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                     children: [
                                                                       SizedBox(
                                                                         width:
-                                                                            42,
+                                                                            32,
                                                                         height:
-                                                                            38,
+                                                                            28,
                                                                         child:
                                                                             TextFormField(
                                                                           maxLength:
@@ -2445,8 +2451,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                                             Row(
                                                                           children: [
                                                                             SizedBox(
-                                                                              width: 42,
-                                                                              height: 38,
+                                                                              width: 32,
+                                                                              height: 28,
                                                                               child: TextFormField(
                                                                                 maxLength: 2,
                                                                                 validator: (value) {
@@ -2483,16 +2489,15 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                               SizedBox(
                                                                 height: 5,
                                                               ),
-                                                              Text(
-                                                                'Reps',
-                                                                style: theme
-                                                                    .textTheme
-                                                                    .labelSmall!
-                                                                    .copyWith(
-                                                                        color: theme
-                                                                            .colorScheme
-                                                                            .onBackground),
-                                                              ),
+                                                              Text('Reps',
+                                                                  style: labelStyle.copyWith(
+                                                                      color: theme
+                                                                          .colorScheme
+                                                                          .onBackground
+                                                                          .withOpacity(
+                                                                              .65),
+                                                                      fontSize:
+                                                                          8)),
                                                             ],
                                                           ),
                                                           // if (!showMoreSets)
@@ -2591,8 +2596,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                   child: Row(
                                                     children: [
                                                       SizedBox(
-                                                        width: 28,
-                                                        height: 35,
+                                                        width: 25,
+                                                        height: 28,
                                                         child: TextFormField(
                                                           maxLength: 2,
                                                           style: formTextStyle,
@@ -2655,8 +2660,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                   child: Row(
                                                     children: [
                                                       SizedBox(
-                                                        width: 28,
-                                                        height: 35,
+                                                        width: 25,
+                                                        height: 28,
                                                         child: TextFormField(
                                                           maxLength: 2,
                                                           style: formTextStyle,
@@ -2698,7 +2703,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                               ),
                                             ]),
                                             SizedBox(height: 5),
-                                            ElevatedButton.icon(
+                                            TextButton.icon(
                                                 style: ButtonStyle(
                                                     backgroundColor:
                                                         resolveColor(theme
@@ -2863,13 +2868,12 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                 icon: Icon(Icons.save_alt,
                                                     color: theme
                                                         .colorScheme.primary,
-                                                    size: 16),
-                                                label: Text(
-                                                  'Save',
-                                                  style: labelStyle.copyWith(
-                                                      color: theme
-                                                          .colorScheme.primary),
-                                                )),
+                                                    size: 14),
+                                                label: Text('Save',
+                                                    style: labelStyle.copyWith(
+                                                        color: theme.colorScheme
+                                                            .primary,
+                                                        fontSize: 10))),
                                             if (hasSavedRestTimes)
                                               Padding(
                                                 padding:
@@ -2878,10 +2882,10 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                                                 child: Text(
                                                   'Saved',
                                                   style: labelStyle.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onBackground
-                                                        .withOpacity(.65),
-                                                  ),
+                                                      color: theme.colorScheme
+                                                          .onBackground
+                                                          .withOpacity(.65),
+                                                      fontSize: 10),
                                                 ),
                                               ),
                                           ],
@@ -2911,36 +2915,7 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
           // SizedBox(width: 20),
           IconButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  width: MediaQuery.of(context).size.width * .8,
-                  backgroundColor: theme.colorScheme.onBackground,
-                  content: SizedBox(
-                      width: MediaQuery.of(context).size.width * .8,
-                      child: Text(
-                          'Removed ${appState.editModeTempSplit.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex]} ${widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast.length > widget.splitDayCardIndex + 1 && widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast[widget.splitDayCardIndex + 1] ? '& ${appState.editModeTempSplit.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex + 1]} Superset' : ''}',
-                          textAlign: TextAlign.center,
-                          style:
-                              TextStyle(color: theme.colorScheme.background))),
-                  duration: Duration(milliseconds: 1500),
-                ),
-              );
-              if (widget.split.trainingDays[widget.dayIndex]
-                          .isSupersettedWithLast.length >
-                      widget.splitDayCardIndex + 1 &&
-                  widget.split.trainingDays[widget.dayIndex]
-                      .isSupersettedWithLast[widget.splitDayCardIndex + 1]) {
-                appState.removeTempMuscleGroupFromSplit(
-                  widget.dayIndex,
-                  widget.splitDayCardIndex,
-                );
-              }
-              // Remove twice if superset
-              appState.removeTempMuscleGroupFromSplit(
-                widget.dayIndex,
-                widget.splitDayCardIndex,
-              );
+              removeSetAndSuperset(context, theme, appState);
             },
             icon: Icon(Icons.delete_outlined, size: 20),
             color: theme.colorScheme.primary,
@@ -2990,6 +2965,77 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
           ),
           SizedBox(width: 20),
         ]),
+      );
+    }
+  }
+
+  void removeSetAndSuperset(
+      BuildContext context, ThemeData theme, MyAppState appState) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: MediaQuery.of(context).size.width * .8,
+        backgroundColor: theme.colorScheme.onBackground,
+        content: SizedBox(
+            width: MediaQuery.of(context).size.width * .8,
+            child: Text(
+                'Removed ${appState.editModeTempSplit.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex]} ${widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast.length > widget.splitDayCardIndex + 1 && widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast[widget.splitDayCardIndex + 1] ? '& ${appState.editModeTempSplit.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex + 1]} Superset' : ''}',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.background))),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
+    if (widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast
+                .length >
+            widget.splitDayCardIndex + 1 &&
+        widget.split.trainingDays[widget.dayIndex]
+            .isSupersettedWithLast[widget.splitDayCardIndex + 1]) {
+      appState.removeTempMuscleGroupFromSplit(
+        widget.dayIndex,
+        widget.splitDayCardIndex,
+      );
+    }
+    // Remove twice if superset
+    appState.removeTempMuscleGroupFromSplit(
+      widget.dayIndex,
+      widget.splitDayCardIndex,
+    );
+  }
+
+  void removeExercise(
+      BuildContext context, ThemeData theme, MyAppState appState) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        width: MediaQuery.of(context).size.width * .8,
+        backgroundColor: theme.colorScheme.onBackground,
+        content: SizedBox(
+            width: MediaQuery.of(context).size.width * .8,
+            child: Text(
+                'Removed ${widget.split.trainingDays[widget.dayIndex].exerciseNames[widget.splitDayCardIndex]}',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.background))),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
+    if (widget.split.trainingDays[widget.dayIndex].isSupersettedWithLast
+                .length >
+            widget.splitDayCardIndex + 1 &&
+        widget.split.trainingDays[widget.dayIndex]
+            .isSupersettedWithLast[widget.splitDayCardIndex + 1]) {
+      // Remove superset
+      widget.split.trainingDays[widget.dayIndex]
+          .isSupersettedWithLast[widget.splitDayCardIndex + 1] = false;
+      appState.removeMuscleGroupFromSplit(
+        widget.split,
+        widget.dayIndex,
+        widget.splitDayCardIndex,
+      );
+    } else {
+      appState.removeMuscleGroupFromSplit(
+        widget.split,
+        widget.dayIndex,
+        widget.splitDayCardIndex,
       );
     }
   }
@@ -3112,6 +3158,20 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
                       color: theme.colorScheme.onBackground)),
             ),
           ),
+        PopupMenuItem(
+          padding: EdgeInsets.zero,
+          value: 'Remove Exercise',
+          child: ListTile(
+            visualDensity: VisualDensity(
+                vertical: VisualDensity.minimumDensity,
+                horizontal: VisualDensity.minimumDensity),
+            dense: true,
+            leading: Icon(Icons.delete_outline,
+                color: theme.colorScheme.secondary, size: 16),
+            title: Text('Remove Exercise',
+                style: labelStyle.copyWith(color: theme.colorScheme.secondary)),
+          ),
+        ),
       ],
     ).then((value) {
       if (value == 'Change Exercise') {
@@ -3180,6 +3240,8 @@ class _SplitMuscleGroupCardState extends State<SplitMuscleGroupCard>
         toExercise(appState, currentExercise);
       } else if (value == 'Tutorial') {
         launchUrl(Uri.parse(currentExercise.videoLink));
+      } else if (value == 'Remove Exercise') {
+        removeExercise(context, theme, appState);
       }
     });
   }

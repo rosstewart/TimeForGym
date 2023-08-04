@@ -281,6 +281,9 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
                   stopExistingTimers(index);
                   widget.workout.timersSecondsLeft[index] =
                       widget.workout.restTimesInSeconds[index]!;
+                  widget.workout.timeToCompleteTimer = DateTime.now().add(
+                      Duration(
+                          seconds: widget.workout.restTimesInSeconds[index]!));
                   decrementTimer(index);
                 }
               },
@@ -335,8 +338,19 @@ class _ActiveWorkoutWindowState extends State<ActiveWorkoutWindow>
           'Resting • ${formatSecondsString(widget.workout.timersSecondsLeft[index])}');
       print(formatSecondsString(widget.workout.timersSecondsLeft[index]));
       widget.workout.timers[index] = Timer(Duration(seconds: 1), () {
-        if (widget.workout.timersSecondsLeft[index] != null &&
-            widget.workout.timersSecondsLeft[index] != 0) {
+        if (widget.workout.timeToCompleteTimer != null &&
+            DateTime.now()
+                    .add(Duration(
+                        seconds: widget.workout.timersSecondsLeft[index]!))
+                    .difference(widget.workout.timeToCompleteTimer!)
+                    .inSeconds >
+                1) {
+          // Timer is behind, likely due to the app being in background
+          widget.workout.timersSecondsLeft[index] = widget
+              .workout.timeToCompleteTimer!
+              .difference(DateTime.now())
+              .inSeconds;
+        } else {
           widget.workout.timersSecondsLeft[index] =
               widget.workout.timersSecondsLeft[index]! - 1;
         }
@@ -1441,10 +1455,17 @@ class _ActiveWorkoutTimerPageState extends State<ActiveWorkoutTimerPage> {
                                     .timers[widget.relativePageIndex] !=
                                 null) {
                               // Pause
+                              appState.activeWorkout!.timeToCompleteTimer =
+                                  null;
                               appState
                                   .cancelTimerAtIndex(widget.relativePageIndex);
                             } else {
                               // Play
+                              appState.activeWorkout!.timeToCompleteTimer =
+                                  DateTime.now().add(Duration(
+                                      seconds: appState
+                                              .activeWorkout!.timersSecondsLeft[
+                                          widget.relativePageIndex]!));
                               appState.decrementTimer(widget.relativePageIndex);
                             }
                           },

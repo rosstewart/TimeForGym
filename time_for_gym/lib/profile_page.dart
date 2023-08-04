@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
         length: 3,
         child: Scaffold(
           appBar: AppBar(
-            toolbarHeight: kToolbarHeight-17,
+            toolbarHeight: kToolbarHeight - 17,
             leading: widget.fromBottomNavBar
                 ? (appState.userProfileStackFromOwnProfile.isNotEmpty
                     ? Back(appState: appState, index: 12)
@@ -214,49 +214,60 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(width: 30),
-                  Column(
-                    children: [
-                      GestureDetector(
-                        onTapDown: (tapDownDetails) {
-                          showGalleryOrCameraMenu(
-                              context, tapDownDetails.globalPosition);
-                        },
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 38,
-                              backgroundImage: profilePictureProvider,
-                              child: isProfilePicLoading[0]
-                                  ? CircularProgressIndicator(
-                                      color: theme.colorScheme.onBackground,
-                                    )
-                                  : (profilePictureProvider == null
-                                      ? Icon(
-                                          Icons.person,
-                                          color: theme.colorScheme.onBackground,
-                                          size: 40,
-                                        )
-                                      : null),
-                            ),
-                            // if (user.profilePicture != null)
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: EdgeInsets.all(0),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.blue,
-                                ),
-                                child: Icon(Icons.add,
-                                    color: theme.colorScheme.onBackground,
-                                    size: 16),
+                  Hero(
+                    tag: 'pfp_${widget.user!.username}',
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTapUp: (tapUpDetails) {
+                            if (widget.user! == appState.currentUser) {
+                              showGalleryOrCameraMenu(
+                                  context, tapUpDetails.globalPosition);
+                            } else {
+                              expandPFP(context, theme);
+                            }
+                          },
+                          onLongPress: () {
+                            expandPFP(context, theme);
+                          },
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 38,
+                                backgroundImage: profilePictureProvider,
+                                child: isProfilePicLoading[0]
+                                    ? CircularProgressIndicator(
+                                        color: theme.colorScheme.onBackground,
+                                      )
+                                    : (profilePictureProvider == null
+                                        ? Icon(
+                                            Icons.person,
+                                            color:
+                                                theme.colorScheme.onBackground,
+                                            size: 40,
+                                          )
+                                        : null),
                               ),
-                            ),
-                          ],
+                              if (widget.user! == appState.currentUser)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: EdgeInsets.all(0),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.blue,
+                                    ),
+                                    child: Icon(Icons.add,
+                                        color: theme.colorScheme.onBackground,
+                                        size: 16),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Spacer(),
                   Padding(
@@ -522,13 +533,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           for (int i = 0;
                               i < widget.user!.activities.length;
                               i++)
-                            ActivityPreviewCard(widget.user!,
-                                widget.user!.activities[i], i, setState, null)
-                        else
-                          Text(
-                              'Only ${widget.user!.username}\'s friends can view their posts\n(Make sure you both follow each other)',
-                              style: greyLabelStyle,
-                              textAlign: TextAlign.center)
+                            if (widget.user!.activities[i].private != true ||
+                                appState.currentUser == widget.user!)
+                              ActivityPreviewCard(widget.user!,
+                                  widget.user!.activities[i], i, setState, null)
+                            else
+                              Text(
+                                  'Only ${widget.user!.username}\'s friends can view their posts\n(Make sure you both follow each other)',
+                                  style: greyLabelStyle,
+                                  textAlign: TextAlign.center)
                       ],
                     ),
                   ),
@@ -606,6 +619,30 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       // ),
     );
+  }
+
+  void expandPFP(BuildContext context, ThemeData theme) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenPhoto(
+            photoTag: 'pfp_${widget.user!.username}',
+            photo: CircleAvatar(
+                                radius: MediaQuery.of(context).size.width / 2 - 20,
+                backgroundImage: profilePictureProvider,
+                child: isProfilePicLoading[0]
+                    ? CircularProgressIndicator(
+                        color: theme.colorScheme.onBackground,
+                      )
+                    : (profilePictureProvider == null
+                        ? Icon(
+                            Icons.person,
+                            color: theme.colorScheme.onBackground,
+                            size: 40,
+                          )
+                        : null)),
+          ),
+        ));
   }
 
   void showOptionsDropdown(
@@ -1092,7 +1129,7 @@ class _EditProfileWindowState extends State<EditProfileWindow>
       child: GestureDetector(
         onTap: FocusScope.of(context).unfocus,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.55,
+          height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
             color: theme.colorScheme.background,
             borderRadius: BorderRadius.only(

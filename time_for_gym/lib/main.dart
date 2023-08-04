@@ -247,9 +247,9 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
     );
 
     Color backgroundColor = Color.fromRGBO(10, 10, 10, 1);
-    Color container1 = Color.fromRGBO(23, 23, 23, 1);
-    Color container2 = Color.fromRGBO(30, 30, 30, 1);
-    Color container3 = Color.fromRGBO(40, 40, 40, 1);
+    Color container1 = Color.fromRGBO(20, 20, 20, 1);
+    Color container2 = Color.fromRGBO(25, 25, 25, 1);
+    Color container3 = Color.fromRGBO(30, 30, 30, 1);
 
     ThemeData theme = ThemeData(
         useMaterial3: true,
@@ -2570,6 +2570,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   void cancelWorkout(bool? duringBuild) {
     // Cancel timers
     if (activeWorkout != null) {
+      activeWorkout!.timeToCompleteTimer = null;
       for (Timer? timer in activeWorkout!.timers) {
         if (timer != null) {
           timer.cancel();
@@ -2630,6 +2631,7 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void stopExistingTimers(int index) {
     if (activeWorkout != null) {
+      activeWorkout!.timeToCompleteTimer = null;
       int left = index - 1;
       int right = index + 1;
       while (left >= 0) {
@@ -2683,8 +2685,22 @@ class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
         activeWorkout!.timers[index] = Timer(Duration(seconds: 1), () {
           if (activeWorkout?.timersSecondsLeft[index] != null &&
               activeWorkout?.timersSecondsLeft[index] != 0) {
-            activeWorkout!.timersSecondsLeft[index] =
-                activeWorkout!.timersSecondsLeft[index]! - 1;
+            if (activeWorkout?.timeToCompleteTimer != null &&
+                DateTime.now()
+                        .add(Duration(
+                            seconds: activeWorkout!.timersSecondsLeft[index]!))
+                        .difference(activeWorkout!.timeToCompleteTimer!)
+                        .inSeconds >
+                    1) {
+              // Timer is behind, likely due to the app being in background
+              activeWorkout!.timersSecondsLeft[index] = activeWorkout!
+                  .timeToCompleteTimer!
+                  .difference(DateTime.now())
+                  .inSeconds;
+            } else {
+              activeWorkout!.timersSecondsLeft[index] =
+                  activeWorkout!.timersSecondsLeft[index]! - 1;
+            }
           }
           decrementTimer(index);
         });
@@ -3228,6 +3244,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         appState.stopExistingTimers(index);
                         appState.activeWorkout!.timersSecondsLeft[index] =
                             appState.activeWorkout!.restTimesInSeconds[index]!;
+                        appState.activeWorkout!.timeToCompleteTimer =
+                            DateTime.now().add(Duration(
+                                seconds: appState.activeWorkout!
+                                    .restTimesInSeconds[index]!));
                         appState.decrementTimer(index);
                       }
                       appState.prefs.setString('activeWorkout',
@@ -3295,9 +3315,15 @@ class _MyHomePageState extends State<MyHomePage> {
                                     if (appState.activeWorkout!.timers[i] !=
                                         null) {
                                       // Pause
-                                      appState.cancelTimerAtIndex(i);
+                                      appState.activeWorkout!
+                                          .timeToCompleteTimer = null;
                                     } else {
                                       // Play
+                                      appState.activeWorkout!
+                                              .timeToCompleteTimer =
+                                          DateTime.now().add(Duration(
+                                              seconds: appState.activeWorkout!
+                                                  .timersSecondsLeft[i]!));
                                       appState.decrementTimer(i);
                                     }
                                   },

@@ -69,4 +69,5 @@ class ActiveWorkout {
   String? completionImageErrorText;
   String? completionPickedFilePath;
   String? completionErrorText;
+  DateTime? timeToCompleteTimer;
 }
