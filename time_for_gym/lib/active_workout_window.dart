@@ -1721,6 +1721,7 @@ class _ActiveWorkoutCompletionPageState
   String? activityPictureUrl;
   Widget? activityPicture;
   String? errorText;
+  bool isSubmitting = false;
 
   @override
   void initState() {
@@ -2100,59 +2101,72 @@ class _ActiveWorkoutCompletionPageState
               ],
             ),
             SizedBox(height: 30),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (_liftTitleController.text.isEmpty) {
-                    setState(() {
-                      errorText = 'Please enter a title';
+            if (!isSubmitting)
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_liftTitleController.text.isEmpty) {
+                      setState(() {
+                        errorText = 'Please enter a title';
+                      });
+                      // Save in memory
+                      appState.activeWorkout!.completionErrorText = errorText;
+                      return;
+                    }
+                    if (_liftTitleController.text.length > 150) {
+                      setState(() {
+                        errorText = 'Please enter a shorter title';
+                      });
+                      // Save in memory
+                      appState.activeWorkout!.completionErrorText = errorText;
+                      return;
+                    }
+                    if (_liftDescriptionController.text.length > 500) {
+                      setState(() {
+                        errorText = 'Description is too long';
+                      });
+                      // Save in memory
+                      appState.activeWorkout!.completionErrorText = errorText;
+                      return;
+                    }
+                    uploadNewActivity(appState).then((value) {
+                      Navigator.of(context).pop();
+                      appState.cancelWorkout(false);
                     });
-                    // Save in memory
-                    appState.activeWorkout!.completionErrorText = errorText;
-                    return;
-                  }
-                  if (_liftTitleController.text.length > 150) {
-                    setState(() {
-                      errorText = 'Please enter a shorter title';
-                    });
-                    // Save in memory
-                    appState.activeWorkout!.completionErrorText = errorText;
-                    return;
-                  }
-                  if (_liftDescriptionController.text.length > 500) {
-                    setState(() {
-                      errorText = 'Description is too long';
-                    });
-                    // Save in memory
-                    appState.activeWorkout!.completionErrorText = errorText;
-                    return;
-                  }
-                  uploadNewActivity(appState).then((value) {
-                    Navigator.of(context).pop();
-                    appState.cancelWorkout(false);
-                  });
-                },
-                style: ButtonStyle(
-                    backgroundColor: resolveColor(theme.colorScheme.primary),
-                    surfaceTintColor: resolveColor(theme.colorScheme.primary)),
-                icon: Padding(
-                  padding: const EdgeInsets.fromLTRB(100, 0, 0, 0),
-                  child: Icon(Icons.post_add,
-                      color: theme.colorScheme.onBackground),
+                  },
+                  style: ButtonStyle(
+                      backgroundColor: resolveColor(theme.colorScheme.primary),
+                      surfaceTintColor:
+                          resolveColor(theme.colorScheme.primary)),
+                  icon: Padding(
+                    padding: const EdgeInsets.fromLTRB(100, 0, 0, 0),
+                    child: Icon(Icons.post_add,
+                        color: theme.colorScheme.onBackground),
+                  ),
+                  label: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 100, 0),
+                    child: Text('Post', style: largeTitleStyle),
+                  ),
                 ),
-                label: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 100, 0),
-                  child: Text('Post', style: largeTitleStyle),
-                ),
-              ),
-            ),
+              )
+            else
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    )),
+                SizedBox(width: 10),
+                Text('Submitting', style: greyLabelStyle)
+              ]),
             if (errorText != null) SizedBox(height: 5),
             if (errorText != null)
               Center(
                 child: Text(errorText!,
                     style: labelStyle.copyWith(
                         color: theme.colorScheme.secondary)),
-              ),
+              )
           ],
         ),
       ),
@@ -2218,6 +2232,9 @@ class _ActiveWorkoutCompletionPageState
   }
 
   Future<void> uploadNewActivity(MyAppState appState) async {
+    setState(() {
+      isSubmitting = true;
+    });
     int millisecondsSinceEpoch = DateTime.now().millisecondsSinceEpoch;
     if (pickedFilePath != null) {
       try {

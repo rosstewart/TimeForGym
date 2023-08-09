@@ -1,3 +1,4 @@
+// SKU: gymBrain_ross_stewart
 // import 'dart:ffi';
 // import 'dart:io';
 //import 'dart:js_util';
@@ -6,6 +7,7 @@ import 'dart:convert';
 import 'dart:math';
 
 // import 'package:flutter/cupertino.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +34,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 // import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart' show rootBundle;
@@ -118,6 +120,30 @@ void main() async {
     name: 'TimeForGym',
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await MobileAds.instance.initialize();
+  // Add the test device ID to the testDeviceIdentifiers list
+  await MobileAds.instance.updateRequestConfiguration(RequestConfiguration(
+    testDeviceIds: ['8fcb70467cd17250c50374ad37c5b590','2ED5E142-352D-4E02-822F-6A003D06EA30'], // Replace with your test device ID
+  ));
+  print(MobileAds.instance);
+  await FirebaseAppCheck.instance.activate(
+    // webRecaptchaSiteKey: 'recaptcha-v3-site-key',
+    // Default provider for Android is the Play Integrity provider. You can use the "AndroidProvider" enum to choose
+    // your preferred provider. Choose from:
+    // 1. Debug provider
+    // 2. Safety Net provider
+    // 3. Play Integrity provider
+    // androidProvider: AndroidProvider.debug,
+    // Default provider for iOS/macOS is the Device Check provider. You can use the "AppleProvider" enum to choose
+        // your preferred provider. Choose from:
+        // 1. Debug provider
+        // 2. Device Check provider
+        // 3. App Attest provider
+        // 4. App Attest provider with fallback to Device Check provider (App Attest provider is only available on iOS 14.0+, macOS 14.0+)
+    // appleProvider: AppleProvider.debug,
+    appleProvider: AppleProvider.appAttestWithDeviceCheckFallback,
+  );
+
 
   // Pass all uncaught "fatal" errors from the framework to Crashlytics
   FlutterError.onError = (errorDetails) {
@@ -3025,32 +3051,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // } else if (appState.fromFavorites || appState.fromSplitDayPage) {
         //   appState.presetSearchPage = 0;
         // }
-        if (appState.showAdBeforeExerciseCounter <= 0) {
-          InterstitialAd.load(
-            adLoadCallback: InterstitialAdLoadCallback(
-              onAdLoaded: (InterstitialAd ad) {
-                print(ad);
-                setState(() {
-                  _interstitialAd = ad;
-                });
-              },
-              onAdFailedToLoad: (LoadAdError error) {
-                print(error);
-              },
-            ),
-            adUnitId: 'ca-app-pub-3940256099942544/4411468910',
-            request: AdRequest(),
-          );
-          if (_interstitialAd != null) {
-            _interstitialAd!.show();
-            // User can view 1, 2, or 3 more exercises without seeing another ad
-            appState.showAdBeforeExerciseCounter = Random().nextInt(3) + 2;
-            print(
-                'loaded ad, new counter: ${appState.showAdBeforeExerciseCounter}');
-          } else {
-            print('interstitial ad is null');
-          }
-        }
+        showInterstitialAd(appState);
         page = IndividualExercisePage(); // Exercise page
         break;
       case 6:
@@ -3558,6 +3559,38 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     });
+  }
+
+  void showInterstitialAd(MyAppState appState) async {
+    if (appState.showAdBeforeExerciseCounter <= 0) {
+      InterstitialAd.load(
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (InterstitialAd ad) {
+            print(ad);
+            setState(() {
+              _interstitialAd = ad;
+            });
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            print(error);
+          },
+        ),
+        // adUnitId: 'ca-app-pub-3940256099942544/4411468910', // Test Id
+        adUnitId: 'ca-app-pub-4103823838490114/4076820388', // Release Id
+        request: AdRequest(),
+      );
+      if (_interstitialAd != null) {
+        print('Ad loaded');
+        print(_interstitialAd!.adUnitId);
+        _interstitialAd!.show();
+        // User can view 1, 2, or 3 more exercises without seeing another ad
+        appState.showAdBeforeExerciseCounter = Random().nextInt(3) + 2;
+        print(
+            'loaded ad, new counter: ${appState.showAdBeforeExerciseCounter}');
+      } else {
+        print('interstitial ad is null');
+      }
+    }
   }
 }
 

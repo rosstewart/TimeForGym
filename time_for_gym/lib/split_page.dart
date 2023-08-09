@@ -258,7 +258,7 @@ class _GymGoalAndDayOfWeekSelectorState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 190,
+              width: (MediaQuery.of(context).size.width / 2) - 25,
               child: Column(
                 children: [
                   SizedBox(
@@ -360,13 +360,13 @@ class _GymGoalAndDayOfWeekSelectorState
               ),
             ),
             SizedBox(
-              width: 190,
+              width: (MediaQuery.of(context).size.width / 2) - 25,
               child: Column(
                 children: [
                   Text("Select Days to Train", style: headingStyle),
                   SizedBox(height: 20),
                   Container(
-                    width: 200,
+                    width: (MediaQuery.of(context).size.width / 2) - 25,
                     // padding: EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                         color: theme.colorScheme.primaryContainer,

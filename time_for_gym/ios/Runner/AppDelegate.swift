@@ -15,7 +15,9 @@ import flutter_local_notifications
 //        NotificationCenter.default.addObserver(self, selector: #selector(handleTimerDurationUpdated(notification:)), name: NotificationViewController.timerDurationUpdatedNotification, object: nil)
 
     GADMobileAds.sharedInstance().start(completionHandler: nil)
-    	GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [ GADSimulatorID ]
+    GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [ GADSimulatorID] // Simulator devices are test
+    // , "d8a1e829c394ae8da1bb39b2a7a483a3" ]
+    // GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [ "0d7d7b286876f158e675c1dc763295cd" ]
     // GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [ kGADSimulatorID ]
     // GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [ ca-app-pub-3940256099942544/2934735716 ]
     // if #available(iOS 9.0, *) {

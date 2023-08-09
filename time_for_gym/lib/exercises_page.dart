@@ -241,7 +241,7 @@ class ExerciseSelectorButton extends StatelessWidget {
           ),
           SizedBox(width: 25),
           SizedBox(
-            width: 260,
+            width: MediaQuery.of(context).size.width - 164,
             child: Text(
               exercise.name,
               style: style,

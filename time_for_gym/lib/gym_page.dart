@@ -3099,7 +3099,7 @@ class _GymResourcesSelectorState extends State<GymResourcesSelector>
                             SizedBox(
                                 width: 100,
                                 child: Text(resource,
-                                    maxLines: 2,
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.labelSmall!.copyWith(

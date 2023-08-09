@@ -245,9 +245,12 @@ class _IndividualExercisePageState extends State<IndividualExercisePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Spacer(flex: 3),
-                      Text(
-                        exercise.name,
-                        style: titleStyle,
+                      SizedBox(
+                    width: MediaQuery.of(context).size.width-102,
+                        child: Text(
+                          exercise.name,
+                          style: titleStyle,
+                        ),
                       ),
                       Spacer(flex: 5),
                     ],
