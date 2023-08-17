@@ -42,11 +42,12 @@ Inverted Row|Set up a bar, suspension trainer, or table at waist height. Lie und
 Smith Machine Bent-Over Row|While standing, hinge down and pull the smith machine bar to your stomach.|Mid Back:3, Lats:2, Upper Back:1, Lower Back:1, Biceps:1, Rear Delts:1|https://youtu.be/FWJR5Ve8bnQ|0.5|Smith Machine|0
 Kneeling Single-Arm Pulldown|While kneeling, use one hand to grip the pulldown handle and pull it down towards your side, engaging your lat muscles. Switch sides.|latPulldown|Video Link|0.0|Cable|0
 Cable Single-Arm Pulldown|Stand beside the cable machine, grasp the handle with one hand, and pull it down and across your body, focusing on engaging your lat. Switch sides.|latPulldown|Video Link|0.0|Cable|0
-V-Bar Lat Pulldown|Sit at the lat pulldown machine, grip the V-bar attachment, and pull it down to your chest, squeezing your lats at the bottom and releasing slowly.|latPulldown|Video Link|0.0|Cable|0
-Reverse-Grip Lat Pulldown|Sit at the pulldown machine, grip the bar with palms facing you, and pull it down to your upper chest, engaging your lats and controlling the upward movement.|latPulldown|Video Link|0.0|Cable|0
+V-Bar Lat Pulldown|Sit at the lat pulldown machine, grip the V-bar attachment, and pull it down to your chest, squeezing your lats at the bottom and releasing slowly.|latPulldown|Video Link|0.0|Cable Lat Pulldown|0
+Reverse-Grip Lat Pulldown|Sit at the pulldown machine, grip the bar with palms facing you, and pull it down to your upper chest, engaging your lats and controlling the upward movement.|latPulldown|Video Link|0.0|Cable Lat Pulldown|0
 Cable Lat Pullover|Stand facing the cable machine, grip the rope handle, and pull it, with your elbows, down and in front of your body, contracting your lats and going back up slowly.|Lats:3, Mid Back:1, Triceps:1, Rear Delts:1|Video Link|0.0|Cable|1
 Single-Arm Seated Cable Row|Sit on a cable row, grab a handle, pull it towards your abdomen while keeping your back straight, and contract your lats while squeezing your shoulder blades together.|lowRow|Video Link|0.0|Cable Row|1
 Seated Row Machine|Sit down and grip the handles, pull them towards your abdomen while keeping your back straight, and contract your lats while squeezing your shoulder blades together.|lowRow|Video Link|0.0|Machine|0|Seated Row
+Hammer Strength Front Pulldown|Sit at the pulldown machine, grip the handles with the grip you feel most comfortable, and pull it down to your upper chest, engaging your lats and controlling the upward movement.|latPulldown|Video Link|0.0|Machine|0
 
 MuscleGroup: Biceps
 
